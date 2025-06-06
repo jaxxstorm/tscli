@@ -2,7 +2,7 @@ module github.com/jaxxstorm/tscli
 
 go 1.24
 
-toolchain go1.24.3
+toolchain go1.24.4
 
 require (
 	github.com/charmbracelet/lipgloss v1.1.0
