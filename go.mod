@@ -6,7 +6,7 @@ toolchain go1.24.3
 
 require (
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/go-git/go-git/v5 v5.16.0
+	github.com/go-git/go-git/v5 v5.16.2
 	github.com/pulumi/pulumictl v0.0.49
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
