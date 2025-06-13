@@ -21,7 +21,7 @@
           pname = "tscli";
           version = "0.0.4";
           src = self;
-          vendorHash = "sha256-KEI7rdYWz7XHU3tBTxGZ5HhemlSEy3Hh633qEG89Dv4=";
+          vendorHash = "sha256-CBaaieo8wCFKiRMzlFd5h3+QF51eiyRJo8UlVnUzIG0=";
         };
       in
       {
@@ -30,6 +30,7 @@
             go
             gotools
             gopls
+            tscli
           ];
         };
 

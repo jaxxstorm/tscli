@@ -123,7 +123,7 @@ func Command() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&rawURL, "url", "", "Destination endpoint URL (required)")
-	cmd.Flags().StringVar(&providerStr, "provider", "generic", "Provider type: generic|slack")
+	cmd.Flags().StringVar(&providerStr, "provider", "generic", "Provider type: generic|slack|mattermost|googlechat|discord")
 	cmd.Flags().StringSliceVar(&subStrs, "subscription", nil, "Event subscription (repeatable)")
 
 	_ = cmd.MarkFlagRequired("url")
