@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.4
 
 require (
-	github.com/charmbracelet/fang v0.2.0
+	github.com/charmbracelet/fang v0.3.0
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/jaxxstorm/vers v0.0.3
 	github.com/spf13/cobra v1.9.1
@@ -24,8 +24,8 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.6 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
-	github.com/charmbracelet/colorprofile v0.3.0 // indirect
-	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta.1 // indirect
+	github.com/charmbracelet/colorprofile v0.3.1 // indirect
+	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta.2 // indirect
 	github.com/charmbracelet/x/ansi v0.8.0 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.13 // indirect
 	github.com/charmbracelet/x/exp/charmtone v0.0.0-20250603201427-c31516f43444 // indirect
