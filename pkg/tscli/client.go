@@ -18,6 +18,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/jaxxstorm/tscli/pkg/config"
 	"github.com/jaxxstorm/tscli/pkg/version"
 	"github.com/spf13/viper"
 	tsapi "tailscale.com/client/tailscale/v2"
@@ -33,12 +34,45 @@ func getUserAgent() string {
 	return fmt.Sprintf("tscli/%s (Go client)", version.GetVersion())
 }
 
-func New() (*tsapi.Client, error) {
-	tailnet := viper.GetString("tailnet")
-	apiKey := viper.GetString("api-key")
-	if tailnet == "" {
-		return nil, fmt.Errorf("tailnet is required")
+// getConfigFromActiveContext returns the active tailnet configuration
+func getConfigFromActiveContext() *config.TailnetConfig {
+	tailnetConfig, err := config.GetActiveTailnetConfig()
+	if err != nil {
+		return nil
 	}
+	return tailnetConfig
+}
+
+func New() (*tsapi.Client, error) {
+	var tailnet, apiKey string
+
+	// Check if using new multi-tailnet configuration
+	if config.IsNewConfig() {
+		tailnetConfig, err := config.GetActiveTailnetConfig()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get active tailnet config: %w", err)
+		}
+		if tailnetConfig == nil {
+			return nil, fmt.Errorf("no active tailnet configured")
+		}
+
+		// Use tailnet from flag/env or from active config
+		tailnet = viper.GetString("tailnet")
+		if tailnet == "" || tailnet == "-" {
+			tailnet = tailnetConfig.Name
+		}
+		apiKey = tailnetConfig.APIKey
+	} else {
+		// Using legacy configuration
+		tailnet = viper.GetString("tailnet")
+		apiKey = viper.GetString("api-key")
+
+		// Apply legacy defaults
+		if tailnet == "" {
+			tailnet = "-"
+		}
+	}
+
 	if apiKey == "" {
 		return nil, fmt.Errorf("api-key is required")
 	}

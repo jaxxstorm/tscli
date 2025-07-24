@@ -38,15 +38,28 @@ func configureCLI() *cobra.Command {
 		Use:  "tscli",
 		Long: "A CLI tool for interacting with the Tailscale API.",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			// skip validation for "help" and "version" commands
-			if cmd.Name() == "help" || cmd.Name() == "version" {
+			// skip validation for "help", "version", and "config" commands
+			if cmd.Name() == "help" || cmd.Name() == "version" || cmd.Name() == "config" ||
+				(cmd.Parent() != nil && cmd.Parent().Name() == "config") ||
+				(cmd.Parent() != nil && cmd.Parent().Parent() != nil && cmd.Parent().Parent().Name() == "config") {
 				return nil
 			}
 
 			_ = v.BindPFlags(cmd.Flags())
-			if v.GetString("api-key") == "" {
+
+			// Check for API key based on configuration mode
+			var hasAPIKey bool
+			if config.IsNewConfig() {
+				tailnetConfig, err := config.GetActiveTailnetConfig()
+				hasAPIKey = err == nil && tailnetConfig != nil && tailnetConfig.APIKey != ""
+			} else {
+				hasAPIKey = v.GetString("api-key") != ""
+			}
+
+			if !hasAPIKey {
 				return fmt.Errorf("a Tailscale API key is required")
 			}
+
 			if v.GetString("tailnet") == "" {
 				v.Set("tailnet", "-")
 			}
