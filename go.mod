@@ -12,10 +12,10 @@ require (
 	github.com/spf13/pflag v1.0.6
 	github.com/spf13/viper v1.20.1
 	github.com/tailscale/hujson v0.0.0-20250605163823-992244df8c5a
-	golang.org/x/oauth2 v0.30.0
+	golang.org/x/oauth2 v0.31.0
 	golang.org/x/term v0.33.0
 	gopkg.in/yaml.v3 v3.0.1
-	tailscale.com/client/tailscale/v2 v2.0.0-20250721135607-5f581daaece7
+	tailscale.com/client/tailscale/v2 v2.3.0
 )
 
 require (
