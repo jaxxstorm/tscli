@@ -20,6 +20,8 @@ import (
 	tsapi "tailscale.com/client/tailscale/v2"
 )
 
+var newClient = tscli.New
+
 // DeletionResult represents the result of a device deletion operation
 type DeletionResult struct {
 	DeviceID   string
@@ -43,6 +45,7 @@ func Command() *cobra.Command {
 	var (
 		lastSeenDuration time.Duration
 		exclude          []string
+		include          []string
 		confirm          bool
 		ephemeral        bool
 	)
@@ -69,16 +72,24 @@ Examples:
   # Delete devices not seen for 24 hours, excluding specific patterns
   tscli delete devices --last-seen 24h --exclude server --exclude prod --confirm
 
+  # Delete only devices matching specific patterns
+  tscli delete devices --last-seen 24h --include dev --include test --confirm
+
   # Actually delete devices (requires --confirm)
   tscli delete devices --last-seen 15m --confirm
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			client, err := tscli.New()
+			// Validate that exclude and include are mutually exclusive
+			if len(exclude) > 0 && len(include) > 0 {
+				return fmt.Errorf("--exclude and --include are mutually exclusive; use one or the other")
+			}
+
+			client, err := newClient()
 			if err != nil {
 				return fmt.Errorf("failed to create client: %w", err)
 			}
 
-			summary, err := deleteDisconnectedDevices(cmd.Context(), client, lastSeenDuration, exclude, ephemeral, confirm)
+			summary, err := deleteDisconnectedDevices(cmd.Context(), client, lastSeenDuration, exclude, include, ephemeral, confirm)
 			if err != nil {
 				return fmt.Errorf("failed to delete devices: %w", err)
 			}
@@ -98,6 +109,8 @@ Examples:
 		"Duration to consider a device disconnected (e.g., 15m, 1h, 24h)")
 	cmd.Flags().StringSliceVar(&exclude, "exclude", nil,
 		"Device names to exclude by partial match (can be specified multiple times)")
+	cmd.Flags().StringSliceVar(&include, "include", nil,
+		"Device names to include by partial match (can be specified multiple times)")
 	cmd.Flags().BoolVar(&ephemeral, "ephemeral", false,
 		"Only delete ephemeral devices")
 	cmd.Flags().BoolVar(&confirm, "confirm", false,
@@ -106,7 +119,7 @@ Examples:
 	return cmd
 }
 
-func deleteDisconnectedDevices(ctx context.Context, client *tsapi.Client, lastSeenTimeout time.Duration, excludedDevices []string, ephemeralOnly bool, confirm bool) (*DeletionSummary, error) {
+func deleteDisconnectedDevices(ctx context.Context, client *tsapi.Client, lastSeenTimeout time.Duration, excludedDevices []string, includedDevices []string, ephemeralOnly bool, confirm bool) (*DeletionSummary, error) {
 	// List all devices with full details to get ephemeral status
 	devices, err := client.Devices().ListWithAllFields(ctx)
 	if err != nil {
@@ -119,6 +132,12 @@ func deleteDisconnectedDevices(ctx context.Context, client *tsapi.Client, lastSe
 
 	// Filter devices based on criteria
 	for _, device := range devices {
+		// Check if the device matches the inclusion list (if specified)
+		if len(includedDevices) > 0 && !isIncluded(device.Name, includedDevices) {
+			skippedDevices = append(skippedDevices, fmt.Sprintf("%s (not included)", device.Name))
+			continue
+		}
+
 		// Check if the device is in the exclusion list by partial match
 		if isExcluded(device.Name, excludedDevices) {
 			skippedDevices = append(skippedDevices, fmt.Sprintf("%s (excluded)", device.Name))
@@ -205,6 +224,15 @@ func deleteDisconnectedDevices(ctx context.Context, client *tsapi.Client, lastSe
 func isExcluded(deviceName string, excludedList []string) bool {
 	for _, exclude := range excludedList {
 		if strings.Contains(deviceName, exclude) {
+			return true
+		}
+	}
+	return false
+}
+
+func isIncluded(deviceName string, includedList []string) bool {
+	for _, include := range includedList {
+		if strings.Contains(deviceName, include) {
 			return true
 		}
 	}
