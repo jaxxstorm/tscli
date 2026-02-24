@@ -17,10 +17,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Command registers `tscli get splitdns`
+// Command registers `tscli get dns split-dns`.
 func Command() *cobra.Command {
 	return &cobra.Command{
-		Use:   "split",
+		Use: "split-dns",
+		Aliases: []string{
+			"split",
+		},
 		Short: "Get tailnet split DNS domains",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			client, err := tscli.New()

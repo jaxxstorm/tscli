@@ -3,6 +3,7 @@
 package device
 
 import (
+	"github.com/jaxxstorm/tscli/cmd/tscli/set/device/attributes"
 	"github.com/jaxxstorm/tscli/cmd/tscli/set/device/authorization"
 	"github.com/jaxxstorm/tscli/cmd/tscli/set/device/expiry"
 	"github.com/jaxxstorm/tscli/cmd/tscli/set/device/invite"
@@ -22,6 +23,7 @@ func Command() *cobra.Command {
 		Long:  "Commands that set device information on the Tailscale API",
 	}
 
+	command.AddCommand(attributes.Command())
 	command.AddCommand(authorization.Command())
 	command.AddCommand(expiry.Command())
 	command.AddCommand(invite.Command())

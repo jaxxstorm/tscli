@@ -48,7 +48,7 @@ func Command() *cobra.Command {
 				context.Background(),
 				client,
 				http.MethodPost,
-				"/user/"+userID+"/role",
+				"/users/"+userID+"/role",
 				map[string]string{"role": role},
 				nil,
 			)

@@ -22,13 +22,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Command registers `tscli set dns-prefs`
+// Command registers `tscli set dns preferences`.
 func Command() *cobra.Command {
 	var magicDNS bool
 
 	cmd := &cobra.Command{
-		Use:     "prefs",
-		Aliases: []string{"preferences"},
+		Use:     "preferences",
+		Aliases: []string{"prefs"},
 		Short:   "Enable or disable MagicDNS for the tailnet",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			client, err := tscli.New()

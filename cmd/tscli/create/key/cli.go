@@ -48,16 +48,23 @@ func scopesNeedTags(sc []string) bool {
 
 func Command() *cobra.Command {
 	var (
-		kind   string
-		desc   string
-		expiry time.Duration
-		scopes []string
-		tags   []string
+		kind          string
+		desc          string
+		expiry        time.Duration
+		scopes        []string
+		tags          []string
+		reusable      bool
+		ephemeral     bool
+		preauthorized bool
 	)
 
 	cmd := &cobra.Command{
 		Use:   "key",
 		Short: "Create an auth-key or OAuth client",
+		Long: "Create Tailscale auth-keys or OAuth clients.\n" +
+			"Auth-key capability flags (--reusable, --ephemeral, --preauthorized) apply only to --type authkey.",
+		Example: "  tscli create key --type authkey --description \"CI runner\" --expiry 720h --reusable --preauthorized\n" +
+			"  tscli create key --type oauthclient --scope users:read --scope devices:read",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			kind = strings.ToLower(kind)
 			if kind == "" {
@@ -93,8 +100,11 @@ func Command() *cobra.Command {
 			if kind == "authkey" {
 				req := tsapi.CreateKeyRequest{
 					Description:  desc,
-					Capabilities: tsapi.KeyCapabilities{}, // zero value == {"devices":{"create":{}}}
+					Capabilities: tsapi.KeyCapabilities{},
 				}
+				req.Capabilities.Devices.Create.Reusable = reusable
+				req.Capabilities.Devices.Create.Ephemeral = ephemeral
+				req.Capabilities.Devices.Create.Preauthorized = preauthorized
 				if cmd.Flags().Lookup("expiry").Changed {
 					req.ExpirySeconds = int64(expiry.Seconds())
 				}
@@ -128,6 +138,9 @@ func Command() *cobra.Command {
 	cmd.Flags().StringVar(&kind, "type", "authkey", "Key type: authkey|oauthclient")
 	cmd.Flags().StringVar(&desc, "description", "", "Short description (≤50 chars)")
 	cmd.Flags().DurationVar(&expiry, "expiry", 0, "Expiry duration (e.g. 720h) for auth-keys")
+	cmd.Flags().BoolVar(&reusable, "reusable", false, "Auth-key only: allow the key to be used multiple times")
+	cmd.Flags().BoolVar(&ephemeral, "ephemeral", false, "Auth-key only: mark devices authenticated with this key as ephemeral")
+	cmd.Flags().BoolVar(&preauthorized, "preauthorized", false, "Auth-key only: create key in preauthorized state")
 	cmd.Flags().StringSliceVar(&scopes, "scope", nil, "OAuth scopes (repeatable)")
 	cmd.Flags().StringSliceVar(&tags, "tags", nil, "Allowed tags (repeatable) for OAuth client")
 

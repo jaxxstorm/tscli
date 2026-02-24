@@ -45,7 +45,7 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			path := "/tailnet/{tailnet}/device-invites/" + url.PathEscape(deviceID)
+			path := "/device/" + url.PathEscape(deviceID) + "/device-invites"
 			if state != "" && strings.ToLower(state) != "all" {
 				q := url.Values{}
 				q.Set("state", strings.ToLower(state))

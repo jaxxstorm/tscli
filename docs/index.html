@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tscli Docs</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css" />
+  <style>
+    :root {
+      --theme-color: #0f766e;
+      --content-max-width: 960px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">Loading tscli docs...</div>
+  <script>
+    const ghPagesPrefix = '/tscli/';
+    const currentPath = window.location.pathname || '/';
+    const basePath = currentPath.startsWith(ghPagesPrefix) ? ghPagesPrefix : '/';
+
+    window.$docsify = {
+      name: 'tscli',
+      repo: 'https://github.com/jaxxstorm/tscli',
+      basePath,
+      loadSidebar: true,
+      subMaxLevel: 2,
+      auto2top: true,
+      homepage: 'README.md',
+      alias: {
+        '/.*/_sidebar.md': `${basePath}_sidebar.md`
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
+</body>
+</html>

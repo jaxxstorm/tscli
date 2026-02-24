@@ -18,11 +18,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Command registers `tscli get prefs`
+// Command registers `tscli get dns preferences`.
 func Command() *cobra.Command {
 	return &cobra.Command{
-		Use:     "prefs",
-		Aliases: []string{"preferences"},
+		Use:     "preferences",
+		Aliases: []string{"prefs"},
 		Short:   "Get tailnet DNS preferences",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			client, err := tscli.New()

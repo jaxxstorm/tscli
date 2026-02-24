@@ -3,6 +3,44 @@
 `tscli` is a fast, single-binary CLI for the [Tailscale HTTP API](https://tailscale.com/api).
 From your terminal you can manage devices, users, auth keys, webhooks, posture integrations, tailnet-wide settings, and even hit raw endpoints when the SDK hasn’t caught up yet.
 
+## 🚀 Quick Start
+
+Authenticate and run your first command:
+
+```bash
+export TAILSCALE_API_KEY=tskey-xxx
+export TAILSCALE_TAILNET=example.com
+tscli list devices
+```
+
+Create a reusable, preauthorized ephemeral auth key:
+
+```bash
+tscli create key \
+  --type authkey \
+  --description "ci-runner" \
+  --expiry 24h \
+  --reusable \
+  --ephemeral \
+  --preauthorized
+```
+
+Set up a named profile for multi-tailnet use:
+
+```bash
+tscli config profiles upsert _lbr_sandbox --api-key tskey-abc123
+tscli config profiles set-active _lbr_sandbox
+tscli config profiles list
+```
+
+Explore available commands:
+
+```bash
+tscli --help
+tscli get --help
+tscli create key --help
+```
+
 ## ✨ Highlights
 
 | Area                     | What you can do                                                                                             |
@@ -17,11 +55,9 @@ From your terminal you can manage devices, users, auth keys, webhooks, posture i
 | **Invites**              | List / delete device- or user-invites                                                                       |
 | **Contacts**             | Get & update contact emails                                                                                 |
 | **Debug switch**         | `--debug` or `TSCLI_DEBUG=1` prints full HTTP requests / responses to stderr                                |
-| **Config precedence**    | _flags_ → _env_ → `~/.tscli/.tscli.yaml` (or local `./.tscli.yaml`)                                         |
+| **Config precedence**    | _flags_ → _env_ → `~/.tscli.yaml` (or local `./.tscli.yaml`)                                                 |
 
-## 🔧 Install
-
-### 🔧 Installation
+## 🔧 Installation
 
 #### macOS / Linux (Homebrew)
 
@@ -75,24 +111,92 @@ After any method, confirm:
 tscli --version
 ```
 
+## 📚 Documentation
+
+The primary docs live in the in-repo Docsify site under `docs/`.
+
+- Site entrypoint: `docs/index.html`
+- Start page: `docs/README.md`
+- Generated command docs: `docs/commands/`
+
+Most useful pages:
+
+- `docs/getting-started.md`: install, first command, and flags
+- `docs/configuration.md`: config keys, profiles, and precedence
+- `docs/authentication.md`: API-key auth methods and security guidance
+- `docs/command-reference.md`: generated command reference and workflow
+
+Docs workflows:
+
+```bash
+make docs-generate   # regenerate docs/commands from Cobra
+make docs-check      # fail if generated docs are stale/missing
+make docs-serve      # serve docs locally with docsify
+```
+
 ## ⚙️ Configuration
 
-| Option            | Flag / Env var                          | YAML key  | Default |
-| ----------------- | --------------------------------------- | --------- | ------- |
-| Tailscale API key | `--api-key`, `-k` / `TAILSCALE_API_KEY` | `api-key` | —       |
-| Tailnet name      | `--tailnet`, `-n` / `TAILSCALE_TAILNET` | `tailnet` | —       |
+| Option            | Flag / Env var                          | YAML key         | Default |
+| ----------------- | --------------------------------------- | ---------------- | ------- |
+| Tailscale API key | `--api-key`, `-k` / `TAILSCALE_API_KEY` | `api-key`        | —       |
+| Tailnet name      | `--tailnet`, `-n` / `TAILSCALE_TAILNET` | `tailnet`        | `-`     |
+| Active profile    | —                                       | `active-tailnet` | —       |
+| Profile list      | —                                       | `tailnets`       | `[]`    |
 
 ```yaml
-# ~/.tscli/.tscli.yaml
-api-key: tskey-abc123…
-tailnet: example.com
+# ~/.tscli.yaml
 output: pretty # other options are: human, json or yaml
+active-tailnet: _lbr_sandbox
+tailnets:
+  - name: _lbr_sandbox
+    api-key: tskey-abc123
+  - name: example.com
+    api-key: tskey-def456
+
+# Legacy keys are still supported for backward compatibility
+tailnet: example.com
+api-key: tskey-def456
+```
+
+Profile management commands:
+
+```bash
+tscli config profiles list
+tscli config profiles upsert _lbr_sandbox --api-key tskey-abc123
+tscli config profiles set-active _lbr_sandbox
+tscli config profiles delete example.com
 ```
 
 ## 🚀 Usage
 
 ```text
 tscli <noun> <verb> [flags]
+```
+
+Canonical verb taxonomy:
+
+- `create` creates resources
+- `set` updates or mutates resources
+- `get` fetches a single resource
+- `list` fetches collections
+- `delete` removes resources
+
+Compatibility aliases remain available for legacy paths such as `get dns ns`, `set dns prefs`, `set dns splitdns`, and `get webhook webhook`.
+
+### Common workflows
+
+```bash
+# Get a single resource
+tscli get device --device node-abc123
+
+# List a collection
+tscli list users
+
+# Update settings
+tscli set settings --devices-approval=true
+
+# Delete a resource
+tscli delete key --key key-id
 ```
 
 ### Global flags
@@ -121,6 +225,7 @@ tscli <noun> <verb> [flags]
 | Get posture attributes           | :white_check_mark: | `tscli get device posture --device <device>` |
 | Set custom posture attributes    | :white_check_mark: | `tscli set device posture --device <device> --key custom:x --value <v>` |
 | Delete custom posture attributes | :white_check_mark: | `tscli delete device posture --device <device> --key custom:x` |
+| Batch update posture attributes  | :white_check_mark: | `tscli set device attributes --file <payload.json>` |
 | **Policy File**                  |        |                 |
 | Get policy file                  | :white_check_mark: | `tscli get policy [--json]` |
 | Set policy file                  | :white_check_mark: | `tscli set policy --file <acl.hujson>` |
@@ -131,29 +236,34 @@ tscli <noun> <verb> [flags]
 | Create auth-key / OAuth client   | :white_check_mark: | `tscli create key --type authkey --oauthclient …` |
 | Get key                          | :white_check_mark: | `tscli get key --key <id>` |
 | Delete / revoke key              | :white_check_mark: | `tscli delete key --key <key-id>` |
+| Update key metadata/scopes       | :white_check_mark: | `tscli set key --key <id> --body '{"description":"new"}'` |
 | Create a token                   | :white_check_mark: | `tscli create token --client-id <oauth-client-id> --client-secret <oauth-client-secret>` |
 | **DNS**                          |        |                 |
 | List DNS nameservers             | :white_check_mark: | `tscli list nameservers` |
-| Set DNS nameservers              | :white_check_mark: | `tscli set nameservers --nameserver <ip> …` |
+| Get DNS configuration            | :white_check_mark: | `tscli get dns configuration` |
+| Set DNS configuration            | :white_check_mark: | `tscli set dns configuration --body '<json>'` |
+| Set DNS nameservers              | :white_check_mark: | `tscli set dns nameservers --nameserver <ip> …` |
 | Get DNS preferences              | :white_check_mark: | `tscli get dns preferences` |
 | Set DNS preferences              | :white_check_mark: | `tscli set dns preferences --magicdns=<bool>` |
-| List DNS search paths            | :white_check_mark: | `tscli list dns searchpaths` |
+| List DNS search paths            | :white_check_mark: | `tscli get dns searchpaths` |
 | Set DNS search paths             | :white_check_mark: | `tscli set dns searchpaths --searchpath <domain> …` |
-| Get split-DNS map                | :white_check_mark: | `tscli get dns split` |
-| Update split-DNS                 | :white_check_mark: | `tscli set dns split --domain <d>=<ip,ip> …` |
-| Set split-DNS                    | :white_check_mark: | `tscli set dns split --replace --domain <d>=<ip>` |
+| Get split-DNS map                | :white_check_mark: | `tscli get dns split-dns` |
+| Update split-DNS                 | :white_check_mark: | `tscli set dns split-dns --entry <d>=<ip> …` |
+| Set split-DNS                    | :white_check_mark: | `tscli set dns split-dns --replace --entry <d>=<ip>` |
 | **Logging**                      |        |                 |
 | List configuration audit logs    | :white_check_mark: | `tscli list logs config --start <t> [--end <t>]` |
 | List network flow logs           | :white_check_mark: | `tscli list logs network --start <t> [--end <t>]` |
 | Get log-streaming status         | :white_check_mark: | `tscli get logs stream --type {configuration|network} --status` |
 | Get log-streaming configuration  | :white_check_mark: | `tscli get logs stream --type {configuration|network}` |
-| Create or get AWS external id.   | :white_check_mark: | `tscli get logs aws [--reusable]` |
+| Set log-streaming configuration  | :white_check_mark: | `tscli set logs stream --type {configuration|network} --body '<json>'` |
+| Disable log-streaming            | :white_check_mark: | `tscli delete logs stream --type {configuration|network}` |
+| Create or get AWS external id.   | :white_check_mark: | `tscli get logs aws` |
 | Validate external ID integraton with IAM role trust policy | :white_check_mark: | `tscli get logs aws validate --external-id <id> --role-arn <arn>` |
 | **Users**                        |        |                 |
 | List users                       | :white_check_mark: | `tscli list users [--type …] [--role …]` |
 | Get a user                       | :white_check_mark: | `tscli get user --user <id>` |
-| Update user role                 | :white_check_mark: | `tscli set user-role --user <id> --role <role>` |
-| Approve / suspend / restore user | :white_check_mark: | `tscli set user-access --user <id> --approve\|--suspend\|--restore` |
+| Update user role                 | :white_check_mark: | `tscli set user role --user <id> --role <role>` |
+| Approve / suspend / restore user | :white_check_mark: | `tscli set user access --user <id> --approve\|--suspend\|--restore` |
 | Delete a user                    | :white_check_mark: | `tscli delete user --user <id>` |
 | **User Invites**                 |        |                 |
 | List user invites                | :white_check_mark: | `tscli list invites user [--state …]` |
@@ -180,11 +290,19 @@ tscli <noun> <verb> [flags]
 | **Webhooks**                     |        |                 |
 | List webhooks                    | :white_check_mark: | `tscli list webhooks` |
 | Create webhook                   | :white_check_mark: | `tscli create webhook --url <endpoint> …` |
-| Get webhook                      | :white_check_mark: | `tscli get webhook --webhook <id>` |
-| Update webhook                   | :white_check_mark: | `tscli set webhook --webhook <id> …` |
-| Delete webhook                   | :white_check_mark: | `tscli delete webhook --webhook <id>` |
-| Test webhook                     | :white_check_mark: | `tscli get webhook test` |
-| Rotate webhook secret            | :white_check_mark: | `tscli rotate webhook --webhook <id>` |
+| Get webhook                      | :white_check_mark: | `tscli get webhook --id <id>` |
+| Update webhook subscriptions     | :white_check_mark: | `tscli set webhook --id <id> --subscription <event>` |
+| Delete webhook                   | :white_check_mark: | `tscli delete webhook --id <id>` |
+| Test webhook                     | :white_check_mark: | `tscli set webhook test --id <id>` |
+| Rotate webhook secret            | :white_check_mark: | `tscli set webhook --id <id> --rotate` |
+| **Services**                     |        |                 |
+| List services                    | :white_check_mark: | `tscli list services` |
+| Get service                      | :white_check_mark: | `tscli get service --service <name>` |
+| List service devices             | :white_check_mark: | `tscli list services devices --service <name>` |
+| Get service approval             | :white_check_mark: | `tscli get service approval --service <name> --device <id>` |
+| Update service                   | :white_check_mark: | `tscli set service --service <name> --body '<json>'` |
+| Set service approval             | :white_check_mark: | `tscli set service approval --service <name> --device <id> --approved=true` |
+| Delete service                   | :white_check_mark: | `tscli delete service --service <name>` |
 | **Tailnet Settings**             |        |                 |
 | Get tailnet settings             | :white_check_mark: | `tscli get settings` |
 | Update tailnet settings          | :white_check_mark: | `tscli set settings --devices-approval …` |
@@ -195,10 +313,19 @@ tscli <noun> <verb> [flags]
 
 ```bash
 # Approve a waiting device
-tscli device authorize --device node-abc123 --approve
+tscli set device authorization --device node-abc123 --approve
 
 # Rotate an auth-key that expires in 30 days
 tscli create key --description "CI" --expiry 720h | jq .key
+
+# Create a reusable preauthorized ephemeral auth-key
+tscli create key \
+  --type authkey \
+  --description "short-lived runner key" \
+  --expiry 24h \
+  --reusable \
+  --ephemeral \
+  --preauthorized
 
 # Create Slack webhook for device deletions
 tscli create webhook \
@@ -222,7 +349,44 @@ TAILSCALE_API_KEY=tskey-… TAILSCALE_TAILNET=example.com go run ./cmd/tscli lis
 Tests & lint:
 
 ```bash
-go test ./...
+make test-unit
+make test-integration
+make test
+```
+
+Documentation workflows:
+
+```bash
+make docs-generate
+make docs-check
+make docs-serve
+```
+
+Generate a CLI/OpenAPI coverage-gap report:
+
+```bash
+make coverage-gaps
+# writes:
+#   coverage/coverage-gaps.json
+#   coverage/coverage-gaps.md
+```
+
+### OpenAPI snapshot workflow
+
+`tscli` pins a Tailscale OpenAPI snapshot for deterministic contract checks:
+
+- Schema: `pkg/contract/openapi/tailscale-v2-openapi.yaml`
+- Metadata: `pkg/contract/openapi/snapshot-metadata.yaml`
+- Command mapping: `pkg/contract/openapi/command-operation-map.yaml`
+
+Refresh the snapshot (requires network access), then re-run tests and report generation:
+
+```bash
+curl -sS "https://api.tailscale.com/api/v2?outputOpenapiSchema=true" \
+  > pkg/contract/openapi/tailscale-v2-openapi.yaml
+shasum -a 256 pkg/contract/openapi/tailscale-v2-openapi.yaml
+make test
+make coverage-gaps
 ```
 
 ## 📄 License

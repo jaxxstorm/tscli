@@ -82,7 +82,7 @@ func Command() *cobra.Command {
 				context.Background(),
 				client,
 				http.MethodPatch,
-				"/tailnet/{tailnet}/posture/integrations/"+id,
+				"/posture/integrations/"+id,
 				body,
 				nil,
 			)

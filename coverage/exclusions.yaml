@@ -1,0 +1,14 @@
+# OpenAPI parity exclusions for tscli.
+# Keys are command paths (for commands) or "<method> <path>" operations.
+operations: {}
+
+commands:
+  config get: "Local config lookup command; no Tailscale API call."
+  config profiles delete: "Local profile management command; no Tailscale API call."
+  config profiles list: "Local profile management command; no Tailscale API call."
+  config profiles set-active: "Local profile management command; no Tailscale API call."
+  config profiles upsert: "Local profile management command; no Tailscale API call."
+  config set: "Local config mutation command; no Tailscale API call."
+  config show: "Local config display command; no Tailscale API call."
+  create token: "OAuth token exchange endpoint is outside pinned /api/v2 OpenAPI schema."
+  version: "Local version command; no Tailscale API call."

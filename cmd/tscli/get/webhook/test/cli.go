@@ -14,11 +14,13 @@ import (
 )
 
 func Command() *cobra.Command {
+	var webhookID string
+
 	cmd := &cobra.Command{
 		Use:   "test",
 		Short: "Test webhook delivery",
-		Long: `Test webhook delivery by sending a test event to all configured webhooks.
-This sends a test event to verify that webhook endpoints are reachable and configured correctly.`,
+		Long: `Test webhook delivery by sending a test event for a single webhook.
+This verifies the target endpoint is reachable and configured correctly.`,
 
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			client, err := tscli.New()
@@ -31,7 +33,7 @@ This sends a test event to verify that webhook endpoints are reachable and confi
 				context.Background(),
 				client,
 				http.MethodPost,
-				"/webhooks/test",
+				fmt.Sprintf("/webhooks/%s/test", webhookID),
 				nil,
 				&response,
 			); err != nil {
@@ -48,6 +50,9 @@ This sends a test event to verify that webhook endpoints are reachable and confi
 			return nil
 		},
 	}
+
+	cmd.Flags().StringVar(&webhookID, "id", "", "Webhook ID to test")
+	_ = cmd.MarkFlagRequired("id")
 
 	return cmd
 }

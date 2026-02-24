@@ -1,7 +1,7 @@
 // cmd/tscli/set/user/invite/cli.go
 //
 // `tscli set user invite --id <invite-id> --resend`
-// Resend a user invite via POST /api/v2/tailnet/{tailnet}/user-invites/{id}/resend
+// Resend a user invite via POST /api/v2/user-invites/{id}/resend
 
 package invite
 
@@ -43,7 +43,7 @@ func Command() *cobra.Command {
 				return fmt.Errorf("failed to create client: %w", err)
 			}
 
-			endpoint := fmt.Sprintf("/tailnet/{tailnet}/user-invites/%s/resend", inviteID)
+			endpoint := fmt.Sprintf("/user-invites/%s/resend", inviteID)
 
 			var response map[string]interface{}
 			if _, err := tscli.Do(
