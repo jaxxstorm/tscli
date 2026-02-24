@@ -24,7 +24,7 @@ tscli list keys [flags]
 ```
   -k, --api-key string   Tailscale API key
   -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [json yaml human pretty]
+  -o, --output string    Output: [human json pretty yaml]
   -n, --tailnet string   Tailscale tailnet (default "-")
 ```
 

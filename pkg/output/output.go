@@ -1,5 +1,7 @@
 package output
 
+import "slices"
+
 // Printer prints a marshalled JSON payload to the terminal in some format.
 type Printer interface {
 	Print(jsonBytes []byte) error
@@ -42,5 +44,6 @@ func Available() (out []string) {
 	for k := range registry {
 		out = append(out, k)
 	}
+	slices.Sort(out)
 	return
 }
