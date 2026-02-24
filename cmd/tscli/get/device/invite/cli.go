@@ -38,7 +38,7 @@ func Command() *cobra.Command {
 				context.Background(),
 				client,
 				http.MethodGet,
-				"/tailnet/{tailnet}/device-invites/"+id,
+				"/device-invites/"+id,
 				nil,
 				&raw,
 			); err != nil {

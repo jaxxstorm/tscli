@@ -52,13 +52,13 @@ func Command() *cobra.Command {
 			var path, msg string
 			switch {
 			case approve:
-				path = "/user/" + userID + "/approve"
+				path = "/users/" + userID + "/approve"
 				msg = "approved"
 			case suspend:
-				path = "/user/" + userID + "/suspend"
+				path = "/users/" + userID + "/suspend"
 				msg = "suspended"
 			case restore:
-				path = "/user/" + userID + "/restore"
+				path = "/users/" + userID + "/restore"
 				msg = "restored"
 			}
 

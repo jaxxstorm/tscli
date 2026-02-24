@@ -33,7 +33,7 @@ import (
 
 var domainRE = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9\.\-]*\.[a-zA-Z]{2,}$`)
 
-// Command registers `tscli set splitdns`.
+// Command registers `tscli set dns split-dns`.
 func Command() *cobra.Command {
 	var (
 		entries []string // domain=ip (repeatable, one per IP)
@@ -41,8 +41,8 @@ func Command() *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:     "splitdns",
-		Aliases: []string{"split", "sd"},
+		Use:     "split-dns",
+		Aliases: []string{"splitdns", "split", "sd"},
 		Short:   "Set or patch split-DNS domains → nameservers",
 
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {

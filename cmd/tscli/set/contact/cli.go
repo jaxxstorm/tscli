@@ -51,7 +51,7 @@ func Command() *cobra.Command {
 			if resend {
 				// Resend verification email
 				ctype := validTypes[strings.ToLower(typeStr)]
-				endpoint := fmt.Sprintf("/contacts/%s/resend-verification-email", string(ctype))
+				endpoint := fmt.Sprintf("/tailnet/{tailnet}/contacts/%s/resend-verification-email", string(ctype))
 
 				if _, err := tscli.Do(
 					context.Background(),

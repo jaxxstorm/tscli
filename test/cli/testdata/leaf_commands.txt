@@ -7,29 +7,40 @@ create key
 create posture-integration
 create token
 create webhook
+delete device
 delete device invite
 delete device posture
 delete devices
 delete key
+delete logs stream
 delete posture-integration
+delete service
+delete user
 delete user invite
 delete webhook
 get contacts
+get device
 get device invite
 get device posture
-get dns ns
-get dns prefs
+get dns configuration
+get dns nameservers
+get dns preferences
 get dns searchpaths
-get dns split
+get dns split-dns
 get key
+get logs aws
 get logs aws validate
 get logs stream
+get policy
 get policy preview
 get policy validate
+get posture-integration
+get service
+get service approval
 get settings
+get user
 get user invite
-get webhook test
-get webhook webhook
+get webhook
 list devices
 list invites device
 list invites user
@@ -39,9 +50,12 @@ list logs network
 list nameservers
 list posture-integrations
 list routes
+list services
+list services devices
 list users
 list webhooks
 set contact
+set device attributes
 set device authorization
 set device expiry
 set device invite
@@ -51,14 +65,21 @@ set device name
 set device posture
 set device routes
 set device tags
-set dns ns
-set dns prefs
+set dns configuration
+set dns nameservers
+set dns preferences
 set dns searchpaths
-set dns splitdns
+set dns split-dns
+set key
+set logs stream
 set policy
 set posture-integration
+set service
+set service approval
 set settings
 set user access
 set user invite
 set user role
+set webhook
+set webhook test
 version

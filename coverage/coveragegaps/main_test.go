@@ -21,6 +21,9 @@ func TestLoadOperations(t *testing.T) {
 	if len(ops) != 3 {
 		t.Fatalf("expected 3 operations, got %d (%v)", len(ops), ops)
 	}
+	if ops[0].Key == "" || ops[0].Domain == "" {
+		t.Fatalf("expected operation key and domain to be populated, got %#v", ops[0])
+	}
 }
 
 func TestLoadManifest(t *testing.T) {
@@ -37,5 +40,15 @@ func TestLoadManifest(t *testing.T) {
 	}
 	if len(items) != 2 {
 		t.Fatalf("expected 2 items, got %d", len(items))
+	}
+}
+
+func TestLoadExclusionsMissingFile(t *testing.T) {
+	p, err := loadExclusions(filepath.Join(t.TempDir(), "does-not-exist.yaml"))
+	if err != nil {
+		t.Fatalf("load exclusions: %v", err)
+	}
+	if len(p.Commands) != 0 || len(p.Operations) != 0 {
+		t.Fatalf("expected empty exclusions, got %#v", p)
 	}
 }

@@ -28,27 +28,43 @@ type commandMap struct {
 	Commands map[string][]string `yaml:"commands"`
 }
 
+type exclusionPolicy struct {
+	Operations map[string]string `yaml:"operations"`
+	Commands   map[string]string `yaml:"commands"`
+}
+
+type operation struct {
+	Key    string
+	Domain string
+}
+
 type report struct {
-	OpenAPIOperations int               `json:"openapi_operations"`
-	ManifestCommands  int               `json:"manifest_commands"`
-	CoveredOperations []string          `json:"covered_operations"`
-	UncoveredOps      []string          `json:"uncovered_operations"`
-	UnknownMappedOps  []string          `json:"unknown_mapped_operations"`
-	CoveredCommands   []string          `json:"covered_commands"`
-	UnmappedCommands  []string          `json:"unmapped_commands"`
-	UnknownCommands   []string          `json:"unknown_mapped_commands"`
-	CommandMappings   map[string]string `json:"command_mappings"`
+	OpenAPIOperations    int                 `json:"openapi_operations"`
+	ExcludedOperations   []string            `json:"excluded_operations"`
+	InScopeOperations    int                 `json:"in_scope_operations"`
+	ManifestCommands     int                 `json:"manifest_commands"`
+	ExcludedCommands     []string            `json:"excluded_commands"`
+	CoveredOperations    []string            `json:"covered_operations"`
+	UncoveredOps         []string            `json:"uncovered_operations"`
+	UncoveredOpsByDomain map[string][]string `json:"uncovered_by_domain"`
+	UnknownMappedOps     []string            `json:"unknown_mapped_operations"`
+	CoveredCommands      []string            `json:"covered_commands"`
+	UnmappedCommands     []string            `json:"unmapped_commands"`
+	UnknownCommands      []string            `json:"unknown_mapped_commands"`
+	CommandMappings      map[string]string   `json:"command_mappings"`
 }
 
 func main() {
 	openapiPath := flag.String("openapi", "pkg/contract/openapi/tailscale-v2-openapi.yaml", "Path to pinned OpenAPI schema")
 	mappingPath := flag.String("mapping", "pkg/contract/openapi/command-operation-map.yaml", "Path to command->operation map")
-	manifestPath := flag.String("manifest", "cmd/tscli/testdata/leaf_commands.txt", "Path to leaf command manifest")
+	manifestPath := flag.String("manifest", "test/cli/testdata/leaf_commands.txt", "Path to command manifest")
+	exclusionsPath := flag.String("exclusions", "coverage/exclusions.yaml", "Path to exclusions policy")
 	jsonOut := flag.String("json-out", "coverage/coverage-gaps.json", "Path for machine-readable report")
 	mdOut := flag.String("md-out", "coverage/coverage-gaps.md", "Path for markdown report")
 	baselinePath := flag.String("baseline", "coverage/coverage-gaps-baseline.json", "Path to baseline report for diffing")
 	diffOut := flag.String("diff-out", "coverage/coverage-gaps-diff.md", "Path for baseline diff report")
 	failOnRegression := flag.Bool("fail-on-regression", false, "Exit non-zero if uncovered operations or unmapped commands regress vs baseline")
+	failOnGaps := flag.Bool("fail-on-gaps", false, "Exit non-zero if uncovered in-scope operations, unmapped commands, unknown mapped operations, or unknown mapped commands remain")
 	flag.Parse()
 
 	ops, err := loadOperations(*openapiPath)
@@ -63,15 +79,47 @@ func main() {
 	if err != nil {
 		fatalf("load manifest: %v", err)
 	}
+	exclusions, err := loadExclusions(*exclusionsPath)
+	if err != nil {
+		fatalf("load exclusions: %v", err)
+	}
 
 	opSet := make(map[string]struct{}, len(ops))
+	opDomain := make(map[string]string, len(ops))
+	allOpKeys := make([]string, 0, len(ops))
 	for _, op := range ops {
-		opSet[op] = struct{}{}
+		opSet[op.Key] = struct{}{}
+		opDomain[op.Key] = op.Domain
+		allOpKeys = append(allOpKeys, op.Key)
 	}
+	slices.Sort(allOpKeys)
+
+	excludedOps := make([]string, 0, len(exclusions.Operations))
+	excludedOpSet := make(map[string]struct{}, len(exclusions.Operations))
+	for op := range exclusions.Operations {
+		if _, ok := opSet[op]; !ok {
+			fatalf("excluded operation not found in schema: %s", op)
+		}
+		excludedOpSet[op] = struct{}{}
+		excludedOps = append(excludedOps, op)
+	}
+	slices.Sort(excludedOps)
+
 	manifestSet := make(map[string]struct{}, len(manifest))
 	for _, cmd := range manifest {
 		manifestSet[cmd] = struct{}{}
 	}
+
+	excludedCmds := make([]string, 0, len(exclusions.Commands))
+	excludedCmdSet := make(map[string]struct{}, len(exclusions.Commands))
+	for cmd := range exclusions.Commands {
+		if _, ok := manifestSet[cmd]; !ok {
+			fatalf("excluded command not found in manifest: %s", cmd)
+		}
+		excludedCmdSet[cmd] = struct{}{}
+		excludedCmds = append(excludedCmds, cmd)
+	}
+	slices.Sort(excludedCmds)
 
 	coveredOpSet := map[string]struct{}{}
 	unknownMappedSet := map[string]struct{}{}
@@ -83,15 +131,21 @@ func main() {
 		if len(mapped) == 0 {
 			continue
 		}
+
 		if _, ok := manifestSet[cmd]; ok {
-			coveredCommands[cmd] = struct{}{}
+			if _, excluded := excludedCmdSet[cmd]; !excluded {
+				coveredCommands[cmd] = struct{}{}
+			}
 		} else {
 			unknownCommandSet[cmd] = struct{}{}
 		}
+
 		commandMapping[cmd] = strings.Join(mapped, ", ")
 		for _, op := range mapped {
 			if _, ok := opSet[op]; ok {
-				coveredOpSet[op] = struct{}{}
+				if _, excluded := excludedOpSet[op]; !excluded {
+					coveredOpSet[op] = struct{}{}
+				}
 			} else {
 				unknownMappedSet[op] = struct{}{}
 			}
@@ -100,6 +154,9 @@ func main() {
 
 	unmappedCommands := make([]string, 0)
 	for _, cmd := range manifest {
+		if _, excluded := excludedCmdSet[cmd]; excluded {
+			continue
+		}
 		if _, ok := coveredCommands[cmd]; !ok {
 			unmappedCommands = append(unmappedCommands, cmd)
 		}
@@ -108,23 +165,39 @@ func main() {
 
 	coveredOps := stringKeys(coveredOpSet)
 	unknownMappedOps := stringKeys(unknownMappedSet)
-	uncoveredOps := make([]string, 0, len(ops))
-	for _, op := range ops {
+	uncoveredOps := make([]string, 0, len(allOpKeys))
+	uncoveredByDomain := map[string][]string{}
+	for _, op := range allOpKeys {
+		if _, excluded := excludedOpSet[op]; excluded {
+			continue
+		}
 		if _, ok := coveredOpSet[op]; !ok {
 			uncoveredOps = append(uncoveredOps, op)
+			domain := opDomain[op]
+			if domain == "" {
+				domain = "Unknown"
+			}
+			uncoveredByDomain[domain] = append(uncoveredByDomain[domain], op)
 		}
+	}
+	for domain := range uncoveredByDomain {
+		slices.Sort(uncoveredByDomain[domain])
 	}
 
 	rep := report{
-		OpenAPIOperations: len(ops),
-		ManifestCommands:  len(manifest),
-		CoveredOperations: coveredOps,
-		UncoveredOps:      uncoveredOps,
-		UnknownMappedOps:  unknownMappedOps,
-		CoveredCommands:   stringKeys(coveredCommands),
-		UnmappedCommands:  unmappedCommands,
-		UnknownCommands:   stringKeys(unknownCommandSet),
-		CommandMappings:   commandMapping,
+		OpenAPIOperations:    len(allOpKeys),
+		ExcludedOperations:   excludedOps,
+		InScopeOperations:    len(allOpKeys) - len(excludedOps),
+		ManifestCommands:     len(manifest),
+		ExcludedCommands:     excludedCmds,
+		CoveredOperations:    coveredOps,
+		UncoveredOps:         uncoveredOps,
+		UncoveredOpsByDomain: uncoveredByDomain,
+		UnknownMappedOps:     unknownMappedOps,
+		CoveredCommands:      stringKeys(coveredCommands),
+		UnmappedCommands:     unmappedCommands,
+		UnknownCommands:      stringKeys(unknownCommandSet),
+		CommandMappings:      commandMapping,
 	}
 
 	if err := os.MkdirAll(filepath.Dir(*jsonOut), 0o755); err != nil {
@@ -148,9 +221,13 @@ func main() {
 		fatalf("coverage regression: %d new uncovered operations, %d new unmapped commands",
 			len(diff.newUncoveredOps), len(diff.newUnmappedCommands))
 	}
+	if *failOnGaps && (len(rep.UncoveredOps) > 0 || len(rep.UnmappedCommands) > 0 || len(rep.UnknownMappedOps) > 0 || len(rep.UnknownCommands) > 0) {
+		fatalf("coverage gaps remain: uncovered=%d unmapped_commands=%d unknown_mapped_operations=%d unknown_mapped_commands=%d",
+			len(rep.UncoveredOps), len(rep.UnmappedCommands), len(rep.UnknownMappedOps), len(rep.UnknownCommands))
+	}
 }
 
-func loadOperations(path string) ([]string, error) {
+func loadOperations(path string) ([]operation, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -160,17 +237,30 @@ func loadOperations(path string) ([]string, error) {
 		return nil, err
 	}
 
-	ops := make([]string, 0)
+	ops := make([]operation, 0)
 	for p, verbs := range doc.Paths {
-		for method := range verbs {
+		for method, rawOp := range verbs {
 			method = strings.ToLower(method)
 			if _, ok := methods[method]; !ok {
 				continue
 			}
-			ops = append(ops, method+" "+p)
+
+			domain := "Unknown"
+			if opObj, ok := rawOp.(map[string]any); ok {
+				if tags, ok := opObj["tags"].([]any); ok && len(tags) > 0 {
+					if t, ok := tags[0].(string); ok && t != "" {
+						domain = t
+					}
+				}
+			}
+
+			ops = append(ops, operation{Key: method + " " + p, Domain: domain})
 		}
 	}
-	slices.Sort(ops)
+
+	slices.SortFunc(ops, func(a, b operation) int {
+		return strings.Compare(a.Key, b.Key)
+	})
 	return ops, nil
 }
 
@@ -187,6 +277,31 @@ func loadCommandMap(path string) (*commandMap, error) {
 		m.Commands = map[string][]string{}
 	}
 	return &m, nil
+}
+
+func loadExclusions(path string) (*exclusionPolicy, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return &exclusionPolicy{
+				Operations: map[string]string{},
+				Commands:   map[string]string{},
+			}, nil
+		}
+		return nil, err
+	}
+
+	var p exclusionPolicy
+	if err := yaml.Unmarshal(data, &p); err != nil {
+		return nil, err
+	}
+	if p.Operations == nil {
+		p.Operations = map[string]string{}
+	}
+	if p.Commands == nil {
+		p.Commands = map[string]string{}
+	}
+	return &p, nil
 }
 
 func loadManifest(path string) ([]string, error) {
@@ -220,16 +335,43 @@ func writeMarkdown(path string, rep report) error {
 	var b strings.Builder
 	b.WriteString("# Coverage Gaps Report\n\n")
 	b.WriteString(fmt.Sprintf("- OpenAPI operations: `%d`\n", rep.OpenAPIOperations))
+	b.WriteString(fmt.Sprintf("- Excluded operations: `%d`\n", len(rep.ExcludedOperations)))
+	b.WriteString(fmt.Sprintf("- In-scope operations: `%d`\n", rep.InScopeOperations))
 	b.WriteString(fmt.Sprintf("- Manifest commands: `%d`\n", rep.ManifestCommands))
+	b.WriteString(fmt.Sprintf("- Excluded commands: `%d`\n", len(rep.ExcludedCommands)))
 	b.WriteString(fmt.Sprintf("- Covered operations: `%d`\n", len(rep.CoveredOperations)))
 	b.WriteString(fmt.Sprintf("- Uncovered operations: `%d`\n", len(rep.UncoveredOps)))
 	b.WriteString(fmt.Sprintf("- Covered commands: `%d`\n", len(rep.CoveredCommands)))
 	b.WriteString(fmt.Sprintf("- Unmapped commands: `%d`\n", len(rep.UnmappedCommands)))
 	b.WriteString(fmt.Sprintf("- Unknown mapped commands: `%d`\n", len(rep.UnknownCommands)))
-	b.WriteString("\n## Unmapped Commands\n\n")
-	for _, cmd := range rep.UnmappedCommands {
-		b.WriteString("- `" + cmd + "`\n")
+
+	b.WriteString("\n## Uncovered Operations By Domain\n\n")
+	if len(rep.UncoveredOpsByDomain) == 0 {
+		b.WriteString("- None\n")
+	} else {
+		domains := make([]string, 0, len(rep.UncoveredOpsByDomain))
+		for domain := range rep.UncoveredOpsByDomain {
+			domains = append(domains, domain)
+		}
+		slices.Sort(domains)
+		for _, domain := range domains {
+			b.WriteString(fmt.Sprintf("### %s (%d)\n\n", domain, len(rep.UncoveredOpsByDomain[domain])))
+			for _, op := range rep.UncoveredOpsByDomain[domain] {
+				b.WriteString("- `" + op + "`\n")
+			}
+			b.WriteString("\n")
+		}
 	}
+
+	b.WriteString("## Unmapped Commands\n\n")
+	if len(rep.UnmappedCommands) == 0 {
+		b.WriteString("- None\n")
+	} else {
+		for _, cmd := range rep.UnmappedCommands {
+			b.WriteString("- `" + cmd + "`\n")
+		}
+	}
+
 	b.WriteString("\n## Unknown Mapped Operations\n\n")
 	if len(rep.UnknownMappedOps) == 0 {
 		b.WriteString("- None\n")
@@ -238,6 +380,7 @@ func writeMarkdown(path string, rep report) error {
 			b.WriteString("- `" + op + "`\n")
 		}
 	}
+
 	b.WriteString("\n## Unknown Mapped Commands\n\n")
 	if len(rep.UnknownCommands) == 0 {
 		b.WriteString("- None\n")
@@ -246,6 +389,7 @@ func writeMarkdown(path string, rep report) error {
 			b.WriteString("- `" + cmd + "`\n")
 		}
 	}
+
 	return os.WriteFile(path, []byte(b.String()), 0o644)
 }
 

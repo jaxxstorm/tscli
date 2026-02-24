@@ -1,7 +1,7 @@
 // cmd/tscli/set/device/invite/cli.go
 //
-// `tscli set device invite --id <invite-id> --status <resend|accept>`
-// Resend or accept a device invite via POST /api/v2/tailnet/{tailnet}/device-invites/{id}/{action}
+// `tscli set device invite --id <invite-id|invite-url-or-code> --status <resend|accept>`
+// Resend or accept a device invite.
 
 package invite
 
@@ -53,7 +53,12 @@ func Command() *cobra.Command {
 			}
 
 			action := validStatuses[strings.ToLower(status)]
-			endpoint := fmt.Sprintf("/tailnet/{tailnet}/device-invites/%s/%s", inviteID, action)
+			endpoint := fmt.Sprintf("/device-invites/%s/resend", inviteID)
+			var body any
+			if action == "accept" {
+				endpoint = "/device-invites/-/accept"
+				body = map[string]string{"invite": inviteID}
+			}
 
 			var response map[string]interface{}
 			if _, err := tscli.Do(
@@ -61,7 +66,7 @@ func Command() *cobra.Command {
 				client,
 				http.MethodPost,
 				endpoint,
-				nil,
+				body,
 				&response,
 			); err != nil {
 				return fmt.Errorf("failed to %s device invite: %w", action, err)
@@ -78,7 +83,7 @@ func Command() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&inviteID, "id", "", "Device invite ID")
+	cmd.Flags().StringVar(&inviteID, "id", "", "Invite ID, URL, or code (required)")
 	cmd.Flags().StringVar(&status, "status", "", "Action to perform: resend or accept")
 
 	_ = cmd.MarkFlagRequired("id")

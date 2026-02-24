@@ -30,7 +30,7 @@ func Command() *cobra.Command {
 				context.Background(),
 				client,
 				http.MethodDelete,
-				"/key/"+keyID,
+				"/tailnet/{tailnet}/keys/"+keyID,
 				nil,
 				nil,
 			); err != nil {
