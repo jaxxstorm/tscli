@@ -1,0 +1,43 @@
+schema: spec-driven
+
+context: |
+  Project: tscli
+  Purpose: Go-based CLI for interacting with the Tailscale HTTP API
+  Stack:
+  - Language: Go
+  - CLI framework: Cobra
+  - Configuration: Viper
+  - Styled terminal output: Lipgloss
+  Architecture:
+  - Commands live under cmd/
+  - Reusable API/domain logic lives under pkg/
+  Configuration precedence:
+  - Command flags
+  - Environment variables
+  - Config files (~/.tscli/.tscli.yaml or ./.tscli.yaml)
+  Product constraints:
+  - Keep commands script-friendly and predictable
+  - Preserve stable flag behavior when possible
+  - Support output formats consistently (pretty/human/json/yaml)
+
+rules:
+  proposal:
+    - Describe user-facing CLI impact first.
+    - Explicitly name affected command groups, flags, and config/env keys.
+    - Call out backward-compatibility implications for existing scripts.
+  specs:
+    - Write requirements in terms of observable CLI behavior.
+    - Include flag/env/config precedence behavior when relevant.
+    - Specify expected output and error behavior for each capability.
+    - Define any new configuration keys and their validation rules.
+    - all new features should include unit and integrations tests
+  design:
+    - Follow Go idioms and keep packages small and composable.
+    - Reuse existing Cobra command organization and shared pkg logic.
+    - Document configuration flow and validation through Viper.
+    - Include testing strategy (unit tests and command-level behavior tests).
+    - all new features should be implemented in a way that minimizes disruption to existing commands and scripts.
+  tasks:
+    - Break implementation into small, reviewable steps.
+    - Include tests and README/help text updates when behavior changes.
+    - Add compatibility checks for changed commands, flags, or output.
