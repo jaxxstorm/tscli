@@ -16,7 +16,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.25.x'
+          go-version: '1.26.x'
 
       - name: Setup gotestfmt
         uses: gotesttools/gotestfmt-action@v2
@@ -28,6 +28,9 @@ jobs:
         run: |
           set -o pipefail
           go test -json -v ./... 2>&1 | tee /tmp/gotest.log | gotestfmt
+
+      - name: Verify generated docs
+        run: make docs-check
 
       - name: Coverage gap report
         run: make coverage-gaps-check

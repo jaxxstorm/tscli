@@ -3,6 +3,44 @@
 `tscli` is a fast, single-binary CLI for the [Tailscale HTTP API](https://tailscale.com/api).
 From your terminal you can manage devices, users, auth keys, webhooks, posture integrations, tailnet-wide settings, and even hit raw endpoints when the SDK hasn’t caught up yet.
 
+## 🚀 Quick Start
+
+Authenticate and run your first command:
+
+```bash
+export TAILSCALE_API_KEY=tskey-xxx
+export TAILSCALE_TAILNET=example.com
+tscli list devices
+```
+
+Create a reusable, preauthorized ephemeral auth key:
+
+```bash
+tscli create key \
+  --type authkey \
+  --description "ci-runner" \
+  --expiry 24h \
+  --reusable \
+  --ephemeral \
+  --preauthorized
+```
+
+Set up a named profile for multi-tailnet use:
+
+```bash
+tscli config profiles upsert _lbr_sandbox --api-key tskey-abc123
+tscli config profiles set-active _lbr_sandbox
+tscli config profiles list
+```
+
+Explore available commands:
+
+```bash
+tscli --help
+tscli get --help
+tscli create key --help
+```
+
 ## ✨ Highlights
 
 | Area                     | What you can do                                                                                             |
@@ -17,11 +55,9 @@ From your terminal you can manage devices, users, auth keys, webhooks, posture i
 | **Invites**              | List / delete device- or user-invites                                                                       |
 | **Contacts**             | Get & update contact emails                                                                                 |
 | **Debug switch**         | `--debug` or `TSCLI_DEBUG=1` prints full HTTP requests / responses to stderr                                |
-| **Config precedence**    | _flags_ → _env_ → `~/.tscli/.tscli.yaml` (or local `./.tscli.yaml`)                                         |
+| **Config precedence**    | _flags_ → _env_ → `~/.tscli.yaml` (or local `./.tscli.yaml`)                                                 |
 
-## 🔧 Install
-
-### 🔧 Installation
+## 🔧 Installation
 
 #### macOS / Linux (Homebrew)
 
@@ -75,6 +111,29 @@ After any method, confirm:
 tscli --version
 ```
 
+## 📚 Documentation
+
+The primary docs live in the in-repo Docsify site under `docs/`.
+
+- Site entrypoint: `docs/index.html`
+- Start page: `docs/README.md`
+- Generated command docs: `docs/commands/`
+
+Most useful pages:
+
+- `docs/getting-started.md`: install, first command, and flags
+- `docs/configuration.md`: config keys, profiles, and precedence
+- `docs/authentication.md`: API-key auth methods and security guidance
+- `docs/command-reference.md`: generated command reference and workflow
+
+Docs workflows:
+
+```bash
+make docs-generate   # regenerate docs/commands from Cobra
+make docs-check      # fail if generated docs are stale/missing
+make docs-serve      # serve docs locally with docsify
+```
+
 ## ⚙️ Configuration
 
 | Option            | Flag / Env var                          | YAML key         | Default |
@@ -123,6 +182,22 @@ Canonical verb taxonomy:
 - `delete` removes resources
 
 Compatibility aliases remain available for legacy paths such as `get dns ns`, `set dns prefs`, `set dns splitdns`, and `get webhook webhook`.
+
+### Common workflows
+
+```bash
+# Get a single resource
+tscli get device --device node-abc123
+
+# List a collection
+tscli list users
+
+# Update settings
+tscli set settings --devices-approval=true
+
+# Delete a resource
+tscli delete key --key key-id
+```
 
 ### Global flags
 
@@ -273,6 +348,14 @@ Tests & lint:
 make test-unit
 make test-integration
 make test
+```
+
+Documentation workflows:
+
+```bash
+make docs-generate
+make docs-check
+make docs-serve
 ```
 
 Generate a CLI/OpenAPI coverage-gap report:
