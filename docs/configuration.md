@@ -2,7 +2,8 @@
 
 `tscli` reads configuration from:
 
-- `./.tscli.yaml`
+- `./.tscli.yaml` - your home directory
+- `.tscli.yaml` - the current directory you're in
 
 ## Supported keys
 
