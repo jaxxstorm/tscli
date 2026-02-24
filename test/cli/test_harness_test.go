@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -35,6 +36,14 @@ func executeCLIWithDefaults(t *testing.T, args []string, env map[string]string, 
 	t.Helper()
 
 	viper.Reset()
+
+	if _, ok := env["HOME"]; !ok {
+		home := t.TempDir()
+		t.Setenv("HOME", home)
+		cfgPath := filepath.Join(home, ".tscli.yaml")
+		_ = os.WriteFile(cfgPath, []byte("output: json\n"), 0o600)
+	}
+
 	if useDefaults {
 		t.Setenv("TAILSCALE_API_KEY", "tskey-test")
 		t.Setenv("TAILSCALE_TAILNET", "example.com")

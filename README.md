@@ -77,16 +77,35 @@ tscli --version
 
 ## ⚙️ Configuration
 
-| Option            | Flag / Env var                          | YAML key  | Default |
-| ----------------- | --------------------------------------- | --------- | ------- |
-| Tailscale API key | `--api-key`, `-k` / `TAILSCALE_API_KEY` | `api-key` | —       |
-| Tailnet name      | `--tailnet`, `-n` / `TAILSCALE_TAILNET` | `tailnet` | —       |
+| Option            | Flag / Env var                          | YAML key         | Default |
+| ----------------- | --------------------------------------- | ---------------- | ------- |
+| Tailscale API key | `--api-key`, `-k` / `TAILSCALE_API_KEY` | `api-key`        | —       |
+| Tailnet name      | `--tailnet`, `-n` / `TAILSCALE_TAILNET` | `tailnet`        | `-`     |
+| Active profile    | —                                       | `active-tailnet` | —       |
+| Profile list      | —                                       | `tailnets`       | `[]`    |
 
 ```yaml
-# ~/.tscli/.tscli.yaml
-api-key: tskey-abc123…
-tailnet: example.com
+# ~/.tscli.yaml
 output: pretty # other options are: human, json or yaml
+active-tailnet: _lbr_sandbox
+tailnets:
+  - name: _lbr_sandbox
+    api-key: tskey-abc123
+  - name: example.com
+    api-key: tskey-def456
+
+# Legacy keys are still supported for backward compatibility
+tailnet: example.com
+api-key: tskey-def456
+```
+
+Profile management commands:
+
+```bash
+tscli config profiles list
+tscli config profiles upsert _lbr_sandbox --api-key tskey-abc123
+tscli config profiles set-active _lbr_sandbox
+tscli config profiles delete example.com
 ```
 
 ## 🚀 Usage

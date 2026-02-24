@@ -28,7 +28,10 @@ func Init() {
 }
 
 func Save() error {
-	v := viper.GetViper()
+	return save(viper.GetViper())
+}
+
+func save(v *viper.Viper) error {
 	path := v.ConfigFileUsed()
 	if path == "" {
 		home, _ := os.UserHomeDir()
