@@ -16,15 +16,20 @@
 <body>
   <div id="app">Loading tscli docs...</div>
   <script>
+    const ghPagesPrefix = '/tscli/';
+    const currentPath = window.location.pathname || '/';
+    const basePath = currentPath.startsWith(ghPagesPrefix) ? ghPagesPrefix : '/';
+
     window.$docsify = {
       name: 'tscli',
       repo: 'https://github.com/jaxxstorm/tscli',
+      basePath,
       loadSidebar: true,
       subMaxLevel: 2,
       auto2top: true,
       homepage: 'README.md',
       alias: {
-        '/.*/_sidebar.md': '/_sidebar.md'
+        '/.*/_sidebar.md': `${basePath}_sidebar.md`
       }
     }
   </script>
