@@ -1,4 +1,4 @@
-.PHONY: test test-unit test-integration coverage-gaps coverage-gaps-check
+.PHONY: test test-unit test-integration coverage-gaps coverage-gaps-check docs-generate docs-check docs-serve
 
 test:
 	go test ./...
@@ -23,3 +23,12 @@ coverage-gaps-check:
 		--baseline coverage/coverage-gaps-baseline.json \
 		--fail-on-regression \
 		--fail-on-gaps
+
+docs-generate:
+	go run ./coverage/docsgen --mode generate
+
+docs-check:
+	go run ./coverage/docsgen --mode check
+
+docs-serve:
+	docsify serve docs

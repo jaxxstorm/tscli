@@ -29,6 +29,9 @@ jobs:
           set -o pipefail
           go test -json -v ./... 2>&1 | tee /tmp/gotest.log | gotestfmt
 
+      - name: Verify generated docs
+        run: make docs-check
+
       - name: Coverage gap report
         run: make coverage-gaps-check
 
