@@ -36,6 +36,7 @@ func getUserAgent() string {
 func New() (*tsapi.Client, error) {
 	tailnet := viper.GetString("tailnet")
 	apiKey := viper.GetString("api-key")
+	baseURL := viper.GetString("base-url")
 	if tailnet == "" {
 		return nil, fmt.Errorf("tailnet is required")
 	}
@@ -60,12 +61,22 @@ func New() (*tsapi.Client, error) {
 		Transport: transport,
 	}
 
-	return &tsapi.Client{
+	client := &tsapi.Client{
 		Tailnet:   tailnet,
 		APIKey:    apiKey,
 		UserAgent: userAgent,
 		HTTP:      httpClient,
-	}, nil
+	}
+
+	if baseURL != "" {
+		parsed, err := url.Parse(baseURL)
+		if err != nil {
+			return nil, fmt.Errorf("invalid base-url: %w", err)
+		}
+		client.BaseURL = parsed
+	}
+
+	return client, nil
 }
 
 // Do performs an HTTP call on top of an existing *tsapi.Client.  Useful for

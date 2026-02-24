@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 
 	tsapi "tailscale.com/client/tailscale/v2"
@@ -17,7 +18,7 @@ type dummyRT struct{ list, one []byte }
 func (d *dummyRT) RoundTrip(req *http.Request) (*http.Response, error) {
 	var body []byte
 	switch {
-	case req.URL.Path == "/api/v2/tailnet/devices":
+	case strings.Contains(req.URL.Path, "/devices"):
 		body = d.list
 	default:
 		body = d.one

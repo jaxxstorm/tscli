@@ -1,0 +1,6 @@
+source_url: https://api.tailscale.com/api/v2?outputOpenapiSchema=true
+fetched_at_utc: 2026-02-24T17:50:12Z
+openapi_version: 3.1.0
+api_version: v2
+sha256: 68bb192467b378eb2f6ea66781a226df126af389f94f3fcaa1b72d74eaa64d83
+schema_file: tailscale-v2-openapi.yaml
