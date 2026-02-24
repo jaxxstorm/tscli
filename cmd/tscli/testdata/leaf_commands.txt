@@ -1,0 +1,64 @@
+config get
+config set
+config show
+create invite device
+create invite user
+create key
+create posture-integration
+create token
+create webhook
+delete device invite
+delete device posture
+delete devices
+delete key
+delete posture-integration
+delete user invite
+delete webhook
+get contacts
+get device invite
+get device posture
+get dns ns
+get dns prefs
+get dns searchpaths
+get dns split
+get key
+get logs aws validate
+get logs stream
+get policy preview
+get policy validate
+get settings
+get user invite
+get webhook test
+get webhook webhook
+list devices
+list invites device
+list invites user
+list keys
+list logs config
+list logs network
+list nameservers
+list posture-integrations
+list routes
+list users
+list webhooks
+set contact
+set device authorization
+set device expiry
+set device invite
+set device ip
+set device key
+set device name
+set device posture
+set device routes
+set device tags
+set dns ns
+set dns prefs
+set dns searchpaths
+set dns splitdns
+set policy
+set posture-integration
+set settings
+set user access
+set user invite
+set user role
+version

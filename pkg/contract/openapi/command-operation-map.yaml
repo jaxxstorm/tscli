@@ -1,0 +1,11 @@
+commands:
+  get device:
+    - get /device/{deviceId}
+  list devices:
+    - get /tailnet/{tailnet}/devices
+  create key:
+    - post /tailnet/{tailnet}/keys
+  set device name:
+    - post /device/{deviceId}/name
+  delete device:
+    - delete /device/{deviceId}

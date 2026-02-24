@@ -218,7 +218,36 @@ TAILSCALE_API_KEY=tskey-… TAILSCALE_TAILNET=example.com go run ./cmd/tscli lis
 Tests & lint:
 
 ```bash
-go test ./...
+make test-unit
+make test-integration
+make test
+```
+
+Generate a CLI/OpenAPI coverage-gap report:
+
+```bash
+make coverage-gaps
+# writes:
+#   coverage/coverage-gaps.json
+#   coverage/coverage-gaps.md
+```
+
+### OpenAPI snapshot workflow
+
+`tscli` pins a Tailscale OpenAPI snapshot for deterministic contract checks:
+
+- Schema: `pkg/contract/openapi/tailscale-v2-openapi.yaml`
+- Metadata: `pkg/contract/openapi/snapshot-metadata.yaml`
+- Command mapping: `pkg/contract/openapi/command-operation-map.yaml`
+
+Refresh the snapshot (requires network access), then re-run tests and report generation:
+
+```bash
+curl -sS "https://api.tailscale.com/api/v2?outputOpenapiSchema=true" \
+  > pkg/contract/openapi/tailscale-v2-openapi.yaml
+shasum -a 256 pkg/contract/openapi/tailscale-v2-openapi.yaml
+make test
+make coverage-gaps
 ```
 
 ## 📄 License
