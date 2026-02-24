@@ -243,6 +243,15 @@ tscli set device authorization --device node-abc123 --approve
 # Rotate an auth-key that expires in 30 days
 tscli create key --description "CI" --expiry 720h | jq .key
 
+# Create a reusable preauthorized ephemeral auth-key
+tscli create key \
+  --type authkey \
+  --description "short-lived runner key" \
+  --expiry 24h \
+  --reusable \
+  --ephemeral \
+  --preauthorized
+
 # Create Slack webhook for device deletions
 tscli create webhook \
   --url https://hooks.slack.com/services/T000/B000/XXXXX \
