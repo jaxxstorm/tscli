@@ -1,4 +1,8 @@
 config get
+config profiles delete
+config profiles list
+config profiles set-active
+config profiles upsert
 config set
 config show
 create invite device
