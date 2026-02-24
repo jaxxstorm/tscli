@@ -59,7 +59,7 @@ func Configure() *cobra.Command {
 
 	root.PersistentFlags().StringVarP(&apiKey, "api-key", "k", "", "Tailscale API key")
 	root.PersistentFlags().StringVarP(&outputType, "output", "o", "", fmt.Sprintf("Output: %v", output.Available()))
-	root.PersistentFlags().StringVarP(&tailnet, "tailnet", "n", v.GetString("tailnet"), "Tailscale tailnet")
+	root.PersistentFlags().StringVarP(&tailnet, "tailnet", "n", "-", "Tailscale tailnet")
 
 	v.SetDefault("output", "json")
 

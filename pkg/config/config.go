@@ -25,6 +25,7 @@ func Init() {
 
 	_ = v.ReadInConfig() // ignore “not found”
 	v.SetDefault("output", "json")
+	v.SetDefault("tailnet", "-")
 }
 
 func Save() error {
