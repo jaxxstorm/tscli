@@ -1,7 +1,7 @@
 // cmd/tscli/delete/user/cli.go
 //
 // `tscli delete user --user <id-or-email>`
-// Removes a user from the tailnet via DELETE /api/v2/user/{id}
+// Removes a user from the tailnet via POST /api/v2/users/{id}/delete
 
 package user
 
@@ -35,7 +35,7 @@ func Command() *cobra.Command {
 				context.Background(),
 				client,
 				http.MethodPost,
-				"/user/"+userID,
+				"/users/"+userID+"/delete",
 				nil,
 				nil,
 			); err != nil {

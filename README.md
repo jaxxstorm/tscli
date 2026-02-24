@@ -95,6 +95,16 @@ output: pretty # other options are: human, json or yaml
 tscli <noun> <verb> [flags]
 ```
 
+Canonical verb taxonomy:
+
+- `create` creates resources
+- `set` updates or mutates resources
+- `get` fetches a single resource
+- `list` fetches collections
+- `delete` removes resources
+
+Compatibility aliases remain available for legacy paths such as `get dns ns`, `set dns prefs`, `set dns splitdns`, and `get webhook webhook`.
+
 ### Global flags
 
 ```
@@ -121,6 +131,7 @@ tscli <noun> <verb> [flags]
 | Get posture attributes           | :white_check_mark: | `tscli get device posture --device <device>` |
 | Set custom posture attributes    | :white_check_mark: | `tscli set device posture --device <device> --key custom:x --value <v>` |
 | Delete custom posture attributes | :white_check_mark: | `tscli delete device posture --device <device> --key custom:x` |
+| Batch update posture attributes  | :white_check_mark: | `tscli set device attributes --file <payload.json>` |
 | **Policy File**                  |        |                 |
 | Get policy file                  | :white_check_mark: | `tscli get policy [--json]` |
 | Set policy file                  | :white_check_mark: | `tscli set policy --file <acl.hujson>` |
@@ -131,29 +142,34 @@ tscli <noun> <verb> [flags]
 | Create auth-key / OAuth client   | :white_check_mark: | `tscli create key --type authkey --oauthclient …` |
 | Get key                          | :white_check_mark: | `tscli get key --key <id>` |
 | Delete / revoke key              | :white_check_mark: | `tscli delete key --key <key-id>` |
+| Update key metadata/scopes       | :white_check_mark: | `tscli set key --key <id> --body '{"description":"new"}'` |
 | Create a token                   | :white_check_mark: | `tscli create token --client-id <oauth-client-id> --client-secret <oauth-client-secret>` |
 | **DNS**                          |        |                 |
 | List DNS nameservers             | :white_check_mark: | `tscli list nameservers` |
-| Set DNS nameservers              | :white_check_mark: | `tscli set nameservers --nameserver <ip> …` |
+| Get DNS configuration            | :white_check_mark: | `tscli get dns configuration` |
+| Set DNS configuration            | :white_check_mark: | `tscli set dns configuration --body '<json>'` |
+| Set DNS nameservers              | :white_check_mark: | `tscli set dns nameservers --nameserver <ip> …` |
 | Get DNS preferences              | :white_check_mark: | `tscli get dns preferences` |
 | Set DNS preferences              | :white_check_mark: | `tscli set dns preferences --magicdns=<bool>` |
-| List DNS search paths            | :white_check_mark: | `tscli list dns searchpaths` |
+| List DNS search paths            | :white_check_mark: | `tscli get dns searchpaths` |
 | Set DNS search paths             | :white_check_mark: | `tscli set dns searchpaths --searchpath <domain> …` |
-| Get split-DNS map                | :white_check_mark: | `tscli get dns split` |
-| Update split-DNS                 | :white_check_mark: | `tscli set dns split --domain <d>=<ip,ip> …` |
-| Set split-DNS                    | :white_check_mark: | `tscli set dns split --replace --domain <d>=<ip>` |
+| Get split-DNS map                | :white_check_mark: | `tscli get dns split-dns` |
+| Update split-DNS                 | :white_check_mark: | `tscli set dns split-dns --entry <d>=<ip> …` |
+| Set split-DNS                    | :white_check_mark: | `tscli set dns split-dns --replace --entry <d>=<ip>` |
 | **Logging**                      |        |                 |
 | List configuration audit logs    | :white_check_mark: | `tscli list logs config --start <t> [--end <t>]` |
 | List network flow logs           | :white_check_mark: | `tscli list logs network --start <t> [--end <t>]` |
 | Get log-streaming status         | :white_check_mark: | `tscli get logs stream --type {configuration|network} --status` |
 | Get log-streaming configuration  | :white_check_mark: | `tscli get logs stream --type {configuration|network}` |
-| Create or get AWS external id.   | :white_check_mark: | `tscli get logs aws [--reusable]` |
+| Set log-streaming configuration  | :white_check_mark: | `tscli set logs stream --type {configuration|network} --body '<json>'` |
+| Disable log-streaming            | :white_check_mark: | `tscli delete logs stream --type {configuration|network}` |
+| Create or get AWS external id.   | :white_check_mark: | `tscli get logs aws` |
 | Validate external ID integraton with IAM role trust policy | :white_check_mark: | `tscli get logs aws validate --external-id <id> --role-arn <arn>` |
 | **Users**                        |        |                 |
 | List users                       | :white_check_mark: | `tscli list users [--type …] [--role …]` |
 | Get a user                       | :white_check_mark: | `tscli get user --user <id>` |
-| Update user role                 | :white_check_mark: | `tscli set user-role --user <id> --role <role>` |
-| Approve / suspend / restore user | :white_check_mark: | `tscli set user-access --user <id> --approve\|--suspend\|--restore` |
+| Update user role                 | :white_check_mark: | `tscli set user role --user <id> --role <role>` |
+| Approve / suspend / restore user | :white_check_mark: | `tscli set user access --user <id> --approve\|--suspend\|--restore` |
 | Delete a user                    | :white_check_mark: | `tscli delete user --user <id>` |
 | **User Invites**                 |        |                 |
 | List user invites                | :white_check_mark: | `tscli list invites user [--state …]` |
@@ -180,11 +196,19 @@ tscli <noun> <verb> [flags]
 | **Webhooks**                     |        |                 |
 | List webhooks                    | :white_check_mark: | `tscli list webhooks` |
 | Create webhook                   | :white_check_mark: | `tscli create webhook --url <endpoint> …` |
-| Get webhook                      | :white_check_mark: | `tscli get webhook --webhook <id>` |
-| Update webhook                   | :white_check_mark: | `tscli set webhook --webhook <id> …` |
-| Delete webhook                   | :white_check_mark: | `tscli delete webhook --webhook <id>` |
-| Test webhook                     | :white_check_mark: | `tscli get webhook test` |
-| Rotate webhook secret            | :white_check_mark: | `tscli rotate webhook --webhook <id>` |
+| Get webhook                      | :white_check_mark: | `tscli get webhook --id <id>` |
+| Update webhook subscriptions     | :white_check_mark: | `tscli set webhook --id <id> --subscription <event>` |
+| Delete webhook                   | :white_check_mark: | `tscli delete webhook --id <id>` |
+| Test webhook                     | :white_check_mark: | `tscli set webhook test --id <id>` |
+| Rotate webhook secret            | :white_check_mark: | `tscli set webhook --id <id> --rotate` |
+| **Services**                     |        |                 |
+| List services                    | :white_check_mark: | `tscli list services` |
+| Get service                      | :white_check_mark: | `tscli get service --service <name>` |
+| List service devices             | :white_check_mark: | `tscli list services devices --service <name>` |
+| Get service approval             | :white_check_mark: | `tscli get service approval --service <name> --device <id>` |
+| Update service                   | :white_check_mark: | `tscli set service --service <name> --body '<json>'` |
+| Set service approval             | :white_check_mark: | `tscli set service approval --service <name> --device <id> --approved=true` |
+| Delete service                   | :white_check_mark: | `tscli delete service --service <name>` |
 | **Tailnet Settings**             |        |                 |
 | Get tailnet settings             | :white_check_mark: | `tscli get settings` |
 | Update tailnet settings          | :white_check_mark: | `tscli set settings --devices-approval …` |
@@ -195,7 +219,7 @@ tscli <noun> <verb> [flags]
 
 ```bash
 # Approve a waiting device
-tscli device authorize --device node-abc123 --approve
+tscli set device authorization --device node-abc123 --approve
 
 # Rotate an auth-key that expires in 30 days
 tscli create key --description "CI" --expiry 720h | jq .key

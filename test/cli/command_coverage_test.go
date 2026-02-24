@@ -1,4 +1,4 @@
-package main
+package cli_test
 
 import (
 	"os"
@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jaxxstorm/tscli/internal/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +17,7 @@ func TestLeafCommandManifest(t *testing.T) {
 		t.Fatalf("load manifest: %v", err)
 	}
 
-	actual := leafCommands(configureCLI())
+	actual := leafCommands(cli.Configure())
 
 	var missing []string
 	for _, cmd := range expected {
@@ -62,11 +63,11 @@ func leafCommands(root *cobra.Command) []string {
 	var walk func(*cobra.Command, []string)
 
 	walk = func(cmd *cobra.Command, path []string) {
-		children := nonBuiltinChildren(cmd)
-		if len(children) == 0 {
+		if commandInvocable(cmd) {
 			out = append(out, strings.Join(path, " "))
-			return
 		}
+
+		children := nonBuiltinChildren(cmd)
 		for _, child := range children {
 			walk(child, append(path, child.Name()))
 		}
@@ -80,10 +81,17 @@ func leafCommands(root *cobra.Command) []string {
 	return out
 }
 
+func commandInvocable(cmd *cobra.Command) bool {
+	return cmd.Run != nil || cmd.RunE != nil
+}
+
 func nonBuiltinChildren(cmd *cobra.Command) []*cobra.Command {
 	children := cmd.Commands()
 	filtered := make([]*cobra.Command, 0, len(children))
 	for _, child := range children {
+		if child.Hidden {
+			continue
+		}
 		switch child.Name() {
 		case "help", "completion":
 			continue

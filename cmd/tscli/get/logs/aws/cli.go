@@ -30,27 +30,16 @@ This external ID is required when setting up AWS log streaming integration.`,
 				return fmt.Errorf("failed to create client: %w", err)
 			}
 
-			// Try the most likely endpoint for AWS external ID
 			var response map[string]interface{}
 			if _, err := tscli.Do(
 				context.Background(),
 				client,
-				http.MethodGet,
-				"/tailnet/{tailnet}/logging/aws/external-id",
+				http.MethodPost,
+				"/tailnet/{tailnet}/aws-external-id",
 				nil,
 				&response,
 			); err != nil {
-				// If that doesn't work, try a POST to create it
-				if _, err := tscli.Do(
-					context.Background(),
-					client,
-					http.MethodPost,
-					"/tailnet/{tailnet}/logging/aws/external-id",
-					nil,
-					&response,
-				); err != nil {
-					return fmt.Errorf("failed to get or create AWS external ID: %w", err)
-				}
+				return fmt.Errorf("failed to get or create AWS external ID: %w", err)
 			}
 
 			out, err := json.MarshalIndent(response, "", "  ")

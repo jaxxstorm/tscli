@@ -8,6 +8,7 @@ import (
 	"github.com/jaxxstorm/tscli/cmd/tscli/list/logs"
 	"github.com/jaxxstorm/tscli/cmd/tscli/list/nameservers"
 	"github.com/jaxxstorm/tscli/cmd/tscli/list/routes"
+	"github.com/jaxxstorm/tscli/cmd/tscli/list/services"
 	"github.com/jaxxstorm/tscli/cmd/tscli/list/users"
 	"github.com/jaxxstorm/tscli/cmd/tscli/list/webhooks"
 	"github.com/spf13/cobra"
@@ -29,6 +30,7 @@ func Command() *cobra.Command {
 	command.AddCommand(postureintegration.Command())
 	command.AddCommand(nameservers.Command())
 	command.AddCommand(logs.Command())
+	command.AddCommand(services.Command())
 
 	return command
 }

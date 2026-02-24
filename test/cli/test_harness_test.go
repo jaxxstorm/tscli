@@ -1,4 +1,4 @@
-package main
+package cli_test
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/jaxxstorm/tscli/internal/cli"
 	"github.com/spf13/viper"
 )
 
@@ -44,7 +45,7 @@ func executeCLIWithDefaults(t *testing.T, args []string, env map[string]string, 
 		t.Setenv(k, v)
 	}
 
-	cmd := configureCLI()
+	cmd := cli.Configure()
 	cmd.SetArgs(args)
 
 	stdout, stderr, err := captureStdIO(func() error {

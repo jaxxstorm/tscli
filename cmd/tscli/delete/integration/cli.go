@@ -37,7 +37,7 @@ func Command() *cobra.Command {
 				context.Background(),
 				client,
 				http.MethodDelete,
-				"/tailnet/{tailnet}/posture/integrations/"+id,
+				"/posture/integrations/"+id,
 				nil,
 				&raw,
 			); err != nil {

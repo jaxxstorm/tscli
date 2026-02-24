@@ -1,11 +1,172 @@
 commands:
-  get device:
-    - get /device/{deviceId}
-  list devices:
-    - get /tailnet/{tailnet}/devices
+  create invite device:
+    - post /device/{deviceId}/device-invites
+  create invite user:
+    - post /tailnet/{tailnet}/user-invites
   create key:
     - post /tailnet/{tailnet}/keys
-  set device name:
-    - post /device/{deviceId}/name
+  create posture-integration:
+    - post /tailnet/{tailnet}/posture/integrations
+  create webhook:
+    - post /tailnet/{tailnet}/webhooks
+
   delete device:
     - delete /device/{deviceId}
+  delete device invite:
+    - delete /device-invites/{deviceInviteId}
+  delete device posture:
+    - delete /device/{deviceId}/attributes/{attributeKey}
+  delete devices:
+    - delete /device/{deviceId}
+  delete key:
+    - delete /tailnet/{tailnet}/keys/{keyId}
+  delete logs stream:
+    - delete /tailnet/{tailnet}/logging/{logType}/stream
+  delete posture-integration:
+    - delete /posture/integrations/{id}
+  delete service:
+    - delete /tailnet/{tailnet}/services/{serviceName}
+  delete user:
+    - post /users/{userId}/delete
+  delete user invite:
+    - delete /user-invites/{userInviteId}
+  delete webhook:
+    - delete /webhooks/{endpointId}
+
+  get contacts:
+    - get /tailnet/{tailnet}/contacts
+  get device:
+    - get /device/{deviceId}
+  get device invite:
+    - get /device-invites/{deviceInviteId}
+  get device posture:
+    - get /device/{deviceId}/attributes
+  get dns configuration:
+    - get /tailnet/{tailnet}/dns/configuration
+  get dns nameservers:
+    - get /tailnet/{tailnet}/dns/nameservers
+  get dns preferences:
+    - get /tailnet/{tailnet}/dns/preferences
+  get dns searchpaths:
+    - get /tailnet/{tailnet}/dns/searchpaths
+  get dns split-dns:
+    - get /tailnet/{tailnet}/dns/split-dns
+  get key:
+    - get /tailnet/{tailnet}/keys/{keyId}
+  get logs aws:
+    - post /tailnet/{tailnet}/aws-external-id
+  get logs aws validate:
+    - post /tailnet/{tailnet}/aws-external-id/{id}/validate-aws-trust-policy
+  get logs stream:
+    - get /tailnet/{tailnet}/logging/{logType}/stream
+    - get /tailnet/{tailnet}/logging/{logType}/stream/status
+  get policy:
+    - get /tailnet/{tailnet}/acl
+  get policy preview:
+    - post /tailnet/{tailnet}/acl/preview
+  get policy validate:
+    - post /tailnet/{tailnet}/acl/validate
+  get posture-integration:
+    - get /posture/integrations/{id}
+  get service:
+    - get /tailnet/{tailnet}/services/{serviceName}
+  get service approval:
+    - get /tailnet/{tailnet}/services/{serviceName}/device/{deviceId}/approved
+  get settings:
+    - get /tailnet/{tailnet}/settings
+  get user:
+    - get /users/{userId}
+  get user invite:
+    - get /user-invites/{userInviteId}
+  get webhook:
+    - get /webhooks/{endpointId}
+
+  list devices:
+    - get /tailnet/{tailnet}/devices
+  list invites device:
+    - get /device/{deviceId}/device-invites
+  list invites user:
+    - get /tailnet/{tailnet}/user-invites
+  list keys:
+    - get /tailnet/{tailnet}/keys
+  list logs config:
+    - get /tailnet/{tailnet}/logging/configuration
+  list logs network:
+    - get /tailnet/{tailnet}/logging/network
+  list nameservers:
+    - get /tailnet/{tailnet}/dns/nameservers
+  list posture-integrations:
+    - get /tailnet/{tailnet}/posture/integrations
+  list routes:
+    - get /device/{deviceId}/routes
+  list services:
+    - get /tailnet/{tailnet}/services
+  list services devices:
+    - get /tailnet/{tailnet}/services/{serviceName}/devices
+  list users:
+    - get /tailnet/{tailnet}/users
+  list webhooks:
+    - get /tailnet/{tailnet}/webhooks
+
+  set contact:
+    - patch /tailnet/{tailnet}/contacts/{contactType}
+    - post /tailnet/{tailnet}/contacts/{contactType}/resend-verification-email
+  set device attributes:
+    - patch /tailnet/{tailnet}/device-attributes
+  set device authorization:
+    - post /device/{deviceId}/authorized
+  set device expiry:
+    - post /device/{deviceId}/expire
+  set device invite:
+    - post /device-invites/{deviceInviteId}/resend
+    - post /device-invites/-/accept
+  set device ip:
+    - post /device/{deviceId}/ip
+  set device key:
+    - post /device/{deviceId}/key
+  set device name:
+    - post /device/{deviceId}/name
+  set device posture:
+    - post /device/{deviceId}/attributes/{attributeKey}
+  set device routes:
+    - post /device/{deviceId}/routes
+  set device tags:
+    - post /device/{deviceId}/tags
+  set dns configuration:
+    - post /tailnet/{tailnet}/dns/configuration
+  set dns nameservers:
+    - post /tailnet/{tailnet}/dns/nameservers
+  set dns preferences:
+    - post /tailnet/{tailnet}/dns/preferences
+  set dns searchpaths:
+    - post /tailnet/{tailnet}/dns/searchpaths
+  set dns split-dns:
+    - patch /tailnet/{tailnet}/dns/split-dns
+    - put /tailnet/{tailnet}/dns/split-dns
+  set key:
+    - put /tailnet/{tailnet}/keys/{keyId}
+  set logs stream:
+    - put /tailnet/{tailnet}/logging/{logType}/stream
+  set policy:
+    - post /tailnet/{tailnet}/acl
+  set posture-integration:
+    - patch /posture/integrations/{id}
+  set service:
+    - put /tailnet/{tailnet}/services/{serviceName}
+  set service approval:
+    - post /tailnet/{tailnet}/services/{serviceName}/device/{deviceId}/approved
+  set settings:
+    - patch /tailnet/{tailnet}/settings
+  set user access:
+    - post /users/{userId}/approve
+    - post /users/{userId}/suspend
+    - post /users/{userId}/restore
+  set user invite:
+    - post /user-invites/{userInviteId}/resend
+  set user role:
+    - post /users/{userId}/role
+  set webhook:
+    - patch /webhooks/{endpointId}
+    - post /webhooks/{endpointId}/rotate
+  set webhook test:
+    - post /webhooks/{endpointId}/test

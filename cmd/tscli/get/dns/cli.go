@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"github.com/jaxxstorm/tscli/cmd/tscli/get/dns/configuration"
 	"github.com/jaxxstorm/tscli/cmd/tscli/get/dns/nameservers"
 	"github.com/jaxxstorm/tscli/cmd/tscli/get/dns/preferences"
 	"github.com/jaxxstorm/tscli/cmd/tscli/get/dns/searchpaths"
@@ -15,6 +16,7 @@ func Command() *cobra.Command {
 		Long:  "Get information about DNS settings.",
 	}
 
+	command.AddCommand(configuration.Command())
 	command.AddCommand(nameservers.Command())
 	command.AddCommand(preferences.Command())
 	command.AddCommand(searchpaths.Command())
