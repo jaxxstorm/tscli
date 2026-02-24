@@ -2,3 +2,5 @@ dist/
 
 # Environment variables
 .env
+
+.gocache

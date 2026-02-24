@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -81,6 +82,8 @@ func (g generator) check() error {
 		fmt.Printf("command docs are up to date in %s\n", filepath.Clean(g.outDir))
 		return nil
 	}
+	fmt.Fprintf(os.Stderr, "Detailed diff between %s and generated output:\n", g.outDir)
+	showDiff(g.outDir, renderedDir)
 
 	fmt.Fprintf(os.Stderr, "command docs check failed (%d differences):\n", len(diffs))
 	for _, diff := range diffs {
@@ -312,6 +315,20 @@ func copyTree(from string, to string) error {
 		}
 		return os.WriteFile(target, b, 0o644)
 	})
+}
+
+func showDiff(actualDir, expectedDir string) {
+	cmd := exec.Command("diff", "-ru", actualDir, expectedDir)
+	cmd.Stdout = os.Stderr
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		// diff returns exit 1 when differences exist; ignore that
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
+			return
+		}
+		fmt.Fprintf(os.Stderr, "diff failed: %v\n", err)
+	}
 }
 
 func fatalf(format string, args ...any) {
