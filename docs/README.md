@@ -21,3 +21,5 @@ Contributors:
 
 - [Command Reference](command-reference.md) for generation/check workflow
 - [Configuration](configuration.md) for precedence and profile behavior
+
+For how the documentation site is built and regenerated, see [`docs/docs.md`](/Users/lbriggs/src/github/jaxxstorm/tscli/docs/docs.md).

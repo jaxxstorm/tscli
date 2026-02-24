@@ -5,14 +5,5 @@ The command reference pages are generated from Cobra metadata in the `tscli` com
 - Generated index: [commands/README.md](commands/README.md)
 - Generated sidebar: [commands/_sidebar.md](commands/_sidebar.md)
 
-Regenerate command docs:
+For reproduction steps and verification, see [`docs/docs.md`](docs.md).
 
-```bash
-make docs-generate
-```
-
-Verify command docs are current:
-
-```bash
-make docs-check
-```
