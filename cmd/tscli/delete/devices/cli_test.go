@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -48,7 +49,7 @@ func TestDeleteDevicesFlagValidation(t *testing.T) {
 			Hostname: "test-device",
 			Name:     "test-device.tail123.ts.net",
 			OS:       "linux",
-			LastSeen: tsapi.Time{Time: oldTime},
+			LastSeen: &tsapi.Time{Time: oldTime},
 		},
 	}
 
@@ -87,6 +88,17 @@ func TestDeleteDevicesFlagValidation(t *testing.T) {
 			cmd.SetArgs(tc.args)
 			cmd.SetOut(io.Discard)
 			cmd.SetErr(io.Discard)
+
+			origStdout := os.Stdout
+			origStderr := os.Stderr
+			nullFile, _ := os.OpenFile(os.DevNull, os.O_WRONLY, 0)
+			os.Stdout = nullFile
+			os.Stderr = nullFile
+			defer func() {
+				os.Stdout = origStdout
+				os.Stderr = origStderr
+				_ = nullFile.Close()
+			}()
 
 			err := cmd.ExecuteContext(context.Background())
 			if tc.wantErr && err == nil {
@@ -161,17 +173,17 @@ func TestDeleteDisconnectedDevicesFilters(t *testing.T) {
 		{
 			ID:       "prod-1",
 			Name:     "prod-server",
-			LastSeen: tsapi.Time{Time: oldTime},
+			LastSeen: &tsapi.Time{Time: oldTime},
 		},
 		{
 			ID:       "dev-1",
 			Name:     "dev-machine",
-			LastSeen: tsapi.Time{Time: oldTime},
+			LastSeen: &tsapi.Time{Time: oldTime},
 		},
 		{
 			ID:       "test-1",
 			Name:     "qa-device",
-			LastSeen: tsapi.Time{Time: oldTime},
+			LastSeen: &tsapi.Time{Time: oldTime},
 		},
 	}
 
