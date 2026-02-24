@@ -25,6 +25,9 @@ Examples:
   # Delete devices not seen for 24 hours, excluding specific patterns
   tscli delete devices --last-seen 24h --exclude server --exclude prod --confirm
 
+  # Delete only devices matching specific patterns
+  tscli delete devices --last-seen 24h --include dev --include test --confirm
+
   # Actually delete devices (requires --confirm)
   tscli delete devices --last-seen 15m --confirm
 
@@ -40,6 +43,7 @@ tscli delete devices [flags]
       --ephemeral            Only delete ephemeral devices
       --exclude strings      Device names to exclude by partial match (can be specified multiple times)
   -h, --help                 help for devices
+      --include strings      Device names to include by partial match (can be specified multiple times)
       --last-seen duration   Duration to consider a device disconnected (e.g., 15m, 1h, 24h) (default 15m0s)
 ```
 
