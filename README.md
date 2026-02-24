@@ -207,6 +207,10 @@ tscli create webhook \
   --subscription nodeDeleted
 ```
 
+### Device deletion filters
+
+`tscli delete devices` accepts `--include` and `--exclude` partial-match filters. Use `--include pattern` (repeatable) to limit deletions to names containing the pattern, or `--exclude pattern` to skip matching devices. These flags are mutually exclusive so that a single filter axis controls the selection.
+
 ## 🛠 Development
 
 ```bash

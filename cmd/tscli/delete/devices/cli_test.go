@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -27,6 +28,14 @@ func (d *dummyRT) RoundTrip(req *http.Request) (*http.Response, error) {
 	}, nil
 }
 
+func newStubClientWithDevices(devices []tsapi.Device) (*tsapi.Client, error) {
+	base, _ := url.Parse("http://fake")
+	return &tsapi.Client{
+		BaseURL: base,
+		HTTP:    &http.Client{Transport: &dummyRT{devices: devices}},
+	}, nil
+}
+
 func TestDeleteDevicesFlagValidation(t *testing.T) {
 	t.Parallel()
 
@@ -44,11 +53,7 @@ func TestDeleteDevicesFlagValidation(t *testing.T) {
 	}
 
 	stubClient := func() (*tsapi.Client, error) {
-		base, _ := url.Parse("http://fake")
-		return &tsapi.Client{
-			BaseURL: base,
-			HTTP:    &http.Client{Transport: &dummyRT{devices: fakeDevices}},
-		}, nil
+		return newStubClientWithDevices(fakeDevices)
 	}
 
 	cases := []struct {
@@ -143,6 +148,88 @@ func TestIsExcluded(t *testing.T) {
 			got := isExcluded(tc.deviceName, tc.excludeList)
 			if got != tc.want {
 				t.Fatalf("isExcluded(%q, %v) = %v, want %v", tc.deviceName, tc.excludeList, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestDeleteDisconnectedDevicesFilters(t *testing.T) {
+	t.Parallel()
+
+	oldTime := time.Now().Add(-2 * time.Hour)
+	devices := []tsapi.Device{
+		{
+			ID:       "prod-1",
+			Name:     "prod-server",
+			LastSeen: tsapi.Time{Time: oldTime},
+		},
+		{
+			ID:       "dev-1",
+			Name:     "dev-machine",
+			LastSeen: tsapi.Time{Time: oldTime},
+		},
+		{
+			ID:       "test-1",
+			Name:     "qa-device",
+			LastSeen: tsapi.Time{Time: oldTime},
+		},
+	}
+
+	client, err := newStubClientWithDevices(devices)
+	if err != nil {
+		t.Fatalf("create stub client: %v", err)
+	}
+
+	cases := []struct {
+		name                   string
+		include                []string
+		exclude                []string
+		expectedTotal          int
+		expectSkippedContains  string
+		expectedSkippedDetails int
+	}{
+		{
+			name:                   "include filter",
+			include:                []string{"dev"},
+			expectedTotal:          2,
+			expectSkippedContains:  "prod-server (not included)",
+			expectedSkippedDetails: 1,
+		},
+		{
+			name:                   "exclude filter",
+			exclude:                []string{"prod"},
+			expectedTotal:          2,
+			expectSkippedContains:  "prod-server (excluded)",
+			expectedSkippedDetails: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			summary, err := deleteDisconnectedDevices(
+				context.Background(),
+				client,
+				time.Minute,
+				tc.exclude,
+				tc.include,
+				false,
+				false,
+			)
+			if err != nil {
+				t.Fatalf("deleteDisconnectedDevices: %v", err)
+			}
+			if summary.Total != tc.expectedTotal {
+				t.Fatalf("total=%d, want %d", summary.Total, tc.expectedTotal)
+			}
+			if len(summary.SkippedDevices) != tc.expectedSkippedDetails {
+				t.Fatalf("skippedDevices=%d, want %d", len(summary.SkippedDevices), tc.expectedSkippedDetails)
+			}
+			if tc.expectSkippedContains != "" {
+				joined := strings.Join(summary.SkippedDevices, " | ")
+				if !strings.Contains(joined, tc.expectSkippedContains) {
+					t.Fatalf("skippedDevices missing %q: %s", tc.expectSkippedContains, joined)
+				}
 			}
 		})
 	}
