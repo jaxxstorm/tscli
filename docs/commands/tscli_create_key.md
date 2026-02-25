@@ -2,11 +2,11 @@
 
 ## tscli create key
 
-Create an auth-key or OAuth client
+Create an auth-key, OAuth client, or federated credential
 
 ### Synopsis
 
-Create Tailscale auth-keys or OAuth clients.
+Create Tailscale auth-keys, OAuth clients, or federated identities.
 Auth-key capability flags (--reusable, --ephemeral, --preauthorized) apply only to --type authkey.
 
 ```
@@ -18,20 +18,25 @@ tscli create key [flags]
 ```
   tscli create key --type authkey --description "CI runner" --expiry 720h --reusable --preauthorized
   tscli create key --type oauthclient --scope users:read --scope devices:read
+  tscli create key --type federated --scope users:read --issuer https://example.com --subject example-*
 ```
 
 ### Options
 
 ```
+      --audience string      Federated only: audience hint
+      --claim strings        Federated only: custom claim rule key=value (repeatable)
       --description string   Short description (≤50 chars)
       --ephemeral            Auth-key only: mark devices authenticated with this key as ephemeral
       --expiry duration      Expiry duration (e.g. 720h) for auth-keys
   -h, --help                 help for key
+      --issuer string        Federated only: issuer HTTPS URL
       --preauthorized        Auth-key only: create key in preauthorized state
       --reusable             Auth-key only: allow the key to be used multiple times
-      --scope strings        OAuth scopes (repeatable)
-      --tags strings         Allowed tags (repeatable) for OAuth client
-      --type string          Key type: authkey|oauthclient (default "authkey")
+      --scope strings        OAuth/federated scopes (repeatable)
+      --subject string       Federated only: subject pattern
+      --tags strings         Allowed tags (repeatable) for OAuth client and federated credentials
+      --type string          Key type: authkey|oauthclient|federated (default "authkey")
 ```
 
 ### Options inherited from parent commands
