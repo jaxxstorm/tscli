@@ -9,7 +9,7 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
-	github.com/tailscale/hujson v0.0.0-20250605163823-992244df8c5a
+	github.com/tailscale/hujson v0.0.0-20260302212456-ecc657c15afd
 	golang.org/x/oauth2 v0.31.0
 	golang.org/x/term v0.33.0
 	gopkg.in/yaml.v3 v3.0.1
