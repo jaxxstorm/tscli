@@ -3489,10 +3489,10 @@ paths:
     parameters:
       - $ref: '#/components/parameters/tailnet'
     get:
-      summary: List all services
+      summary: List all Services
       description: |
-        List all services configured for the tailnet. This includes all services in the "advertised"
-        tab of the services page in the Tailscale admin console.
+        List all Services configured for the tailnet. This includes all Services in the "advertised"
+        tab of the Services page in the Tailscale admin console.
 
         OAuth Scope: `services:read`.
       operationId: listServices
@@ -3524,9 +3524,9 @@ paths:
       - $ref: '#/components/parameters/tailnet'
       - $ref: '#/components/parameters/serviceName'
     get:
-      summary: Get a service
+      summary: Get a Service
       description: |
-        Retrieve the details for the specified service.
+        Retrieve the details for the specified Service.
 
         OAuth Scope: `services:read`.
       operationId: getService
@@ -3542,7 +3542,7 @@ paths:
         '400':
           $ref: '#/components/responses/400'
         '403':
-          description: Access to the service is forbidden.
+          description: Access to the Service is forbidden.
           $ref: '#/components/responses/403'
         '404':
           description: Service not found.
@@ -3552,20 +3552,20 @@ paths:
         '504':
           $ref: '#/components/responses/504'
     put:
-      summary: Update a service
+      summary: Update a Service
       description: |
-        Update or create the specified service. If the service does not exist, it will
-        create a service with the provided details. When creating a new service, the name
+        Update or create the specified Service. If the Service does not exist, it will
+        create a Service with the provided details. When creating a new Service, the name
         in the request body must match the serviceName path parameter. When updating an existing
-        service, the path parameter is the current name of the service, and the name in the request
-        body can be used to rename the service.
+        Service, the path parameter is the current name of the Service, and the name in the request
+        body can be used to rename the Service.
 
         OAuth Scope: `services`.
       operationId: updateService
       tags:
         - Services
       requestBody:
-        description: The service details to create or update.
+        description: The Service details to create or update.
         required: true
         content:
           application/json:
@@ -3581,7 +3581,7 @@ paths:
         '400':
           $ref: '#/components/responses/400'
         '403':
-          description: Access to modify the service is forbidden.
+          description: Access to modify the Service is forbidden.
           $ref: '#/components/responses/403'
         '404':
           description: Service not found.
@@ -3591,9 +3591,9 @@ paths:
         '504':
           $ref: '#/components/responses/504'
     delete:
-      summary: Delete a service
+      summary: Delete a Service
       description: |
-        Delete the specified service from the tailnet.
+        Delete the specified Service from the tailnet.
 
         OAuth Scope: `services`.
       operationId: deleteService
@@ -3605,7 +3605,7 @@ paths:
         '400':
           $ref: '#/components/responses/400'
         '403':
-          description: Access to delete the service is forbidden.
+          description: Access to delete the Service is forbidden.
           $ref: '#/components/responses/403'
         '404':
           description: Service not found.
@@ -3619,9 +3619,9 @@ paths:
       - $ref: '#/components/parameters/tailnet'
       - $ref: '#/components/parameters/serviceName'
     get:
-      summary: List devices hosting a service
+      summary: List devices hosting a Service
       description: |
-        List all devices that are hosting the specified service.
+        List all devices that are hosting the specified Service.
 
         OAuth Scope: `services`, `devices:core`.
       operationId: listServiceHosts
@@ -3640,10 +3640,10 @@ paths:
                     items:
                       $ref: '#/components/schemas/ServiceHostInfo'
         '400':
-          description: Invalid parameters or no permission to services.
+          description: Invalid parameters or no permission to Services.
           $ref: '#/components/responses/400'
         '403':
-          description: Access to the service or devices is forbidden.
+          description: Access to the Service or devices is forbidden.
           $ref: '#/components/responses/403'
         '404':
           description: Service not found.
@@ -3658,9 +3658,9 @@ paths:
       - $ref: '#/components/parameters/serviceName'
       - $ref: '#/components/parameters/deviceId'
     get:
-      summary: Get approval status of service on a device
+      summary: Get approval status of Service on a device
       description: |
-        Retrieve the approval status of the specified service on a specific device.
+        Retrieve the approval status of the specified Service on a specific device.
 
         OAuth Scope: `services`, `devices:core`.
       operationId: getServiceDeviceApproval
@@ -3674,10 +3674,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/VIPServiceApproval'
         '400':
-          description: Invalid parameters or no permission to services.
+          description: Invalid parameters or no permission to Services.
           $ref: '#/components/responses/400'
         '403':
-          description: Access to the service or device is forbidden.
+          description: Access to the Service or device is forbidden.
           $ref: '#/components/responses/403'
         '404':
           description: Service or device not found.
@@ -3687,16 +3687,16 @@ paths:
         '504':
           $ref: '#/components/responses/504'
     post:
-      summary: Update approval status of service on a device
+      summary: Update approval status of Service on a device
       description: |
-        Update the approval status of the specified service on a specific device.
+        Update the approval status of the specified Service on a specific device.
 
         OAuth Scope: `services`, `devices:core`.
       operationId: updateServiceDeviceApproval
       tags:
         - Services
       requestBody:
-        description: The approval status to set for the service on the device.
+        description: The approval status to set for the Service on the device.
         required: true
         content:
           application/json:
@@ -3706,7 +3706,7 @@ paths:
                 approved:
                   type: boolean
                   description: |
-                    Indicates whether to approve or revoke approval for the service on the device.
+                    Indicates whether to approve or revoke approval for the Service on the device.
                   example: true
       responses:
         '200':
@@ -3716,10 +3716,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/VIPServiceApproval'
         '400':
-          description: Invalid parameters or no permission to services.
+          description: Invalid parameters or no permission to Services.
           $ref: '#/components/responses/400'
         '403':
-          description: Access to the service or device is forbidden.
+          description: Access to the Service or device is forbidden.
           $ref: '#/components/responses/403'
         '404':
           description: Service or device not found.
@@ -4092,8 +4092,8 @@ components:
       in: path
       name: serviceName
       description: |
-        The unique name of a service. The name should be prefixed with "svc:". It should be unique
-        across the tailnet, so names already used for a machine cannot be reused for a service.
+        The unique name of a Service. The name should be prefixed with "svc:". It should be unique
+        across the tailnet, so names already used for a machine cannot be reused for a Service.
       required: true
       example: svc:example
       schema:
@@ -5939,18 +5939,22 @@ components:
     VIPServiceInfo:
       type: object
       description: |
-        An information summary for a service.
+        An information summary for a Service.
 
-        Each service has a unique name within the tailnet, one IPv4 and one IPv6 address, optional comment, list of ports, 
+        Each Service has a unique name within the tailnet, one IPv4 and one IPv6 address, optional comment, list of ports, 
         and optional tags.
       properties:
         name:
           type: string
-          description: The unique name of the service.
+          description: The unique name of the Service.
           example: svc:example
         addrs:
           type: array
-          description: The IP addresses assigned to the service.
+          description: |
+            The IP addresses assigned to the Service.
+
+            - For new Services: either unset or a single IPv4 to assign the Service.
+            - For existing Services: an IPv4 and an IPv6. The IPv4 can be updated, but not the IPv6.
           items:
             type: string
           example:
@@ -5958,12 +5962,12 @@ components:
             - fd7a:115c:a1e0::3456:3cb4
         comment:
           type: string
-          description: An optional comment for the service.
-          example: Example service
+          description: An optional comment for the Service.
+          example: Example Service
         ports:
           type: array
           description: |
-            A list of protocol:port pairs to be exposed by the service.
+            A list of protocol:port pairs to be exposed by the Service.
 
             The only supported protocol is "tcp" at this time. "do-not-validate" can be used to skip validation.
           items:
@@ -5973,7 +5977,7 @@ components:
             - tcp:443
         tags:
           type: array
-          description: A list of optional tags associated with the service.
+          description: A list of optional tags associated with the Service.
           items:
             type: string
           example:
@@ -5981,7 +5985,7 @@ components:
     ServiceHostInfo:
       type: object
       description: |
-        An information summary for a device hosting a service.
+        An information summary for a device hosting a Service.
       properties:
         stableNodeID:
           type: string
@@ -5991,28 +5995,28 @@ components:
         approvalLevel:
           type: string
           description: |
-            The approval level of the device hosting the service.
+            The approval level of the device hosting the Service.
           enum:
             - not-approved
             - approved:auto
             - approved:manual
         configured:
           type: string
-          description: The configuration status of the device hosting the service.
+          description: The configuration status of the device hosting the Service.
           example: ready
     VIPServiceApproval:
       type: object
       description: |
-        The approval status of a service on a specific device.
+        The approval status of a Service on a specific device.
       properties:
         approved:
           type: boolean
           description: |
-            Indicates whether the service is approved on the device.
+            Indicates whether the Service is approved on the device.
         autoApproved:
           type: boolean
           description: |
-            Indicates whether the service was auto-approved by an auto-approver.
+            Indicates whether the Service was auto-approved by an auto-approver.
   responses:
     '400':
       description: Bad request.

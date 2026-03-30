@@ -371,6 +371,25 @@ make coverage-gaps
 #   coverage/coverage-gaps.md
 ```
 
+Refresh the pinned OpenAPI snapshot and metadata from the latest upstream schema:
+
+```bash
+make openapi-refresh
+# writes:
+#   pkg/contract/openapi/tailscale-v2-openapi.yaml
+#   pkg/contract/openapi/snapshot-metadata.yaml
+```
+
+Refresh the snapshot and immediately run strict coverage-gap validation against it:
+
+```bash
+make coverage-gaps-latest
+# writes:
+#   coverage/coverage-gaps.json
+#   coverage/coverage-gaps.md
+#   coverage/coverage-gaps-diff.md
+```
+
 ### OpenAPI snapshot workflow
 
 `tscli` pins a Tailscale OpenAPI snapshot for deterministic contract checks:
@@ -379,15 +398,29 @@ make coverage-gaps
 - Metadata: `pkg/contract/openapi/snapshot-metadata.yaml`
 - Command mapping: `pkg/contract/openapi/command-operation-map.yaml`
 
-Refresh the snapshot (requires network access), then re-run tests and report generation:
+Refresh the snapshot (requires network access) with the supported make target:
 
 ```bash
-curl -sS "https://api.tailscale.com/api/v2?outputOpenapiSchema=true" \
-  > pkg/contract/openapi/tailscale-v2-openapi.yaml
-shasum -a 256 pkg/contract/openapi/tailscale-v2-openapi.yaml
-make test
-make coverage-gaps
+make openapi-refresh
 ```
+
+The refresh target records source URL, fetch timestamp, schema version data, path count, operation count, and SHA-256 digest in `pkg/contract/openapi/snapshot-metadata.yaml`.
+
+To validate parity against the refreshed snapshot in one step:
+
+```bash
+make coverage-gaps-latest
+```
+
+Review these generated artifacts after a refresh:
+
+- `pkg/contract/openapi/tailscale-v2-openapi.yaml`
+- `pkg/contract/openapi/snapshot-metadata.yaml`
+- `coverage/coverage-gaps.json`
+- `coverage/coverage-gaps.md`
+- `coverage/coverage-gaps-diff.md`
+
+If the refreshed upstream schema introduces new uncovered operations or unmapped command regressions, update the command-operation map, refresh the baseline artifacts as needed, and follow up with implementation work to close the newly exposed gaps.
 
 ## 📄 License
 
