@@ -2,11 +2,17 @@ package apimock
 
 func Device() map[string]any {
 	return map[string]any{
-		"id":        "123",
-		"nodeId":    "node-123",
-		"hostname":  "device-one",
-		"os":        "linux",
-		"addresses": []string{"100.64.0.1"},
+		"id":       "123",
+		"nodeId":   "node-123",
+		"hostname": "device-one",
+		"os":       "linux",
+		"addresses": []string{
+			"100.64.0.1",
+		},
+		"postureIdentity": map[string]any{
+			"serialNumbers": []string{"CP74LFQJXM"},
+			"disabled":      false,
+		},
 	}
 }
 

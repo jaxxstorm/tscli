@@ -124,6 +124,25 @@ func TestListDevicesAllFlag(t *testing.T) {
 	assertOutputForMode(t, "json", res.stdout)
 }
 
+func TestListDevicesPropertyCoverage(t *testing.T) {
+	mock := apimock.New(t)
+	mock.AddJSON(http.MethodGet, "/devices", http.StatusOK, apimock.DeviceList())
+
+	res := executeCLI(t, []string{"list", "devices", "--all"}, map[string]string{
+		"TSCLI_BASE_URL": mock.URL(),
+		"TSCLI_OUTPUT":   "json",
+	})
+	if res.err != nil {
+		t.Fatalf("unexpected error: %v", res.err)
+	}
+	if !strings.Contains(res.stdout, `"postureIdentity"`) {
+		t.Fatalf("expected postureIdentity in JSON output, got %s", res.stdout)
+	}
+	if !strings.Contains(res.stdout, `"serialNumbers"`) {
+		t.Fatalf("expected postureIdentity.serialNumbers in JSON output, got %s", res.stdout)
+	}
+}
+
 func TestCreateKeyValidation(t *testing.T) {
 	res := executeCLI(t, []string{"create", "key", "--type", "oauthclient"}, nil)
 	if res.err == nil {

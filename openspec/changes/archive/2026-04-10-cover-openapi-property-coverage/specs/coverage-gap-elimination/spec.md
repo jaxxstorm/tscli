@@ -1,8 +1,5 @@
-# coverage-gap-elimination Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change fill-api-coverage-gaps. Update Purpose after archive.
-## Requirements
 ### Requirement: Coverage-gap reports enforce parity completion
 Coverage-gap reporting SHALL enforce zero missing in-scope OpenAPI operations, zero unknown mapped commands, and zero uncovered in-scope request/response properties before the change is considered complete.
 

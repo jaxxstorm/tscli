@@ -1,0 +1,28 @@
+operations:
+  "get /tailnet/{tailnet}/devices":
+    response:
+      - type: coverage.device_list_response
+        evidence:
+          model: tailscale.com/client/tailscale/v2.Device
+          tests:
+            - TestListDevicesPropertyCoverage
+  "get /tailnet/{tailnet}/settings":
+    response:
+      - type: tsapi.TailnetSettings
+        evidence:
+          model: tailscale.com/client/tailscale/v2.TailnetSettings
+          tests:
+            - TestPropertyCoverageManifestIncludesRepresentativeOperations
+  "patch /tailnet/{tailnet}/settings":
+    request:
+      - type: tsapi.UpdateTailnetSettingsRequest
+        evidence:
+          model: tailscale.com/client/tailscale/v2.UpdateTailnetSettingsRequest
+          command: set settings
+  "post /tailnet/{tailnet}/keys":
+    request:
+      - type: coverage.create_key_operation_request
+        evidence:
+          model: tscli create-key operation request union
+          tests:
+            - TestCreateKeyAuthkeyTagsPayload

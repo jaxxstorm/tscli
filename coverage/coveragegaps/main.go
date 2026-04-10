@@ -21,7 +21,8 @@ var methods = map[string]struct{}{
 }
 
 type openapiDoc struct {
-	Paths map[string]map[string]any `yaml:"paths"`
+	Paths      map[string]map[string]any `yaml:"paths"`
+	Components openapiComponents         `yaml:"components"`
 }
 
 type commandMap struct {
@@ -52,6 +53,12 @@ type report struct {
 	UnmappedCommands     []string            `json:"unmapped_commands"`
 	UnknownCommands      []string            `json:"unknown_mapped_commands"`
 	CommandMappings      map[string]string   `json:"command_mappings"`
+	CoveredProperties    []string            `json:"covered_properties"`
+	ExcludedProperties   []string            `json:"excluded_properties"`
+	UncoveredProperties  []string            `json:"uncovered_properties"`
+	CoveredPropsByOp     map[string][]string `json:"covered_properties_by_operation"`
+	ExcludedPropsByOp    map[string][]string `json:"excluded_properties_by_operation"`
+	UncoveredPropsByOp   map[string][]string `json:"uncovered_properties_by_operation"`
 }
 
 func main() {
@@ -63,6 +70,8 @@ func main() {
 	mdOut := flag.String("md-out", "coverage/coverage-gaps.md", "Path for markdown report")
 	baselinePath := flag.String("baseline", "coverage/coverage-gaps-baseline.json", "Path to baseline report for diffing")
 	diffOut := flag.String("diff-out", "coverage/coverage-gaps-diff.md", "Path for baseline diff report")
+	propertyCoveragePath := flag.String("property-coverage", "coverage/property-coverage.yaml", "Path to property coverage manifest")
+	propertyExclusionsPath := flag.String("property-exclusions", "coverage/property-exclusions.yaml", "Path to property exclusion policy")
 	failOnRegression := flag.Bool("fail-on-regression", false, "Exit non-zero if uncovered operations or unmapped commands regress vs baseline")
 	failOnGaps := flag.Bool("fail-on-gaps", false, "Exit non-zero if uncovered in-scope operations, unmapped commands, unknown mapped operations, or unknown mapped commands remain")
 	flag.Parse()
@@ -82,6 +91,14 @@ func main() {
 	exclusions, err := loadExclusions(*exclusionsPath)
 	if err != nil {
 		fatalf("load exclusions: %v", err)
+	}
+	propertyCoverage, err := loadPropertyCoverage(*propertyCoveragePath)
+	if err != nil {
+		fatalf("load property coverage: %v", err)
+	}
+	propertyExclusions, err := loadPropertyExclusions(*propertyExclusionsPath)
+	if err != nil {
+		fatalf("load property exclusions: %v", err)
 	}
 
 	opSet := make(map[string]struct{}, len(ops))
@@ -199,6 +216,16 @@ func main() {
 		UnknownCommands:      stringKeys(unknownCommandSet),
 		CommandMappings:      commandMapping,
 	}
+	propertyInventory, err := derivePropertyCoverage(&opsDoc, mapping, excludedOpSet, propertyCoverage, propertyExclusions)
+	if err != nil {
+		fatalf("derive property coverage: %v", err)
+	}
+	rep.CoveredProperties = propertyInventory.Covered
+	rep.ExcludedProperties = propertyInventory.Excluded
+	rep.UncoveredProperties = propertyInventory.Uncovered
+	rep.CoveredPropsByOp = propertyInventory.CoveredByOperation
+	rep.ExcludedPropsByOp = propertyInventory.ExcludedByOperation
+	rep.UncoveredPropsByOp = propertyInventory.UncoveredByOperation
 
 	if err := os.MkdirAll(filepath.Dir(*jsonOut), 0o755); err != nil {
 		fatalf("create output directory: %v", err)
@@ -217,13 +244,13 @@ func main() {
 	if err := os.WriteFile(*diffOut, []byte(diff.markdown), 0o644); err != nil {
 		fatalf("write diff report: %v", err)
 	}
-	if *failOnRegression && (len(diff.newUncoveredOps) > 0 || len(diff.newUnmappedCommands) > 0) {
-		fatalf("coverage regression: %d new uncovered operations, %d new unmapped commands",
-			len(diff.newUncoveredOps), len(diff.newUnmappedCommands))
+	if *failOnRegression && (len(diff.newUncoveredOps) > 0 || len(diff.newUnmappedCommands) > 0 || len(diff.newUncoveredProperties) > 0) {
+		fatalf("coverage regression: %d new uncovered operations, %d new uncovered properties, %d new unmapped commands",
+			len(diff.newUncoveredOps), len(diff.newUncoveredProperties), len(diff.newUnmappedCommands))
 	}
-	if *failOnGaps && (len(rep.UncoveredOps) > 0 || len(rep.UnmappedCommands) > 0 || len(rep.UnknownMappedOps) > 0 || len(rep.UnknownCommands) > 0) {
-		fatalf("coverage gaps remain: uncovered=%d unmapped_commands=%d unknown_mapped_operations=%d unknown_mapped_commands=%d",
-			len(rep.UncoveredOps), len(rep.UnmappedCommands), len(rep.UnknownMappedOps), len(rep.UnknownCommands))
+	if *failOnGaps && (len(rep.UncoveredOps) > 0 || len(rep.UncoveredProperties) > 0 || len(rep.UnmappedCommands) > 0 || len(rep.UnknownMappedOps) > 0 || len(rep.UnknownCommands) > 0) {
+		fatalf("coverage gaps remain: uncovered_operations=%d uncovered_properties=%d unmapped_commands=%d unknown_mapped_operations=%d unknown_mapped_commands=%d",
+			len(rep.UncoveredOps), len(rep.UncoveredProperties), len(rep.UnmappedCommands), len(rep.UnknownMappedOps), len(rep.UnknownCommands))
 	}
 }
 
@@ -236,6 +263,10 @@ func loadOperations(path string) ([]operation, error) {
 	if err := yaml.Unmarshal(data, &doc); err != nil {
 		return nil, err
 	}
+	if doc.Paths == nil {
+		doc.Paths = map[string]map[string]any{}
+	}
+	opsDoc = doc
 
 	ops := make([]operation, 0)
 	for p, verbs := range doc.Paths {
@@ -263,6 +294,8 @@ func loadOperations(path string) ([]operation, error) {
 	})
 	return ops, nil
 }
+
+var opsDoc openapiDoc
 
 func loadCommandMap(path string) (*commandMap, error) {
 	data, err := os.ReadFile(path)
@@ -344,6 +377,9 @@ func writeMarkdown(path string, rep report) error {
 	b.WriteString(fmt.Sprintf("- Covered commands: `%d`\n", len(rep.CoveredCommands)))
 	b.WriteString(fmt.Sprintf("- Unmapped commands: `%d`\n", len(rep.UnmappedCommands)))
 	b.WriteString(fmt.Sprintf("- Unknown mapped commands: `%d`\n", len(rep.UnknownCommands)))
+	b.WriteString(fmt.Sprintf("- Covered properties: `%d`\n", len(rep.CoveredProperties)))
+	b.WriteString(fmt.Sprintf("- Excluded properties: `%d`\n", len(rep.ExcludedProperties)))
+	b.WriteString(fmt.Sprintf("- Uncovered properties: `%d`\n", len(rep.UncoveredProperties)))
 
 	b.WriteString("\n## Uncovered Operations By Domain\n\n")
 	if len(rep.UncoveredOpsByDomain) == 0 {
@@ -390,13 +426,18 @@ func writeMarkdown(path string, rep report) error {
 		}
 	}
 
+	writePropertySection(&b, "\n## Covered Properties By Operation\n\n", rep.CoveredPropsByOp)
+	writePropertySection(&b, "\n## Excluded Properties By Operation\n\n", rep.ExcludedPropsByOp)
+	writePropertySection(&b, "\n## Uncovered Properties By Operation\n\n", rep.UncoveredPropsByOp)
+
 	return os.WriteFile(path, []byte(b.String()), 0o644)
 }
 
 type baselineDiff struct {
-	newUncoveredOps     []string
-	newUnmappedCommands []string
-	markdown            string
+	newUncoveredOps        []string
+	newUncoveredProperties []string
+	newUnmappedCommands    []string
+	markdown               string
 }
 
 func diffAgainstBaseline(path string, current report) (baselineDiff, error) {
@@ -421,6 +462,10 @@ func diffAgainstBaseline(path string, current report) (baselineDiff, error) {
 	for _, cmd := range base.UnmappedCommands {
 		baseUnmapped[cmd] = struct{}{}
 	}
+	baseUncoveredProps := make(map[string]struct{}, len(base.UncoveredProperties))
+	for _, prop := range base.UncoveredProperties {
+		baseUncoveredProps[prop] = struct{}{}
+	}
 
 	var newOps []string
 	for _, op := range current.UncoveredOps {
@@ -434,12 +479,20 @@ func diffAgainstBaseline(path string, current report) (baselineDiff, error) {
 			newUnmapped = append(newUnmapped, cmd)
 		}
 	}
+	var newProps []string
+	for _, prop := range current.UncoveredProperties {
+		if _, ok := baseUncoveredProps[prop]; !ok {
+			newProps = append(newProps, prop)
+		}
+	}
 	slices.Sort(newOps)
+	slices.Sort(newProps)
 	slices.Sort(newUnmapped)
 
 	var b strings.Builder
 	b.WriteString("# Coverage Baseline Diff\n\n")
 	b.WriteString(fmt.Sprintf("- New uncovered operations: `%d`\n", len(newOps)))
+	b.WriteString(fmt.Sprintf("- New uncovered properties: `%d`\n", len(newProps)))
 	b.WriteString(fmt.Sprintf("- New unmapped commands: `%d`\n", len(newUnmapped)))
 	b.WriteString("\n## New Uncovered Operations\n\n")
 	if len(newOps) == 0 {
@@ -447,6 +500,14 @@ func diffAgainstBaseline(path string, current report) (baselineDiff, error) {
 	} else {
 		for _, op := range newOps {
 			b.WriteString("- `" + op + "`\n")
+		}
+	}
+	b.WriteString("\n## New Uncovered Properties\n\n")
+	if len(newProps) == 0 {
+		b.WriteString("- None\n")
+	} else {
+		for _, prop := range newProps {
+			b.WriteString("- `" + prop + "`\n")
 		}
 	}
 	b.WriteString("\n## New Unmapped Commands\n\n")
@@ -459,10 +520,31 @@ func diffAgainstBaseline(path string, current report) (baselineDiff, error) {
 	}
 
 	return baselineDiff{
-		newUncoveredOps:     newOps,
-		newUnmappedCommands: newUnmapped,
-		markdown:            b.String(),
+		newUncoveredOps:        newOps,
+		newUncoveredProperties: newProps,
+		newUnmappedCommands:    newUnmapped,
+		markdown:               b.String(),
 	}, nil
+}
+
+func writePropertySection(b *strings.Builder, heading string, grouped map[string][]string) {
+	b.WriteString(heading)
+	if len(grouped) == 0 {
+		b.WriteString("- None\n")
+		return
+	}
+	keys := make([]string, 0, len(grouped))
+	for key := range grouped {
+		keys = append(keys, key)
+	}
+	slices.Sort(keys)
+	for _, key := range keys {
+		b.WriteString("### " + key + "\n\n")
+		for _, prop := range grouped[key] {
+			b.WriteString("- `" + prop + "`\n")
+		}
+		b.WriteString("\n")
+	}
 }
 
 func stringKeys(m map[string]struct{}) []string {

@@ -1,0 +1,8 @@
+default:
+  request: "Property coverage for this mapped request body has not been audited yet."
+  response: "Property coverage for this mapped response body has not been audited yet."
+
+properties:
+  "get /tailnet/{tailnet}/devices response devices[].advertisedRoutes": "Current SDK response model uses a mismatched JSON tag for advertised routes; tracked separately from property coverage rollout."
+  "get /tailnet/{tailnet}/devices response devices[].advertisedRoutes[]": "Current SDK response model uses a mismatched JSON tag for advertised routes; tracked separately from property coverage rollout."
+  "get /tailnet/{tailnet}/devices response devices[].multipleConnections": "Current SDK response model does not expose this schema field yet; track separately before making property coverage strict."

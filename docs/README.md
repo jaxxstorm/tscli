@@ -27,7 +27,7 @@ Contributors:
 
 Use `tscli create key --type federated` to provision federated identities that mirror an OIDC issuer/subject pair. Provide `--scope` plus `--issuer` and `--subject`, and optionally `--audience`, `--tags`, and `--claim` to express custom claim rules.
 
-After adding new key types or CLI verbs, keep the OpenAPI coverage mappings in sync by editing `pkg/contract/openapi/command-operation-map.yaml` and rerunning `make coverage-gaps-check`. The generated waterfall is saved in `coverage/coverage-gaps.*` so CI can detect regressions.
+After adding new key types, CLI verbs, or request/response fields, keep the OpenAPI coverage data in sync by editing `pkg/contract/openapi/command-operation-map.yaml`, `coverage/property-coverage.yaml`, and `coverage/property-exclusions.yaml`, then rerun `make coverage-gaps-check`. The generated waterfall is saved in `coverage/coverage-gaps.*` so CI can detect both endpoint-level and property-level regressions.
 
 For references to the updated create-key documentation, see the generated [tscli create key](commands/tscli_create_key.md) command page.
 

@@ -12,6 +12,8 @@ COVERAGE_JSON ?= $(COVERAGE_DIR)/coverage-gaps.json
 COVERAGE_MD ?= $(COVERAGE_DIR)/coverage-gaps.md
 COVERAGE_DIFF ?= $(COVERAGE_DIR)/coverage-gaps-diff.md
 COVERAGE_BASELINE ?= $(COVERAGE_DIR)/coverage-gaps-baseline.json
+COVERAGE_PROPERTY_MANIFEST ?= $(COVERAGE_DIR)/property-coverage.yaml
+COVERAGE_PROPERTY_EXCLUSIONS ?= $(COVERAGE_DIR)/property-exclusions.yaml
 GOCACHE ?= $(CURDIR)/.gocache
 GO_RUN = GOCACHE=$(GOCACHE) go run
 GO_TEST = GOCACHE=$(GOCACHE) go test
@@ -37,6 +39,8 @@ coverage-gaps:
 		--openapi $(OPENAPI_SCHEMA) \
 		--mapping $(OPENAPI_COMMAND_MAP) \
 		--manifest $(LEAF_COMMANDS) \
+		--property-coverage $(COVERAGE_PROPERTY_MANIFEST) \
+		--property-exclusions $(COVERAGE_PROPERTY_EXCLUSIONS) \
 		--json-out $(COVERAGE_JSON) \
 		--md-out $(COVERAGE_MD)
 
@@ -45,6 +49,8 @@ coverage-gaps-check:
 		--openapi $(OPENAPI_SCHEMA) \
 		--mapping $(OPENAPI_COMMAND_MAP) \
 		--manifest $(LEAF_COMMANDS) \
+		--property-coverage $(COVERAGE_PROPERTY_MANIFEST) \
+		--property-exclusions $(COVERAGE_PROPERTY_EXCLUSIONS) \
 		--json-out $(COVERAGE_JSON) \
 		--md-out $(COVERAGE_MD) \
 		--diff-out $(COVERAGE_DIFF) \
