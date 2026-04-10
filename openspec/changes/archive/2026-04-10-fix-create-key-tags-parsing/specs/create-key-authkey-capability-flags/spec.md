@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Auth-key capability flags are exposed on create key
 The CLI SHALL provide `--reusable`, `--ephemeral`, `--preauthorized`, and `--tags` flags for `tscli create key` when creating auth keys.
@@ -29,13 +29,6 @@ For auth-key creation, each capability flag SHALL be mapped to the corresponding
 #### Scenario: Preauthorized value is mapped
 - **WHEN** `--preauthorized` is set for an auth-key create request
 - **THEN** the request payload SHALL include the preauthorized capability value
-
-### Requirement: OAuth client flow remains unchanged
-Adding auth-key capability flags SHALL NOT change existing oauthclient validation and request behavior.
-
-#### Scenario: OAuth client create path is preserved
-- **WHEN** a user runs `tscli create key --type oauthclient` with required oauth flags
-- **THEN** the command SHALL execute the same oauthclient validations and request flow as before
 
 ### Requirement: Capability flag behavior is covered by automated tests
 The project SHALL include integration tests for create-key capability flags, including tag serialization regression coverage, and compatibility tests for unchanged behavior.
