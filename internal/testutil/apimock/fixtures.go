@@ -4,11 +4,14 @@ func Device() map[string]any {
 	return map[string]any{
 		"id":       "123",
 		"nodeId":   "node-123",
+		"name":     "device-one",
 		"hostname": "device-one",
 		"os":       "linux",
 		"addresses": []string{
 			"100.64.0.1",
 		},
+		"lastSeen":    "2000-01-01T00:00:00Z",
+		"isEphemeral": false,
 		"advertisedRoutes": []string{
 			"10.0.0.0/24",
 		},
@@ -54,6 +57,212 @@ func KeyResponse() map[string]any {
 		"id":          "k123",
 		"description": "test",
 		"key":         "tskey-auth-abc123",
+	}
+}
+
+func KeyList() []map[string]any {
+	return []map[string]any{KeyResponse()}
+}
+
+func KeyListEnvelope() map[string]any {
+	return map[string]any{
+		"keys": KeyList(),
+	}
+}
+
+func Contacts() map[string]any {
+	return map[string]any{
+		"primary": map[string]any{
+			"email": "ops@example.com",
+		},
+		"billing": map[string]any{
+			"email": "billing@example.com",
+		},
+	}
+}
+
+func DNSConfiguration() map[string]any {
+	return map[string]any{
+		"magicDNS":    true,
+		"nameservers": []string{"1.1.1.1"},
+		"searchPaths": []string{"corp.example.com"},
+		"splitDNS": map[string]any{
+			"corp.example.com": []string{"1.1.1.1"},
+		},
+	}
+}
+
+func DNSNameservers() []string {
+	return []string{"1.1.1.1", "8.8.8.8"}
+}
+
+func DNSSearchPaths() []string {
+	return []string{"corp.example.com", "svc.example.com"}
+}
+
+func DNSSplitConfig() map[string]any {
+	return map[string]any{
+		"corp.example.com": []string{"1.1.1.1"},
+		"svc.example.com":  []string{"8.8.8.8"},
+	}
+}
+
+func Invite() map[string]any {
+	return map[string]any{
+		"id":     "invite-1",
+		"email":  "user@example.com",
+		"status": "pending",
+	}
+}
+
+func InviteList() []map[string]any {
+	return []map[string]any{Invite()}
+}
+
+func DevicePostureResponse() map[string]any {
+	return map[string]any{
+		"attributes": map[string]any{
+			"custom:group": "prod",
+		},
+		"expiries": map[string]any{},
+	}
+}
+
+func LogsConfiguration() []map[string]any {
+	return []map[string]any{
+		{
+			"id":     "cfg-1",
+			"action": "policy.updated",
+		},
+	}
+}
+
+func LogsNetwork() []map[string]any {
+	return []map[string]any{
+		{
+			"id":    "net-1",
+			"srcIP": "100.64.0.1",
+			"dstIP": "100.64.0.2",
+		},
+	}
+}
+
+func LogsStream() map[string]any {
+	return map[string]any{
+		"enabled":  true,
+		"endpoint": "https://example.com/logs",
+	}
+}
+
+func AWSExternalID() map[string]any {
+	return map[string]any{
+		"externalId": "ext-123",
+	}
+}
+
+func AWSValidation() map[string]any {
+	return map[string]any{
+		"valid": true,
+	}
+}
+
+func Policy() string {
+	return "{\n  \"acls\": []\n}\n"
+}
+
+func PolicyPreview() map[string]any {
+	return map[string]any{
+		"matches": []map[string]any{
+			{
+				"action": "accept",
+			},
+		},
+	}
+}
+
+func PolicyValidation() map[string]any {
+	return map[string]any{
+		"valid": true,
+	}
+}
+
+func PostureAttributeMap() map[string]any {
+	return map[string]any{
+		"custom:group": "prod",
+	}
+}
+
+func PostureIntegration() map[string]any {
+	return map[string]any{
+		"id":       "pi-1",
+		"provider": "falcon",
+	}
+}
+
+func PostureIntegrationList() map[string]any {
+	return map[string]any{
+		"integrations": []map[string]any{PostureIntegration()},
+	}
+}
+
+func Service() map[string]any {
+	return map[string]any{
+		"name":  "svc",
+		"ports": []int{443},
+	}
+}
+
+func ServiceList() []map[string]any {
+	return []map[string]any{Service()}
+}
+
+func ServiceDevices() []map[string]any {
+	return []map[string]any{
+		{
+			"nodeId":   "node-123",
+			"approved": true,
+		},
+	}
+}
+
+func ServiceApproval() map[string]any {
+	return map[string]any{
+		"approved": true,
+	}
+}
+
+func User() map[string]any {
+	return map[string]any{
+		"id":        "user-1",
+		"loginName": "user@example.com",
+		"role":      "member",
+	}
+}
+
+func UserList() []map[string]any {
+	return []map[string]any{User()}
+}
+
+func UserListEnvelope() map[string]any {
+	return map[string]any{
+		"users": UserList(),
+	}
+}
+
+func Webhook() map[string]any {
+	return map[string]any{
+		"id":          "wh-1",
+		"endpointUrl": "https://example.com/hook",
+	}
+}
+
+func WebhookList() []map[string]any {
+	return []map[string]any{Webhook()}
+}
+
+func WebhookListEnvelope() map[string]any {
+	return map[string]any{
+		"webhooks": WebhookList(),
 	}
 }
 
