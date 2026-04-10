@@ -3,6 +3,7 @@ package oauth
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"golang.org/x/oauth2/clientcredentials"
@@ -18,10 +19,15 @@ type TokenResponse struct {
 
 // ExchangeClientCredentials exchanges OAuth client credentials for an access token
 func ExchangeClientCredentials(ctx context.Context, clientID, clientSecret string) (*TokenResponse, error) {
+	tokenURL := os.Getenv("TSCLI_OAUTH_TOKEN_URL")
+	if tokenURL == "" {
+		tokenURL = "https://api.tailscale.com/api/v2/oauth/token"
+	}
+
 	config := &clientcredentials.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
-		TokenURL:     "https://api.tailscale.com/api/v2/oauth/token",
+		TokenURL:     tokenURL,
 	}
 
 	token, err := config.Token(ctx)

@@ -1,0 +1,8 @@
+default:
+  request: "Property coverage for this mapped request body has not been audited yet."
+  response: "Property coverage for this mapped response body has not been audited yet."
+
+properties:
+  "patch /tailnet/{tailnet}/settings request aclsExternallyManagedOn": "`set settings` does not expose a flag for aclsExternallyManagedOn yet."
+  "patch /tailnet/{tailnet}/settings request aclsExternalLink": "`set settings` does not expose a flag for aclsExternalLink yet."
+  "patch /tailnet/{tailnet}/settings request httpsEnabled": "`set settings` does not expose a flag for httpsEnabled yet."

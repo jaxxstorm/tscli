@@ -8,8 +8,10 @@ List devices
 
 List every device registered in your tailnet.
 
-By default only the common fields are returned.  
+By default only the common fields are returned.
 Use --all to include advanced fields such as ClientConnectivity, AdvertisedRoutes, and EnabledRoutes.
+
+Structured output preserves all API-documented device fields while keeping the historical top-level array shape.
 
 Examples
 

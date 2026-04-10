@@ -1,0 +1,64 @@
+operations:
+  "get /device/{deviceId}":
+    response:
+      - type: apitype.Device
+        evidence:
+          model: github.com/jaxxstorm/tscli/pkg/apitype.Device
+          tests:
+            - TestGetDevicePropertyCoverage
+  "get /device/{deviceId}/routes":
+    response:
+      - type: apitype.DeviceRoutes
+        evidence:
+          model: github.com/jaxxstorm/tscli/pkg/apitype.DeviceRoutes
+          tests:
+            - TestListRoutesPropertyCoverage
+  "get /tailnet/{tailnet}/devices":
+    response:
+      - type: apitype.DeviceListResponse
+        evidence:
+          model: github.com/jaxxstorm/tscli/pkg/apitype.DeviceListResponse
+          tests:
+            - TestListDevicesPropertyCoverage
+  "get /tailnet/{tailnet}/settings":
+    response:
+      - type: apitype.TailnetSettings
+        evidence:
+          model: github.com/jaxxstorm/tscli/pkg/apitype.TailnetSettings
+          tests:
+            - TestGetSettingsPropertyCoverage
+  "patch /tailnet/{tailnet}/settings":
+    request:
+      - type: coverage.set_settings_operation_request
+        evidence:
+          model: tscli set-settings request flags
+          command: set settings
+          tests:
+            - TestSetSettingsPropertyCoverage
+    response:
+      - type: apitype.TailnetSettings
+        evidence:
+          model: github.com/jaxxstorm/tscli/pkg/apitype.TailnetSettings
+          tests:
+            - TestSetSettingsPropertyCoverage
+  "post /device/{deviceId}/routes":
+    request:
+      - type: apitype.DeviceRoutesUpdateRequest
+        evidence:
+          model: github.com/jaxxstorm/tscli/pkg/apitype.DeviceRoutesUpdateRequest
+          command: set device routes
+          tests:
+            - TestSetDeviceRoutesPropertyCoverage
+    response:
+      - type: apitype.DeviceRoutes
+        evidence:
+          model: github.com/jaxxstorm/tscli/pkg/apitype.DeviceRoutes
+          tests:
+            - TestSetDeviceRoutesPropertyCoverage
+  "post /tailnet/{tailnet}/keys":
+    request:
+      - type: coverage.create_key_operation_request
+        evidence:
+          model: tscli create-key operation request union
+          tests:
+            - TestCreateKeyAuthkeyTagsPayload

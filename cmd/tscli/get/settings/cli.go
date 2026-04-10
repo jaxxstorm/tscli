@@ -5,16 +5,12 @@
 package settings
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/jaxxstorm/tscli/pkg/output"
-
 	"github.com/jaxxstorm/tscli/pkg/tscli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	tsapi "tailscale.com/client/tailscale/v2"
 )
 
 func Command() *cobra.Command {
@@ -27,19 +23,13 @@ func Command() *cobra.Command {
 				return fmt.Errorf("failed to create client: %w", err)
 			}
 
-			var s *tsapi.TailnetSettings
-			s, err = client.TailnetSettings().Get(context.Background())
+			raw, err := tscli.GetTailnetSettingsJSON(cmd.Context(), client)
 			if err != nil {
 				return fmt.Errorf("failed to retrieve settings: %w", err)
 			}
 
-			out, err := json.MarshalIndent(s, "", "  ")
-			if err != nil {
-				return fmt.Errorf("failed to marshal settings: %w", err)
-			}
 			outputType := viper.GetString("output")
-			output.Print(outputType, out)
-			return nil
+			return output.Print(outputType, raw)
 		},
 	}
 }

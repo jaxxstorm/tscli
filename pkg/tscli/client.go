@@ -181,6 +181,14 @@ func Do(
 	if out == nil || len(data) == 0 {
 		return res.Header, nil
 	}
+	if raw, ok := out.(*[]byte); ok {
+		*raw = append((*raw)[:0], data...)
+		return res.Header, nil
+	}
+	if raw, ok := out.(*json.RawMessage); ok {
+		*raw = append((*raw)[:0], data...)
+		return res.Header, nil
+	}
 	if err := json.Unmarshal(data, out); err != nil {
 		return res.Header, fmt.Errorf("decode response: %w", err)
 	}

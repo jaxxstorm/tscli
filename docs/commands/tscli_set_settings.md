@@ -4,6 +4,10 @@
 
 Update tailnet settings
 
+### Synopsis
+
+Update tailnet settings and print the authoritative settings object returned by the API.
+
 ```
 tscli set settings [flags]
 ```

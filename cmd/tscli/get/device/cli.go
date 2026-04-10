@@ -16,7 +16,6 @@
 package device
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -29,7 +28,6 @@ import (
 	"github.com/jaxxstorm/tscli/pkg/tscli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	tsapi "tailscale.com/client/tailscale/v2"
 )
 
 var newClient = tscli.New
@@ -100,20 +98,13 @@ func Command() *cobra.Command {
 				}
 			}
 
-			var dv *tsapi.Device
-			if showAll {
-				dv, err = client.Devices().GetWithAllFields(cmd.Context(), deviceID)
-			} else {
-				dv, err = client.Devices().Get(cmd.Context(), deviceID)
-			}
+			raw, err := tscli.GetDeviceJSON(cmd.Context(), client, deviceID, showAll)
 			if err != nil {
 				return fmt.Errorf("failed to get device %s: %w", deviceID, err)
 			}
 
-			out, _ := json.MarshalIndent(dv, "", "  ")
 			outputType := viper.GetString("output")
-			output.Print(outputType, out)
-			return nil
+			return output.Print(outputType, raw)
 		},
 	}
 

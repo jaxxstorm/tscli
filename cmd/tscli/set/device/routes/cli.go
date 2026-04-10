@@ -6,14 +6,12 @@
 package routes
 
 import (
-	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
 
+	"github.com/jaxxstorm/tscli/pkg/apitype"
 	"github.com/jaxxstorm/tscli/pkg/output"
-
 	"github.com/jaxxstorm/tscli/pkg/tscli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -35,6 +33,8 @@ Examples
   # Replace with two CIDRs
   tscli set device routes --device node-abc123 \
       --route 10.0.0.0/24 --route 192.168.1.0/24
+
+Structured output prints the updated routes object returned by the API.
 `,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(routes) == 0 {
@@ -53,23 +53,15 @@ Examples
 				return fmt.Errorf("failed to create client: %w", err)
 			}
 
-			if err := client.Devices().SetSubnetRoutes(
-				context.Background(),
-				deviceID,
-				routes,
-			); err != nil {
+			raw, err := tscli.SetDeviceRoutesJSON(cmd.Context(), client, deviceID, apitype.DeviceRoutesUpdateRequest{
+				Routes: routes,
+			})
+			if err != nil {
 				return fmt.Errorf("failed to set subnet routes: %w", err)
 			}
 
-			resp := map[string]any{
-				"result": "subnet routes updated",
-				"device": deviceID,
-				"routes": routes,
-			}
-			out, _ := json.MarshalIndent(resp, "", "  ")
 			outputType := viper.GetString("output")
-			output.Print(outputType, out)
-			return nil
+			return output.Print(outputType, raw)
 		},
 	}
 
