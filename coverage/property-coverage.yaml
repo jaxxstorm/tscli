@@ -1,24 +1,64 @@
 operations:
+  "get /device/{deviceId}":
+    response:
+      - type: apitype.Device
+        evidence:
+          model: github.com/jaxxstorm/tscli/pkg/apitype.Device
+          tests:
+            - TestGetDevicePropertyCoverage
+  "get /device/{deviceId}/routes":
+    response:
+      - type: apitype.DeviceRoutes
+        evidence:
+          model: github.com/jaxxstorm/tscli/pkg/apitype.DeviceRoutes
+          tests:
+            - TestListRoutesPropertyCoverage
   "get /tailnet/{tailnet}/devices":
     response:
-      - type: coverage.device_list_response
+      - type: apitype.DeviceListResponse
         evidence:
-          model: tailscale.com/client/tailscale/v2.Device
+          model: github.com/jaxxstorm/tscli/pkg/apitype.DeviceListResponse
           tests:
             - TestListDevicesPropertyCoverage
   "get /tailnet/{tailnet}/settings":
     response:
-      - type: tsapi.TailnetSettings
+      - type: apitype.TailnetSettings
         evidence:
-          model: tailscale.com/client/tailscale/v2.TailnetSettings
+          model: github.com/jaxxstorm/tscli/pkg/apitype.TailnetSettings
           tests:
-            - TestPropertyCoverageManifestIncludesRepresentativeOperations
+            - TestGetSettingsPropertyCoverage
   "patch /tailnet/{tailnet}/settings":
     request:
+      - type: apitype.UpdateTailnetSettingsRequest
+        evidence:
+          model: github.com/jaxxstorm/tscli/pkg/apitype.UpdateTailnetSettingsRequest
+          command: set settings
+          tests:
+            - TestSetSettingsPropertyCoverage
       - type: tsapi.UpdateTailnetSettingsRequest
         evidence:
           model: tailscale.com/client/tailscale/v2.UpdateTailnetSettingsRequest
           command: set settings
+    response:
+      - type: apitype.TailnetSettings
+        evidence:
+          model: github.com/jaxxstorm/tscli/pkg/apitype.TailnetSettings
+          tests:
+            - TestSetSettingsPropertyCoverage
+  "post /device/{deviceId}/routes":
+    request:
+      - type: apitype.DeviceRoutesUpdateRequest
+        evidence:
+          model: github.com/jaxxstorm/tscli/pkg/apitype.DeviceRoutesUpdateRequest
+          command: set device routes
+          tests:
+            - TestSetDeviceRoutesPropertyCoverage
+    response:
+      - type: apitype.DeviceRoutes
+        evidence:
+          model: github.com/jaxxstorm/tscli/pkg/apitype.DeviceRoutes
+          tests:
+            - TestSetDeviceRoutesPropertyCoverage
   "post /tailnet/{tailnet}/keys":
     request:
       - type: coverage.create_key_operation_request

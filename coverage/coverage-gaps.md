@@ -10,8 +10,8 @@
 - Covered commands: `80`
 - Unmapped commands: `0`
 - Unknown mapped commands: `0`
-- Covered properties: `91`
-- Excluded properties: `709`
+- Covered properties: `166`
+- Excluded properties: `634`
 - Uncovered properties: `0`
 
 ## Uncovered Operations By Domain
@@ -30,130 +30,6 @@
 - None
 
 ## Covered Properties By Operation
-
-### get /tailnet/{tailnet}/devices response
-
-- `devices`
-- `devices[]`
-- `devices[].addresses`
-- `devices[].addresses[]`
-- `devices[].authorized`
-- `devices[].blocksIncomingConnections`
-- `devices[].clientConnectivity`
-- `devices[].clientConnectivity.clientSupports`
-- `devices[].clientConnectivity.clientSupports.hairPinning`
-- `devices[].clientConnectivity.clientSupports.ipv6`
-- `devices[].clientConnectivity.clientSupports.pcp`
-- `devices[].clientConnectivity.clientSupports.pmp`
-- `devices[].clientConnectivity.clientSupports.udp`
-- `devices[].clientConnectivity.clientSupports.upnp`
-- `devices[].clientConnectivity.endpoints`
-- `devices[].clientConnectivity.endpoints[]`
-- `devices[].clientConnectivity.latency`
-- `devices[].clientConnectivity.mappingVariesByDestIP`
-- `devices[].clientVersion`
-- `devices[].connectedToControl`
-- `devices[].created`
-- `devices[].distro`
-- `devices[].distro.codeName`
-- `devices[].distro.name`
-- `devices[].distro.version`
-- `devices[].enabledRoutes`
-- `devices[].enabledRoutes[]`
-- `devices[].expires`
-- `devices[].hostname`
-- `devices[].id`
-- `devices[].isEphemeral`
-- `devices[].isExternal`
-- `devices[].keyExpiryDisabled`
-- `devices[].lastSeen`
-- `devices[].machineKey`
-- `devices[].name`
-- `devices[].nodeId`
-- `devices[].nodeKey`
-- `devices[].os`
-- `devices[].postureIdentity`
-- `devices[].postureIdentity.disabled`
-- `devices[].postureIdentity.serialNumbers`
-- `devices[].postureIdentity.serialNumbers[]`
-- `devices[].sshEnabled`
-- `devices[].tags`
-- `devices[].tags[]`
-- `devices[].tailnetLockError`
-- `devices[].tailnetLockKey`
-- `devices[].updateAvailable`
-- `devices[].user`
-
-### get /tailnet/{tailnet}/settings response
-
-- `aclsExternalLink`
-- `aclsExternallyManagedOn`
-- `devicesApprovalOn`
-- `devicesAutoUpdatesOn`
-- `devicesKeyDurationDays`
-- `httpsEnabled`
-- `networkFlowLoggingOn`
-- `postureIdentityCollectionOn`
-- `regionalRoutingOn`
-- `usersApprovalOn`
-- `usersRoleAllowedToJoinExternalTailnets`
-
-### patch /tailnet/{tailnet}/settings request
-
-- `aclsExternalLink`
-- `aclsExternallyManagedOn`
-- `devicesApprovalOn`
-- `devicesAutoUpdatesOn`
-- `devicesKeyDurationDays`
-- `httpsEnabled`
-- `networkFlowLoggingOn`
-- `postureIdentityCollectionOn`
-- `regionalRoutingOn`
-- `usersApprovalOn`
-- `usersRoleAllowedToJoinExternalTailnets`
-
-### post /tailnet/{tailnet}/keys request
-
-- `audience`
-- `capabilities`
-- `capabilities.devices`
-- `capabilities.devices.create`
-- `capabilities.devices.create.ephemeral`
-- `capabilities.devices.create.preauthorized`
-- `capabilities.devices.create.reusable`
-- `capabilities.devices.create.tags`
-- `capabilities.devices.create.tags[]`
-- `customClaimRules`
-- `description`
-- `expirySeconds`
-- `issuer`
-- `keyType`
-- `scopes`
-- `scopes[]`
-- `subject`
-- `tags`
-- `tags[]`
-
-
-## Excluded Properties By Operation
-
-### get /device-invites/{deviceInviteId} response
-
-- `accepted`
-- `acceptedBy`
-- `acceptedBy.id`
-- `acceptedBy.loginName`
-- `acceptedBy.profilePicUrl`
-- `allowExitNode`
-- `created`
-- `deviceId`
-- `email`
-- `id`
-- `inviteUrl`
-- `lastEmailSentAt`
-- `multiUse`
-- `sharerId`
-- `tailnetId`
 
 ### get /device/{deviceId} response
 
@@ -209,6 +85,166 @@
 - `updateAvailable`
 - `user`
 
+### get /device/{deviceId}/routes response
+
+- `advertisedRoutes`
+- `advertisedRoutes[]`
+- `enabledRoutes`
+- `enabledRoutes[]`
+
+### get /tailnet/{tailnet}/devices response
+
+- `devices`
+- `devices[]`
+- `devices[].addresses`
+- `devices[].addresses[]`
+- `devices[].advertisedRoutes`
+- `devices[].advertisedRoutes[]`
+- `devices[].authorized`
+- `devices[].blocksIncomingConnections`
+- `devices[].clientConnectivity`
+- `devices[].clientConnectivity.clientSupports`
+- `devices[].clientConnectivity.clientSupports.hairPinning`
+- `devices[].clientConnectivity.clientSupports.ipv6`
+- `devices[].clientConnectivity.clientSupports.pcp`
+- `devices[].clientConnectivity.clientSupports.pmp`
+- `devices[].clientConnectivity.clientSupports.udp`
+- `devices[].clientConnectivity.clientSupports.upnp`
+- `devices[].clientConnectivity.endpoints`
+- `devices[].clientConnectivity.endpoints[]`
+- `devices[].clientConnectivity.latency`
+- `devices[].clientConnectivity.mappingVariesByDestIP`
+- `devices[].clientVersion`
+- `devices[].connectedToControl`
+- `devices[].created`
+- `devices[].distro`
+- `devices[].distro.codeName`
+- `devices[].distro.name`
+- `devices[].distro.version`
+- `devices[].enabledRoutes`
+- `devices[].enabledRoutes[]`
+- `devices[].expires`
+- `devices[].hostname`
+- `devices[].id`
+- `devices[].isEphemeral`
+- `devices[].isExternal`
+- `devices[].keyExpiryDisabled`
+- `devices[].lastSeen`
+- `devices[].machineKey`
+- `devices[].multipleConnections`
+- `devices[].name`
+- `devices[].nodeId`
+- `devices[].nodeKey`
+- `devices[].os`
+- `devices[].postureIdentity`
+- `devices[].postureIdentity.disabled`
+- `devices[].postureIdentity.serialNumbers`
+- `devices[].postureIdentity.serialNumbers[]`
+- `devices[].sshEnabled`
+- `devices[].tags`
+- `devices[].tags[]`
+- `devices[].tailnetLockError`
+- `devices[].tailnetLockKey`
+- `devices[].updateAvailable`
+- `devices[].user`
+
+### get /tailnet/{tailnet}/settings response
+
+- `aclsExternalLink`
+- `aclsExternallyManagedOn`
+- `devicesApprovalOn`
+- `devicesAutoUpdatesOn`
+- `devicesKeyDurationDays`
+- `httpsEnabled`
+- `networkFlowLoggingOn`
+- `postureIdentityCollectionOn`
+- `regionalRoutingOn`
+- `usersApprovalOn`
+- `usersRoleAllowedToJoinExternalTailnets`
+
+### patch /tailnet/{tailnet}/settings request
+
+- `aclsExternalLink`
+- `aclsExternallyManagedOn`
+- `devicesApprovalOn`
+- `devicesAutoUpdatesOn`
+- `devicesKeyDurationDays`
+- `httpsEnabled`
+- `networkFlowLoggingOn`
+- `postureIdentityCollectionOn`
+- `regionalRoutingOn`
+- `usersApprovalOn`
+- `usersRoleAllowedToJoinExternalTailnets`
+
+### patch /tailnet/{tailnet}/settings response
+
+- `aclsExternalLink`
+- `aclsExternallyManagedOn`
+- `devicesApprovalOn`
+- `devicesAutoUpdatesOn`
+- `devicesKeyDurationDays`
+- `httpsEnabled`
+- `networkFlowLoggingOn`
+- `postureIdentityCollectionOn`
+- `regionalRoutingOn`
+- `usersApprovalOn`
+- `usersRoleAllowedToJoinExternalTailnets`
+
+### post /device/{deviceId}/routes request
+
+- `routes`
+- `routes[]`
+
+### post /device/{deviceId}/routes response
+
+- `advertisedRoutes`
+- `advertisedRoutes[]`
+- `enabledRoutes`
+- `enabledRoutes[]`
+
+### post /tailnet/{tailnet}/keys request
+
+- `audience`
+- `capabilities`
+- `capabilities.devices`
+- `capabilities.devices.create`
+- `capabilities.devices.create.ephemeral`
+- `capabilities.devices.create.preauthorized`
+- `capabilities.devices.create.reusable`
+- `capabilities.devices.create.tags`
+- `capabilities.devices.create.tags[]`
+- `customClaimRules`
+- `description`
+- `expirySeconds`
+- `issuer`
+- `keyType`
+- `scopes`
+- `scopes[]`
+- `subject`
+- `tags`
+- `tags[]`
+
+
+## Excluded Properties By Operation
+
+### get /device-invites/{deviceInviteId} response
+
+- `accepted`
+- `acceptedBy`
+- `acceptedBy.id`
+- `acceptedBy.loginName`
+- `acceptedBy.profilePicUrl`
+- `allowExitNode`
+- `created`
+- `deviceId`
+- `email`
+- `id`
+- `inviteUrl`
+- `lastEmailSentAt`
+- `multiUse`
+- `sharerId`
+- `tailnetId`
+
 ### get /device/{deviceId}/attributes response
 
 - `attributes`
@@ -231,13 +267,6 @@
 - `[].multiUse`
 - `[].sharerId`
 - `[].tailnetId`
-
-### get /device/{deviceId}/routes response
-
-- `advertisedRoutes`
-- `advertisedRoutes[]`
-- `enabledRoutes`
-- `enabledRoutes[]`
 
 ### get /posture/integrations/{id} response
 
@@ -269,12 +298,6 @@
 - `support.email`
 - `support.fallbackEmail`
 - `support.needsVerification`
-
-### get /tailnet/{tailnet}/devices response
-
-- `devices[].advertisedRoutes`
-- `devices[].advertisedRoutes[]`
-- `devices[].multipleConnections`
 
 ### get /tailnet/{tailnet}/dns/configuration response
 
@@ -654,20 +677,6 @@
 - `comment`
 - `nodes`
 
-### patch /tailnet/{tailnet}/settings response
-
-- `aclsExternalLink`
-- `aclsExternallyManagedOn`
-- `devicesApprovalOn`
-- `devicesAutoUpdatesOn`
-- `devicesKeyDurationDays`
-- `httpsEnabled`
-- `networkFlowLoggingOn`
-- `postureIdentityCollectionOn`
-- `regionalRoutingOn`
-- `usersApprovalOn`
-- `usersRoleAllowedToJoinExternalTailnets`
-
 ### patch /webhooks/{endpointId} request
 
 - `subscriptions`
@@ -760,18 +769,6 @@
 ### post /device/{deviceId}/name request
 
 - `name`
-
-### post /device/{deviceId}/routes request
-
-- `routes`
-- `routes[]`
-
-### post /device/{deviceId}/routes response
-
-- `advertisedRoutes`
-- `advertisedRoutes[]`
-- `enabledRoutes`
-- `enabledRoutes[]`
 
 ### post /device/{deviceId}/tags request
 

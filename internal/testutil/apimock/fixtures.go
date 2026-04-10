@@ -9,6 +9,13 @@ func Device() map[string]any {
 		"addresses": []string{
 			"100.64.0.1",
 		},
+		"advertisedRoutes": []string{
+			"10.0.0.0/24",
+		},
+		"enabledRoutes": []string{
+			"10.0.0.0/24",
+		},
+		"multipleConnections": true,
 		"postureIdentity": map[string]any{
 			"serialNumbers": []string{"CP74LFQJXM"},
 			"disabled":      false,
@@ -19,6 +26,26 @@ func Device() map[string]any {
 func DeviceList() map[string]any {
 	return map[string]any{
 		"devices": []map[string]any{Device()},
+	}
+}
+
+func DeviceRoutes() map[string]any {
+	return map[string]any{
+		"advertisedRoutes": []string{"10.0.0.0/24"},
+		"enabledRoutes":    []string{"10.0.0.0/24"},
+	}
+}
+
+func TailnetSettings() map[string]any {
+	return map[string]any{
+		"devicesApprovalOn":           true,
+		"devicesAutoUpdatesOn":        true,
+		"devicesKeyDurationDays":      30,
+		"usersApprovalOn":             false,
+		"networkFlowLoggingOn":        true,
+		"regionalRoutingOn":           false,
+		"postureIdentityCollectionOn": true,
+		"httpsEnabled":                true,
 	}
 }
 

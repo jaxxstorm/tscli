@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 	"testing"
@@ -135,11 +136,131 @@ func TestListDevicesPropertyCoverage(t *testing.T) {
 	if res.err != nil {
 		t.Fatalf("unexpected error: %v", res.err)
 	}
+	if !strings.Contains(res.stdout, `"devices"`) {
+		t.Fatalf("expected devices envelope in JSON output, got %s", res.stdout)
+	}
+	if !strings.Contains(res.stdout, `"advertisedRoutes"`) {
+		t.Fatalf("expected advertisedRoutes in JSON output, got %s", res.stdout)
+	}
+	if !strings.Contains(res.stdout, `"multipleConnections"`) {
+		t.Fatalf("expected multipleConnections in JSON output, got %s", res.stdout)
+	}
 	if !strings.Contains(res.stdout, `"postureIdentity"`) {
 		t.Fatalf("expected postureIdentity in JSON output, got %s", res.stdout)
 	}
 	if !strings.Contains(res.stdout, `"serialNumbers"`) {
 		t.Fatalf("expected postureIdentity.serialNumbers in JSON output, got %s", res.stdout)
+	}
+}
+
+func TestGetDevicePropertyCoverage(t *testing.T) {
+	mock := apimock.New(t)
+	mock.AddJSON(http.MethodGet, "/device/", http.StatusOK, apimock.Device())
+
+	res := executeCLI(t, []string{"get", "device", "--device", "node-123", "--all"}, map[string]string{
+		"TSCLI_BASE_URL": mock.URL(),
+		"TSCLI_OUTPUT":   "json",
+	})
+	if res.err != nil {
+		t.Fatalf("unexpected error: %v", res.err)
+	}
+	for _, want := range []string{`"advertisedRoutes"`, `"multipleConnections"`, `"postureIdentity"`} {
+		if !strings.Contains(res.stdout, want) {
+			t.Fatalf("expected %s in JSON output, got %s", want, res.stdout)
+		}
+	}
+}
+
+func TestListRoutesPropertyCoverage(t *testing.T) {
+	mock := apimock.New(t)
+	mock.AddJSON(http.MethodGet, "/routes", http.StatusOK, apimock.DeviceRoutes())
+
+	res := executeCLI(t, []string{"list", "routes", "--device", "node-123"}, map[string]string{
+		"TSCLI_BASE_URL": mock.URL(),
+		"TSCLI_OUTPUT":   "json",
+	})
+	if res.err != nil {
+		t.Fatalf("unexpected error: %v", res.err)
+	}
+	for _, want := range []string{`"advertisedRoutes"`, `"enabledRoutes"`} {
+		if !strings.Contains(res.stdout, want) {
+			t.Fatalf("expected %s in JSON output, got %s", want, res.stdout)
+		}
+	}
+}
+
+func TestGetSettingsPropertyCoverage(t *testing.T) {
+	mock := apimock.New(t)
+	mock.AddJSON(http.MethodGet, "/settings", http.StatusOK, apimock.TailnetSettings())
+
+	res := executeCLI(t, []string{"get", "settings"}, map[string]string{
+		"TSCLI_BASE_URL": mock.URL(),
+		"TSCLI_OUTPUT":   "json",
+	})
+	if res.err != nil {
+		t.Fatalf("unexpected error: %v", res.err)
+	}
+	if !strings.Contains(res.stdout, `"postureIdentityCollectionOn"`) {
+		t.Fatalf("expected postureIdentityCollectionOn in JSON output, got %s", res.stdout)
+	}
+}
+
+func TestSetDeviceRoutesPropertyCoverage(t *testing.T) {
+	mock := apimock.New(t)
+	mock.AddJSON(http.MethodPost, "/routes", http.StatusOK, apimock.DeviceRoutes())
+
+	res := executeCLI(t, []string{"set", "device", "routes", "--device", "node-123", "--route", "10.0.0.0/24"}, map[string]string{
+		"TSCLI_BASE_URL": mock.URL(),
+		"TSCLI_OUTPUT":   "json",
+	})
+	if res.err != nil {
+		t.Fatalf("unexpected error: %v", res.err)
+	}
+	reqs := mock.Requests()
+	if len(reqs) == 0 {
+		t.Fatalf("expected request to mock API, got none")
+	}
+	var body map[string]any
+	if err := json.Unmarshal([]byte(reqs[0].Body), &body); err != nil {
+		t.Fatalf("unmarshal request body: %v", err)
+	}
+	if _, ok := body["routes"]; !ok {
+		t.Fatalf("expected routes request property, got %#v", body)
+	}
+	if !strings.Contains(res.stdout, `"advertisedRoutes"`) || !strings.Contains(res.stdout, `"enabledRoutes"`) {
+		t.Fatalf("expected route response fields in output, got %s", res.stdout)
+	}
+	if strings.Contains(res.stdout, `"result"`) {
+		t.Fatalf("expected authoritative API response, got synthetic summary %s", res.stdout)
+	}
+}
+
+func TestSetSettingsPropertyCoverage(t *testing.T) {
+	mock := apimock.New(t)
+	mock.AddJSON(http.MethodPatch, "/settings", http.StatusOK, apimock.TailnetSettings())
+
+	res := executeCLI(t, []string{"set", "settings", "--devices-approval", "--posture-identity-collection"}, map[string]string{
+		"TSCLI_BASE_URL": mock.URL(),
+		"TSCLI_OUTPUT":   "json",
+	})
+	if res.err != nil {
+		t.Fatalf("unexpected error: %v", res.err)
+	}
+	reqs := mock.Requests()
+	if len(reqs) == 0 {
+		t.Fatalf("expected request to mock API, got none")
+	}
+	var body map[string]any
+	if err := json.Unmarshal([]byte(reqs[0].Body), &body); err != nil {
+		t.Fatalf("unmarshal request body: %v", err)
+	}
+	for _, want := range []string{"devicesApprovalOn", "postureIdentityCollectionOn"} {
+		if _, ok := body[want]; !ok {
+			t.Fatalf("expected %s in request body, got %#v", want, body)
+		}
+	}
+	if !strings.Contains(res.stdout, `"postureIdentityCollectionOn"`) {
+		t.Fatalf("expected authoritative settings response in output, got %s", res.stdout)
 	}
 }
 

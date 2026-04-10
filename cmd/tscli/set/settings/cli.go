@@ -2,18 +2,15 @@
 package settings
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
+	"github.com/jaxxstorm/tscli/pkg/apitype"
 	"github.com/jaxxstorm/tscli/pkg/output"
-
 	"github.com/jaxxstorm/tscli/pkg/tscli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	tsapi "tailscale.com/client/tailscale/v2"
 )
 
 var validJoin = map[string]struct{}{
@@ -31,6 +28,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "settings",
 		Short: "Update tailnet settings",
+		Long:  "Update tailnet settings and print the authoritative settings object returned by the API.",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			f := cmd.Flags()
 
@@ -60,43 +58,41 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			req := tsapi.UpdateTailnetSettingsRequest{}
+			req := apitype.UpdateTailnetSettingsRequest{}
 			f := cmd.Flags()
 
 			if f.Lookup("devices-approval").Changed {
-				req.DevicesApprovalOn = tsapi.PointerTo(devAppr)
+				req.DevicesApprovalOn = &devAppr
 			}
 			if f.Lookup("devices-auto-updates").Changed {
-				req.DevicesAutoUpdatesOn = tsapi.PointerTo(devAuto)
+				req.DevicesAutoUpdatesOn = &devAuto
 			}
 			if f.Lookup("devices-key-duration").Changed {
-				req.DevicesKeyDurationDays = tsapi.PointerTo(keyDays)
+				req.DevicesKeyDurationDays = &keyDays
 			}
 			if f.Lookup("users-approval").Changed {
-				req.UsersApprovalOn = tsapi.PointerTo(usrAppr)
+				req.UsersApprovalOn = &usrAppr
 			}
 			if f.Lookup("users-role-join").Changed {
-				role := tsapi.RoleAllowedToJoinExternalTailnets(joinRole)
-				req.UsersRoleAllowedToJoinExternalTailnets = tsapi.PointerTo(role)
+				req.UsersRoleAllowedToJoinExternalTailnets = &joinRole
 			}
 			if f.Lookup("network-flow-logging").Changed {
-				req.NetworkFlowLoggingOn = tsapi.PointerTo(netLog)
+				req.NetworkFlowLoggingOn = &netLog
 			}
 			if f.Lookup("regional-routing").Changed {
-				req.RegionalRoutingOn = tsapi.PointerTo(regRoute)
+				req.RegionalRoutingOn = &regRoute
 			}
 			if f.Lookup("posture-identity-collection").Changed {
-				req.PostureIdentityCollectionOn = tsapi.PointerTo(postureID)
+				req.PostureIdentityCollectionOn = &postureID
 			}
 
-			if err := client.TailnetSettings().Update(context.Background(), req); err != nil {
+			raw, err := tscli.UpdateTailnetSettingsJSON(cmd.Context(), client, req)
+			if err != nil {
 				return fmt.Errorf("update failed: %w", err)
 			}
 
-			out, _ := json.MarshalIndent(req, "", "  ")
 			outputType := viper.GetString("output")
-			output.Print(outputType, out)
-			return nil
+			return output.Print(outputType, raw)
 		},
 	}
 

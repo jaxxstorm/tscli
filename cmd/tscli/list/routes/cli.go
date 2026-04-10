@@ -9,11 +9,9 @@
 package routes
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/jaxxstorm/tscli/pkg/output"
-
 	"github.com/jaxxstorm/tscli/pkg/tscli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -38,18 +36,13 @@ func Command() *cobra.Command {
 				return fmt.Errorf("failed to create client: %w", err)
 			}
 
-			routes, err := client.Devices().SubnetRoutes(cmd.Context(), deviceID)
+			routes, err := tscli.ListDeviceRoutesJSON(cmd.Context(), client, deviceID)
 			if err != nil {
 				return fmt.Errorf("failed to list routes for device %s: %w", deviceID, err)
 			}
 
-			out, err := json.MarshalIndent(routes, "", "  ")
-			if err != nil {
-				return fmt.Errorf("failed to marshal routes into JSON: %w", err)
-			}
 			outputType := viper.GetString("output")
-			output.Print(outputType, out)
-			return nil
+			return output.Print(outputType, routes)
 		},
 	}
 

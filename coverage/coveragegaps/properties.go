@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/jaxxstorm/tscli/pkg/apitype"
 	"gopkg.in/yaml.v3"
 	tsapi "tailscale.com/client/tailscale/v2"
 )
@@ -58,10 +59,6 @@ type openapiComponents struct {
 	RequestBodies map[string]any `yaml:"requestBodies"`
 }
 
-type deviceListResponse struct {
-	Devices []tsapi.Device `json:"devices"`
-}
-
 type createKeyOperationRequest struct {
 	KeyType          string                `json:"keyType"`
 	Capabilities     tsapi.KeyCapabilities `json:"capabilities"`
@@ -76,12 +73,17 @@ type createKeyOperationRequest struct {
 }
 
 var propertyTypeRegistry = map[string]reflect.Type{
+	"apitype.Device":                        reflect.TypeOf(apitype.Device{}),
+	"apitype.DeviceListResponse":            reflect.TypeOf(apitype.DeviceListResponse{}),
+	"apitype.DeviceRoutes":                  reflect.TypeOf(apitype.DeviceRoutes{}),
+	"apitype.DeviceRoutesUpdateRequest":     reflect.TypeOf(apitype.DeviceRoutesUpdateRequest{}),
+	"apitype.TailnetSettings":               reflect.TypeOf(apitype.TailnetSettings{}),
+	"apitype.UpdateTailnetSettingsRequest":  reflect.TypeOf(apitype.UpdateTailnetSettingsRequest{}),
 	"tsapi.CreateKeyRequest":                reflect.TypeOf(tsapi.CreateKeyRequest{}),
 	"tsapi.Device":                          reflect.TypeOf(tsapi.Device{}),
 	"tsapi.Key":                             reflect.TypeOf(tsapi.Key{}),
 	"tsapi.TailnetSettings":                 reflect.TypeOf(tsapi.TailnetSettings{}),
 	"tsapi.UpdateTailnetSettingsRequest":    reflect.TypeOf(tsapi.UpdateTailnetSettingsRequest{}),
-	"coverage.device_list_response":         reflect.TypeOf(deviceListResponse{}),
 	"coverage.create_key_operation_request": reflect.TypeOf(createKeyOperationRequest{}),
 }
 

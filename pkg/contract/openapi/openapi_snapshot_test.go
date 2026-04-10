@@ -158,6 +158,38 @@ func TestPinnedSchemaIncludesDevicePostureIdentityProperty(t *testing.T) {
 	}
 }
 
+func TestPinnedSchemaIncludesDeviceAdvancedRouteProperties(t *testing.T) {
+	doc := loadSnapshotDoc(t)
+	deviceProps := loadDeviceSchemaProperties(t, doc)
+
+	if _, ok := deviceProps["advertisedRoutes"]; !ok {
+		t.Fatalf("expected Device.advertisedRoutes in pinned schema")
+	}
+	if _, ok := deviceProps["multipleConnections"]; !ok {
+		t.Fatalf("expected Device.multipleConnections in pinned schema")
+	}
+}
+
+func TestPinnedSchemaIncludesDeviceRoutesSchemaProperties(t *testing.T) {
+	doc := loadSnapshotDoc(t)
+	routesSchema := resolveSchemaRef(t, doc, "#/components/schemas/DeviceRoutes")
+	props := routesSchema["properties"].(map[string]any)
+	for _, key := range []string{"advertisedRoutes", "enabledRoutes"} {
+		if _, ok := props[key]; !ok {
+			t.Fatalf("expected DeviceRoutes.%s in pinned schema", key)
+		}
+	}
+}
+
+func TestPinnedSchemaIncludesTailnetSettingsPostureIdentityCollectionProperty(t *testing.T) {
+	doc := loadSnapshotDoc(t)
+	settingsSchema := resolveSchemaRef(t, doc, "#/components/schemas/TailnetSettings")
+	props := settingsSchema["properties"].(map[string]any)
+	if _, ok := props["postureIdentityCollectionOn"]; !ok {
+		t.Fatalf("expected TailnetSettings.postureIdentityCollectionOn in pinned schema")
+	}
+}
+
 func TestPinnedSchemaIncludesCreateKeyTagsProperty(t *testing.T) {
 	doc := loadSnapshotDoc(t)
 
@@ -211,4 +243,28 @@ func resolveSchemaRef(t *testing.T, doc snapshotDoc, ref string) map[string]any 
 		t.Fatalf("schema ref %q has unexpected shape", ref)
 	}
 	return schema
+}
+
+func loadDeviceSchemaProperties(t *testing.T, doc snapshotDoc) map[string]any {
+	t.Helper()
+
+	verbs, ok := doc.Paths["/tailnet/{tailnet}/devices"]
+	if !ok {
+		t.Fatalf("devices path missing from schema")
+	}
+	getOp, ok := verbs["get"].(map[string]any)
+	if !ok {
+		t.Fatalf("devices GET operation missing from schema")
+	}
+	responses := getOp["responses"].(map[string]any)
+	okResp := responses["200"].(map[string]any)
+	content := okResp["content"].(map[string]any)
+	appJSON := content["application/json"].(map[string]any)
+	schema := appJSON["schema"].(map[string]any)
+	properties := schema["properties"].(map[string]any)
+	devices := properties["devices"].(map[string]any)
+	items := devices["items"].(map[string]any)
+	deviceRef := items["$ref"].(string)
+	deviceSchema := resolveSchemaRef(t, doc, deviceRef)
+	return deviceSchema["properties"].(map[string]any)
 }

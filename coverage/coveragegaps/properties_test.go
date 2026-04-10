@@ -7,11 +7,13 @@ import (
 )
 
 func TestExpandTypePropertyPaths(t *testing.T) {
-	paths := expandTypePropertyPaths("", propertyTypeRegistry["coverage.device_list_response"])
+	paths := expandTypePropertyPaths("", propertyTypeRegistry["apitype.DeviceListResponse"])
 
 	mustContain := []string{
 		"devices",
 		"devices[]",
+		"devices[].advertisedRoutes",
+		"devices[].multipleConnections",
 		"devices[].postureIdentity",
 		"devices[].postureIdentity.serialNumbers",
 		"devices[].postureIdentity.serialNumbers[]",

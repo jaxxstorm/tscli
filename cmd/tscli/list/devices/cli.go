@@ -10,15 +10,12 @@
 package devices
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/jaxxstorm/tscli/pkg/output"
-
 	"github.com/jaxxstorm/tscli/pkg/tscli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	tsapi "tailscale.com/client/tailscale/v2"
 )
 
 func Command() *cobra.Command {
@@ -29,8 +26,10 @@ func Command() *cobra.Command {
 		Short: "List devices",
 		Long: `List every device registered in your tailnet.
 
-By default only the common fields are returned.  
+By default only the common fields are returned.
 Use --all to include advanced fields such as ClientConnectivity, AdvertisedRoutes, and EnabledRoutes.
+
+Structured output prints the API response body directly so documented response fields are preserved.
 
 Examples
 
@@ -46,23 +45,13 @@ Examples
 				return fmt.Errorf("failed to create client: %w", err)
 			}
 
-			var devices []tsapi.Device
-			if showAll {
-				devices, err = client.Devices().ListWithAllFields(cmd.Context())
-			} else {
-				devices, err = client.Devices().List(cmd.Context())
-			}
+			raw, err := tscli.ListDevicesJSON(cmd.Context(), client, showAll)
 			if err != nil {
 				return fmt.Errorf("failed to list devices: %w", err)
 			}
 
-			out, err := json.MarshalIndent(devices, "", "  ")
-			if err != nil {
-				return fmt.Errorf("failed to marshal devices into JSON: %w", err)
-			}
 			outputType := viper.GetString("output")
-			output.Print(outputType, out)
-			return nil
+			return output.Print(outputType, raw)
 		},
 	}
 
