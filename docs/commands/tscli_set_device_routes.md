@@ -14,6 +14,8 @@ Examples
   tscli set device routes --device node-abc123 \
       --route 10.0.0.0/24 --route 192.168.1.0/24
 
+Structured output prints the updated routes object returned by the API.
+
 
 ```
 tscli set device routes [flags]
