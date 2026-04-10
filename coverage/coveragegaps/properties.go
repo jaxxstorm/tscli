@@ -72,19 +72,31 @@ type createKeyOperationRequest struct {
 	CustomClaimRules map[string]string     `json:"customClaimRules"`
 }
 
+type setSettingsOperationRequest struct {
+	DevicesApprovalOn                      *bool   `json:"devicesApprovalOn,omitempty"`
+	DevicesAutoUpdatesOn                   *bool   `json:"devicesAutoUpdatesOn,omitempty"`
+	DevicesKeyDurationDays                 *int    `json:"devicesKeyDurationDays,omitempty"`
+	UsersApprovalOn                        *bool   `json:"usersApprovalOn,omitempty"`
+	UsersRoleAllowedToJoinExternalTailnets *string `json:"usersRoleAllowedToJoinExternalTailnets,omitempty"`
+	NetworkFlowLoggingOn                   *bool   `json:"networkFlowLoggingOn,omitempty"`
+	RegionalRoutingOn                      *bool   `json:"regionalRoutingOn,omitempty"`
+	PostureIdentityCollectionOn            *bool   `json:"postureIdentityCollectionOn,omitempty"`
+}
+
 var propertyTypeRegistry = map[string]reflect.Type{
-	"apitype.Device":                        reflect.TypeOf(apitype.Device{}),
-	"apitype.DeviceListResponse":            reflect.TypeOf(apitype.DeviceListResponse{}),
-	"apitype.DeviceRoutes":                  reflect.TypeOf(apitype.DeviceRoutes{}),
-	"apitype.DeviceRoutesUpdateRequest":     reflect.TypeOf(apitype.DeviceRoutesUpdateRequest{}),
-	"apitype.TailnetSettings":               reflect.TypeOf(apitype.TailnetSettings{}),
-	"apitype.UpdateTailnetSettingsRequest":  reflect.TypeOf(apitype.UpdateTailnetSettingsRequest{}),
-	"tsapi.CreateKeyRequest":                reflect.TypeOf(tsapi.CreateKeyRequest{}),
-	"tsapi.Device":                          reflect.TypeOf(tsapi.Device{}),
-	"tsapi.Key":                             reflect.TypeOf(tsapi.Key{}),
-	"tsapi.TailnetSettings":                 reflect.TypeOf(tsapi.TailnetSettings{}),
-	"tsapi.UpdateTailnetSettingsRequest":    reflect.TypeOf(tsapi.UpdateTailnetSettingsRequest{}),
-	"coverage.create_key_operation_request": reflect.TypeOf(createKeyOperationRequest{}),
+	"apitype.Device":                          reflect.TypeOf(apitype.Device{}),
+	"apitype.DeviceListResponse":              reflect.TypeOf(apitype.DeviceListResponse{}),
+	"apitype.DeviceRoutes":                    reflect.TypeOf(apitype.DeviceRoutes{}),
+	"apitype.DeviceRoutesUpdateRequest":       reflect.TypeOf(apitype.DeviceRoutesUpdateRequest{}),
+	"apitype.TailnetSettings":                 reflect.TypeOf(apitype.TailnetSettings{}),
+	"apitype.UpdateTailnetSettingsRequest":    reflect.TypeOf(apitype.UpdateTailnetSettingsRequest{}),
+	"tsapi.CreateKeyRequest":                  reflect.TypeOf(tsapi.CreateKeyRequest{}),
+	"tsapi.Device":                            reflect.TypeOf(tsapi.Device{}),
+	"tsapi.Key":                               reflect.TypeOf(tsapi.Key{}),
+	"tsapi.TailnetSettings":                   reflect.TypeOf(tsapi.TailnetSettings{}),
+	"tsapi.UpdateTailnetSettingsRequest":      reflect.TypeOf(tsapi.UpdateTailnetSettingsRequest{}),
+	"coverage.create_key_operation_request":   reflect.TypeOf(createKeyOperationRequest{}),
+	"coverage.set_settings_operation_request": reflect.TypeOf(setSettingsOperationRequest{}),
 }
 
 func loadPropertyCoverage(path string) (*propertyCoverageManifest, error) {
@@ -130,7 +142,7 @@ func derivePropertyCoverage(
 	manifest *propertyCoverageManifest,
 	exclusions *propertyExclusions,
 ) (propertyInventory, error) {
-	ops := uniqueMappedOperations(mapping, excludedOps)
+	ops := uniqueMappedOperations(doc, mapping, excludedOps)
 
 	coveredSet := map[string]struct{}{}
 	excludedSet := map[string]struct{}{}
@@ -169,17 +181,33 @@ func derivePropertyCoverage(
 	}, nil
 }
 
-func uniqueMappedOperations(mapping *commandMap, excludedOps map[string]struct{}) []string {
+func uniqueMappedOperations(doc *openapiDoc, mapping *commandMap, excludedOps map[string]struct{}) []string {
 	seen := map[string]struct{}{}
 	for _, ops := range mapping.Commands {
 		for _, op := range ops {
 			if _, excluded := excludedOps[op]; excluded {
 				continue
 			}
+			if !operationExists(doc, op) {
+				continue
+			}
 			seen[op] = struct{}{}
 		}
 	}
 	return stringKeys(seen)
+}
+
+func operationExists(doc *openapiDoc, opKey string) bool {
+	method, apiPath, ok := strings.Cut(opKey, " ")
+	if !ok {
+		return false
+	}
+	verbs, ok := doc.Paths[apiPath]
+	if !ok {
+		return false
+	}
+	_, ok = verbs[strings.ToLower(method)]
+	return ok
 }
 
 func expandCoverage(specs []propertyCoverageEvidence) (map[string]struct{}, error) {

@@ -145,6 +145,54 @@ components:
 	}
 }
 
+func TestDerivePropertyCoverageSkipsUnknownMappedOperations(t *testing.T) {
+	dir := t.TempDir()
+	schemaPath := filepath.Join(dir, "openapi.yaml")
+	schema := `
+paths:
+  /tailnet/{tailnet}/devices:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  devices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        hostname:
+                          type: string
+`
+	if err := os.WriteFile(schemaPath, []byte(schema), 0o644); err != nil {
+		t.Fatalf("write schema: %v", err)
+	}
+	if _, err := loadOperations(schemaPath); err != nil {
+		t.Fatalf("load operations: %v", err)
+	}
+
+	mapping := &commandMap{Commands: map[string][]string{
+		"list devices": {"get /tailnet/{tailnet}/devices", "get /not-in-schema"},
+	}}
+	_, err := derivePropertyCoverage(
+		&opsDoc,
+		mapping,
+		map[string]struct{}{},
+		&propertyCoverageManifest{Operations: map[string]propertyCoverageOperation{
+			"get /tailnet/{tailnet}/devices": {
+				Response: []propertyCoverageEvidence{{Type: "apitype.DeviceListResponse"}},
+			},
+		}},
+		&propertyExclusions{Properties: map[string]string{}},
+	)
+	if err != nil {
+		t.Fatalf("derive property coverage should ignore unknown mapped operations, got %v", err)
+	}
+}
+
 func contains(items []string, want string) bool {
 	for _, item := range items {
 		if item == want {

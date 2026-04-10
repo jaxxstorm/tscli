@@ -29,16 +29,12 @@ operations:
             - TestGetSettingsPropertyCoverage
   "patch /tailnet/{tailnet}/settings":
     request:
-      - type: apitype.UpdateTailnetSettingsRequest
+      - type: coverage.set_settings_operation_request
         evidence:
-          model: github.com/jaxxstorm/tscli/pkg/apitype.UpdateTailnetSettingsRequest
+          model: tscli set-settings request flags
           command: set settings
           tests:
             - TestSetSettingsPropertyCoverage
-      - type: tsapi.UpdateTailnetSettingsRequest
-        evidence:
-          model: tailscale.com/client/tailscale/v2.UpdateTailnetSettingsRequest
-          command: set settings
     response:
       - type: apitype.TailnetSettings
         evidence:

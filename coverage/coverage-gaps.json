@@ -390,12 +390,9 @@
     "get /tailnet/{tailnet}/settings response regionalRoutingOn",
     "get /tailnet/{tailnet}/settings response usersApprovalOn",
     "get /tailnet/{tailnet}/settings response usersRoleAllowedToJoinExternalTailnets",
-    "patch /tailnet/{tailnet}/settings request aclsExternalLink",
-    "patch /tailnet/{tailnet}/settings request aclsExternallyManagedOn",
     "patch /tailnet/{tailnet}/settings request devicesApprovalOn",
     "patch /tailnet/{tailnet}/settings request devicesAutoUpdatesOn",
     "patch /tailnet/{tailnet}/settings request devicesKeyDurationDays",
-    "patch /tailnet/{tailnet}/settings request httpsEnabled",
     "patch /tailnet/{tailnet}/settings request networkFlowLoggingOn",
     "patch /tailnet/{tailnet}/settings request postureIdentityCollectionOn",
     "patch /tailnet/{tailnet}/settings request regionalRoutingOn",
@@ -799,6 +796,9 @@
     "patch /tailnet/{tailnet}/contacts/{contactType} request email",
     "patch /tailnet/{tailnet}/device-attributes request comment",
     "patch /tailnet/{tailnet}/device-attributes request nodes",
+    "patch /tailnet/{tailnet}/settings request aclsExternalLink",
+    "patch /tailnet/{tailnet}/settings request aclsExternallyManagedOn",
+    "patch /tailnet/{tailnet}/settings request httpsEnabled",
     "patch /webhooks/{endpointId} request subscriptions",
     "patch /webhooks/{endpointId} request subscriptions[]",
     "patch /webhooks/{endpointId} response created",
@@ -1204,12 +1204,9 @@
       "usersRoleAllowedToJoinExternalTailnets"
     ],
     "patch /tailnet/{tailnet}/settings request": [
-      "aclsExternalLink",
-      "aclsExternallyManagedOn",
       "devicesApprovalOn",
       "devicesAutoUpdatesOn",
       "devicesKeyDurationDays",
-      "httpsEnabled",
       "networkFlowLoggingOn",
       "postureIdentityCollectionOn",
       "regionalRoutingOn",
@@ -1681,6 +1678,11 @@
     "patch /tailnet/{tailnet}/device-attributes request": [
       "comment",
       "nodes"
+    ],
+    "patch /tailnet/{tailnet}/settings request": [
+      "aclsExternalLink",
+      "aclsExternallyManagedOn",
+      "httpsEnabled"
     ],
     "patch /webhooks/{endpointId} request": [
       "subscriptions",

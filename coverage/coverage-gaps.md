@@ -10,8 +10,8 @@
 - Covered commands: `80`
 - Unmapped commands: `0`
 - Unknown mapped commands: `0`
-- Covered properties: `166`
-- Excluded properties: `634`
+- Covered properties: `163`
+- Excluded properties: `637`
 - Uncovered properties: `0`
 
 ## Uncovered Operations By Domain
@@ -164,12 +164,9 @@
 
 ### patch /tailnet/{tailnet}/settings request
 
-- `aclsExternalLink`
-- `aclsExternallyManagedOn`
 - `devicesApprovalOn`
 - `devicesAutoUpdatesOn`
 - `devicesKeyDurationDays`
-- `httpsEnabled`
 - `networkFlowLoggingOn`
 - `postureIdentityCollectionOn`
 - `regionalRoutingOn`
@@ -676,6 +673,12 @@
 
 - `comment`
 - `nodes`
+
+### patch /tailnet/{tailnet}/settings request
+
+- `aclsExternalLink`
+- `aclsExternallyManagedOn`
+- `httpsEnabled`
 
 ### patch /webhooks/{endpointId} request
 

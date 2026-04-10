@@ -10,8 +10,10 @@
 package devices
 
 import (
+	"encoding/json"
 	"fmt"
 
+	"github.com/jaxxstorm/tscli/pkg/apitype"
 	"github.com/jaxxstorm/tscli/pkg/output"
 	"github.com/jaxxstorm/tscli/pkg/tscli"
 	"github.com/spf13/cobra"
@@ -29,7 +31,7 @@ func Command() *cobra.Command {
 By default only the common fields are returned.
 Use --all to include advanced fields such as ClientConnectivity, AdvertisedRoutes, and EnabledRoutes.
 
-Structured output prints the API response body directly so documented response fields are preserved.
+Structured output preserves all API-documented device fields while keeping the historical top-level array shape.
 
 Examples
 
@@ -49,9 +51,17 @@ Examples
 			if err != nil {
 				return fmt.Errorf("failed to list devices: %w", err)
 			}
+			var response apitype.DeviceListResponse
+			if err := json.Unmarshal(raw, &response); err != nil {
+				return fmt.Errorf("failed to decode devices response: %w", err)
+			}
+			out, err := json.Marshal(response.Devices)
+			if err != nil {
+				return fmt.Errorf("failed to marshal devices output: %w", err)
+			}
 
 			outputType := viper.GetString("output")
-			return output.Print(outputType, raw)
+			return output.Print(outputType, out)
 		},
 	}
 

@@ -136,9 +136,6 @@ func TestListDevicesPropertyCoverage(t *testing.T) {
 	if res.err != nil {
 		t.Fatalf("unexpected error: %v", res.err)
 	}
-	if !strings.Contains(res.stdout, `"devices"`) {
-		t.Fatalf("expected devices envelope in JSON output, got %s", res.stdout)
-	}
 	if !strings.Contains(res.stdout, `"advertisedRoutes"`) {
 		t.Fatalf("expected advertisedRoutes in JSON output, got %s", res.stdout)
 	}
@@ -150,6 +147,13 @@ func TestListDevicesPropertyCoverage(t *testing.T) {
 	}
 	if !strings.Contains(res.stdout, `"serialNumbers"`) {
 		t.Fatalf("expected postureIdentity.serialNumbers in JSON output, got %s", res.stdout)
+	}
+	var payload []map[string]any
+	if err := json.Unmarshal([]byte(res.stdout), &payload); err != nil {
+		t.Fatalf("expected top-level device array output, got %v\n%s", err, res.stdout)
+	}
+	if len(payload) == 0 {
+		t.Fatalf("expected non-empty device array output")
 	}
 }
 
