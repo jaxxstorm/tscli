@@ -108,8 +108,8 @@ func Command() *cobra.Command {
 		Use:   "key",
 		Short: "Create an auth-key, OAuth client, or federated credential",
 		Long: "Create Tailscale auth-keys, OAuth clients, or federated identities.\n" +
-			"Auth-key capability flags (--reusable, --ephemeral, --preauthorized) apply only to --type authkey.",
-		Example: "  tscli create key --type authkey --description \"CI runner\" --expiry 720h --reusable --preauthorized\n" +
+			"Auth-key capability flags (--reusable, --ephemeral, --preauthorized, --tags) apply only to --type authkey.",
+		Example: "  tscli create key --type authkey --description \"CI runner\" --expiry 720h --reusable --preauthorized --tags tag:ci\n" +
 			"  tscli create key --type oauthclient --scope users:read --scope devices:read\n" +
 			"  tscli create key --type federated --scope users:read --issuer https://example.com --subject example-*",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
@@ -169,6 +169,9 @@ func Command() *cobra.Command {
 				}
 				req.Capabilities.Devices.Create.Reusable = reusable
 				req.Capabilities.Devices.Create.Ephemeral = ephemeral
+				if len(tags) > 0 {
+					req.Capabilities.Devices.Create.Tags = tags
+				}
 				req.Capabilities.Devices.Create.Preauthorized = preauthorized
 				if cmd.Flags().Lookup("expiry").Changed {
 					req.ExpirySeconds = int64(expiry.Seconds())
@@ -223,7 +226,7 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVar(&ephemeral, "ephemeral", false, "Auth-key only: mark devices authenticated with this key as ephemeral")
 	cmd.Flags().BoolVar(&preauthorized, "preauthorized", false, "Auth-key only: create key in preauthorized state")
 	cmd.Flags().StringSliceVar(&scopes, "scope", nil, "OAuth/federated scopes (repeatable)")
-	cmd.Flags().StringSliceVar(&tags, "tags", nil, "Allowed tags (repeatable) for OAuth client and federated credentials")
+	cmd.Flags().StringSliceVar(&tags, "tags", nil, "Allowed tags (repeatable) for auth-key device creation, OAuth clients, and federated credentials")
 	cmd.Flags().StringVar(&issuer, "issuer", "", "Federated only: issuer HTTPS URL")
 	cmd.Flags().StringVar(&subject, "subject", "", "Federated only: subject pattern")
 	cmd.Flags().StringVar(&audience, "audience", "", "Federated only: audience hint")

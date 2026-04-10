@@ -67,6 +67,45 @@ func TestCreateKeyAuthkeyCapabilityFlagsPayload(t *testing.T) {
 	}
 }
 
+func TestCreateKeyAuthkeyTagsPayload(t *testing.T) {
+	mock := apimock.New(t)
+	mock.AddJSON(http.MethodPost, "/keys", http.StatusOK, apimock.KeyResponse())
+
+	res := executeCLI(t, []string{
+		"create", "key",
+		"--type", "authkey",
+		"--tags", "tag:tsdns",
+	}, map[string]string{
+		"TSCLI_BASE_URL": mock.URL(),
+		"TSCLI_OUTPUT":   "json",
+	})
+	if res.err != nil {
+		t.Fatalf("unexpected error: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	reqs := mock.Requests()
+	if len(reqs) == 0 {
+		t.Fatalf("expected request to mock API, got none")
+	}
+
+	var body map[string]any
+	if err := json.Unmarshal([]byte(reqs[0].Body), &body); err != nil {
+		t.Fatalf("unmarshal request body: %v\nbody=%s", err, reqs[0].Body)
+	}
+
+	caps := body["capabilities"].(map[string]any)
+	devices := caps["devices"].(map[string]any)
+	create := devices["create"].(map[string]any)
+
+	tags, ok := create["tags"].([]any)
+	if !ok {
+		t.Fatalf("expected tags array in capabilities.devices.create, got %#v", create["tags"])
+	}
+	if len(tags) != 1 || tags[0] != "tag:tsdns" {
+		t.Fatalf("expected tags [tag:tsdns], got %#v", tags)
+	}
+}
+
 func TestCreateKeyAuthkeyCompatibilityWithoutFlags(t *testing.T) {
 	mock := apimock.New(t)
 	mock.AddJSON(http.MethodPost, "/keys", http.StatusOK, apimock.KeyResponse())
