@@ -1,10 +1,13 @@
 package config
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
 
 func TestLoadTailnetProfilesStateValidation(t *testing.T) {
@@ -204,11 +207,36 @@ func TestTailnetProfilePersistenceHelpers(t *testing.T) {
 	if state.ActiveTailnet != "prod" {
 		t.Fatalf("expected active profile prod, got %q", state.ActiveTailnet)
 	}
-	if got := viper.GetString("tailnet"); got != "prod" {
-		t.Fatalf("expected legacy tailnet mirrored to prod, got %q", got)
+
+	resolved, err := ResolveRuntimeConfig(nil)
+	if err != nil {
+		t.Fatalf("resolve runtime config: %v", err)
 	}
-	if got := viper.GetString("api-key"); got != "tskey-prod" {
-		t.Fatalf("expected legacy api-key mirrored to active profile, got %q", got)
+	if resolved.Tailnet != "prod" || resolved.APIKey != "tskey-prod" {
+		t.Fatalf("expected resolved active profile credentials, got %+v", resolved)
+	}
+
+	cfg, err := os.ReadFile(filepath.Join(home, ".tscli.yaml"))
+	if err != nil {
+		t.Fatalf("read persisted config: %v", err)
+	}
+	body := string(cfg)
+	if !strings.Contains(body, "active-tailnet: prod") {
+		t.Fatalf("expected active-tailnet in config, got:\n%s", body)
+	}
+	if !strings.Contains(body, "tailnets:") {
+		t.Fatalf("expected tailnets block in config, got:\n%s", body)
+	}
+
+	var persisted map[string]any
+	if err := yaml.Unmarshal(cfg, &persisted); err != nil {
+		t.Fatalf("unmarshal persisted config: %v", err)
+	}
+	if _, ok := persisted["tailnet"]; ok {
+		t.Fatalf("did not expect duplicated top-level tailnet in config, got:\n%s", body)
+	}
+	if _, ok := persisted["api-key"]; ok {
+		t.Fatalf("did not expect duplicated top-level api-key in profile-backed config, got:\n%s", body)
 	}
 
 	if err := RemoveTailnetProfile("prod"); err == nil {
@@ -217,5 +245,63 @@ func TestTailnetProfilePersistenceHelpers(t *testing.T) {
 
 	if err := RemoveTailnetProfile("sandbox"); err != nil {
 		t.Fatalf("remove non-active profile: %v", err)
+	}
+}
+
+func TestProfilePersistenceNormalizesMixedLegacyConfig(t *testing.T) {
+	v := viper.New()
+
+	home := t.TempDir()
+	path := filepath.Join(home, ".tscli.yaml")
+	data := strings.Join([]string{
+		"output: pretty",
+		"debug: false",
+		"help: false",
+		"active-tailnet: prod",
+		"tailnet: prod",
+		"api-key: tskey-prod",
+		"tailnets:",
+		"  - name: prod",
+		"    api-key: tskey-prod",
+		"  - name: sandbox",
+		"    api-key: tskey-sandbox",
+		"",
+	}, "\n")
+	if err := os.WriteFile(path, []byte(data), 0o600); err != nil {
+		t.Fatalf("write config file: %v", err)
+	}
+
+	v.SetConfigFile(path)
+	if err := v.ReadInConfig(); err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+
+	if err := persistTailnetProfilesState(v, TailnetProfilesState{
+		ActiveTailnet: "sandbox",
+		Tailnets: []TailnetProfile{
+			{Name: "prod", APIKey: "tskey-prod"},
+			{Name: "sandbox", APIKey: "tskey-sandbox"},
+		},
+	}); err != nil {
+		t.Fatalf("persist profiles: %v", err)
+	}
+
+	cfg, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read normalized config: %v", err)
+	}
+	body := string(cfg)
+
+	var persisted map[string]any
+	if err := yaml.Unmarshal(cfg, &persisted); err != nil {
+		t.Fatalf("unmarshal normalized config: %v", err)
+	}
+	for _, unwanted := range []string{"tailnet", "api-key", "debug", "help"} {
+		if _, ok := persisted[unwanted]; ok {
+			t.Fatalf("did not expect %q in normalized config:\n%s", unwanted, body)
+		}
+	}
+	if !strings.Contains(body, "output: pretty") {
+		t.Fatalf("expected unrelated persisted keys to remain, got:\n%s", body)
 	}
 }

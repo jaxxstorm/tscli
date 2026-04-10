@@ -1,4 +1,4 @@
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Multi-tailnet profile schema is supported
 The CLI configuration SHALL support an `active-tailnet` key and a `tailnets` collection of profile objects with `name` and `api-key` fields. When profile-backed configuration is persisted, that profile schema SHALL be the canonical stored representation and SHALL NOT require duplicate top-level `tailnet` or `api-key` keys.

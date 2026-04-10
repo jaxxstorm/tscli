@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -76,6 +77,12 @@ func TestConfigProfilesCommandFlow(t *testing.T) {
 	if !strings.Contains(string(cfg), "active-tailnet: prod") {
 		t.Fatalf("expected persisted active-tailnet in config file, got:\n%s", string(cfg))
 	}
+	if strings.Contains(string(cfg), "\ntailnet:") {
+		t.Fatalf("did not expect duplicated top-level tailnet in config file, got:\n%s", string(cfg))
+	}
+	if strings.Contains(string(cfg), "\napi-key:") {
+		t.Fatalf("did not expect duplicated top-level api-key in config file, got:\n%s", string(cfg))
+	}
 }
 
 func TestRuntimeUsesActiveProfileWithoutEnvOrFlags(t *testing.T) {
@@ -109,6 +116,105 @@ func TestRuntimeUsesActiveProfileWithoutEnvOrFlags(t *testing.T) {
 	reqs := mock.Requests()
 	if len(reqs) == 0 || !strings.Contains(reqs[0].Path, "/tailnet/profile-tailnet/devices") {
 		t.Fatalf("expected request path to use active profile tailnet, got %+v", reqs)
+	}
+}
+
+func TestSwitchingActiveProfileChangesRuntimeTailnet(t *testing.T) {
+	home := t.TempDir()
+
+	for _, args := range [][]string{
+		{"config", "profiles", "upsert", "sandbox", "--api-key", "tskey-sandbox"},
+		{"config", "profiles", "upsert", "prod", "--api-key", "tskey-prod"},
+	} {
+		res := executeCLINoDefaults(t, args, map[string]string{"HOME": home})
+		if res.err != nil {
+			t.Fatalf("setup %v: %v\nstderr:\n%s", args, res.err, res.stderr)
+		}
+	}
+
+	mock := apimock.New(t)
+	mock.AddJSON(http.MethodGet, "/tailnet/prod/devices", http.StatusOK, apimock.DeviceList())
+	mock.AddJSON(http.MethodGet, "/tailnet/sandbox/devices", http.StatusOK, apimock.DeviceList())
+
+	res := executeCLINoDefaults(t, []string{"config", "profiles", "set-active", "prod"}, map[string]string{"HOME": home})
+	if res.err != nil {
+		t.Fatalf("set active prod: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	res = executeCLINoDefaults(t, []string{"list", "devices"}, map[string]string{
+		"HOME":           home,
+		"TSCLI_BASE_URL": mock.URL(),
+	})
+	if res.err != nil {
+		t.Fatalf("list devices with prod active: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	res = executeCLINoDefaults(t, []string{"config", "profiles", "set-active", "sandbox"}, map[string]string{"HOME": home})
+	if res.err != nil {
+		t.Fatalf("set active sandbox: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	res = executeCLINoDefaults(t, []string{"list", "devices"}, map[string]string{
+		"HOME":           home,
+		"TSCLI_BASE_URL": mock.URL(),
+	})
+	if res.err != nil {
+		t.Fatalf("list devices with sandbox active: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	reqs := mock.Requests()
+	if len(reqs) < 2 {
+		t.Fatalf("expected requests for both active profiles, got %+v", reqs)
+	}
+	if !strings.Contains(reqs[0].Path, "/tailnet/prod/devices") {
+		t.Fatalf("expected first request to use prod tailnet, got %+v", reqs[0])
+	}
+	if !strings.Contains(reqs[1].Path, "/tailnet/sandbox/devices") {
+		t.Fatalf("expected second request to use sandbox tailnet, got %+v", reqs[1])
+	}
+}
+
+func TestConfigShowNormalizesProfileBackedConfig(t *testing.T) {
+	home := t.TempDir()
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg := strings.Join([]string{
+		"output: pretty",
+		"debug: false",
+		"help: false",
+		"active-tailnet: prod",
+		"tailnet: prod",
+		"api-key: tskey-prod",
+		"tailnets:",
+		"  - name: prod",
+		"    api-key: tskey-prod",
+		"",
+	}, "\n")
+	if err := os.WriteFile(configFile, []byte(cfg), 0o600); err != nil {
+		t.Fatalf("write config file: %v", err)
+	}
+
+	res := executeCLINoDefaults(t, []string{"config", "show"}, map[string]string{
+		"HOME":         home,
+		"TSCLI_OUTPUT": "json",
+	})
+	if res.err != nil {
+		t.Fatalf("config show: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	var shown map[string]any
+	if err := json.Unmarshal([]byte(res.stdout), &shown); err != nil {
+		t.Fatalf("unmarshal config show output: %v\noutput:\n%s", err, res.stdout)
+	}
+	for _, unwanted := range []string{"tailnet", "api-key", "debug", "help"} {
+		if _, ok := shown[unwanted]; ok {
+			t.Fatalf("did not expect top-level %q in config show output: %s", unwanted, res.stdout)
+		}
+	}
+	if _, ok := shown["active-tailnet"]; !ok {
+		t.Fatalf("expected active-tailnet in output, got %s", res.stdout)
+	}
+	if _, ok := shown["tailnets"]; !ok {
+		t.Fatalf("expected canonical profile keys in output, got %s", res.stdout)
 	}
 }
 

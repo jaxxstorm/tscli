@@ -286,16 +286,20 @@ func persistTailnetProfilesState(v *viper.Viper, state TailnetProfilesState) err
 		return err
 	}
 
+	settings, err := loadPersistedSettings(v)
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+
+	settings["tailnets"] = state.Tailnets
+	settings["active-tailnet"] = state.ActiveTailnet
+	delete(settings, "tailnet")
+	delete(settings, "api-key")
+
 	v.Set("tailnets", state.Tailnets)
 	v.Set("active-tailnet", state.ActiveTailnet)
 
-	if state.ActiveTailnet != "" {
-		active, _ := findTailnetProfile(state.Tailnets, state.ActiveTailnet)
-		v.Set("tailnet", active.Name)
-		v.Set("api-key", active.APIKey)
-	}
-
-	if err := save(v); err != nil {
+	if err := writePersistedSettings(v, settings); err != nil {
 		return fmt.Errorf("write config: %w", err)
 	}
 
