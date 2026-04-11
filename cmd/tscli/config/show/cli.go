@@ -16,7 +16,12 @@ func Command() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			config.WarnIfOverrides(cmd.ErrOrStderr(), cmd)
 
-			out, _ := json.MarshalIndent(viper.AllSettings(), "", "  ")
+			settings, err := config.ShowSettings()
+			if err != nil {
+				return err
+			}
+
+			out, _ := json.MarshalIndent(settings, "", "  ")
 			return output.Print(viper.GetString("output"), out)
 		},
 	}

@@ -32,6 +32,8 @@ tailnets:
     api-key: tskey-xxx
 ```
 
+Profile-backed configs use `active-tailnet` plus the `tailnets` array as the canonical stored shape. Top-level `tailnet` and `api-key` remain legacy compatibility keys for older single-tailnet config files and are not required in profile mode.
+
 ## Secret handling guidance
 
 - Never commit API keys to git.
