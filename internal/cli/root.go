@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 
+	agentcmd "github.com/jaxxstorm/tscli/cmd/tscli/agent"
 	configuration "github.com/jaxxstorm/tscli/cmd/tscli/config"
 	"github.com/jaxxstorm/tscli/cmd/tscli/create"
 	"github.com/jaxxstorm/tscli/cmd/tscli/delete"
@@ -34,7 +35,7 @@ func Configure() *cobra.Command {
 			if cmd.Name() == "help" || cmd.Name() == "version" || cmd.Name() == "completion" {
 				return nil
 			}
-			if isConfigCommand(cmd) {
+			if isLocalCommand(cmd) {
 				return nil
 			}
 
@@ -48,6 +49,7 @@ func Configure() *cobra.Command {
 	}
 
 	root.AddCommand(
+		agentcmd.Command(root),
 		get.Command(),
 		list.Command(),
 		delete.Command(),
@@ -78,9 +80,10 @@ func Configure() *cobra.Command {
 	return root
 }
 
-func isConfigCommand(cmd *cobra.Command) bool {
+func isLocalCommand(cmd *cobra.Command) bool {
 	for current := cmd; current != nil; current = current.Parent() {
-		if current.Name() == "config" {
+		switch current.Name() {
+		case "config", "agent":
 			return true
 		}
 	}

@@ -13,6 +13,7 @@ func TestRequiredDocsPagesExist(t *testing.T) {
 		"docs/_sidebar.md",
 		"docs/README.md",
 		"docs/getting-started.md",
+		"docs/agents.md",
 		"docs/command-reference.md",
 		"docs/configuration.md",
 		"docs/authentication.md",
@@ -31,6 +32,7 @@ func TestDocsSidebarHasCoreLinks(t *testing.T) {
 
 	links := []string{
 		"Getting Started",
+		"AI Agents",
 		"Command Reference",
 		"Configuration",
 		"Authentication",
@@ -48,6 +50,7 @@ func TestGeneratedCommandDocsArtifactsExist(t *testing.T) {
 		"docs/commands/README.md",
 		"docs/commands/_sidebar.md",
 		"docs/commands/tscli.md",
+		"docs/commands/tscli_agent.md",
 		"docs/commands/tscli_config.md",
 		"docs/commands/tscli_create.md",
 		"docs/commands/tscli_get.md",

@@ -41,6 +41,13 @@ tscli get --help
 tscli create key --help
 ```
 
+Initialize repo-local AI agent guidance and prompt surfaces:
+
+```bash
+tscli agent init
+tscli agent update
+```
+
 ## ✨ Highlights
 
 | Area                     | What you can do                                                                                             |
@@ -122,6 +129,7 @@ The primary docs live in the in-repo Docsify site under `docs/`.
 Most useful pages:
 
 - `docs/getting-started.md`: install, first command, and flags
+- `docs/agents.md`: repo-local AI agent integrations and refresh workflow
 - `docs/configuration.md`: config keys, profiles, and precedence
 - `docs/authentication.md`: API-key auth methods and security guidance
 - `docs/command-reference.md`: generated command reference and workflow

@@ -1,5 +1,6 @@
 - [Home](/)
 - [Getting Started](getting-started.md)
+- [AI Agents](agents.md)
 - [Command Reference](command-reference.md)
 - [Configuration](configuration.md)
 - [Authentication](authentication.md)

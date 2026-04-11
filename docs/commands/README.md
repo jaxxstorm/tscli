@@ -13,6 +13,9 @@ make docs-generate
 ## Commands
 
 - [tscli](tscli.md)
+- [tscli agent](tscli_agent.md)
+- [tscli agent init](tscli_agent_init.md)
+- [tscli agent update](tscli_agent_update.md)
 - [tscli config](tscli_config.md)
 - [tscli config get](tscli_config_get.md)
 - [tscli config profiles](tscli_config_profiles.md)
