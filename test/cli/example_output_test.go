@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -162,6 +163,60 @@ func TestServiceCommandRenderedOutput(t *testing.T) {
 				if got := strings.Count(res.stdout, part); got != want {
 					t.Fatalf("expected %q count %d, got %d\noutput:\n%s", part, want, got, res.stdout)
 				}
+			}
+		})
+	}
+}
+
+func TestListServicesStructuredModesPreserveRawEnvelope(t *testing.T) {
+	const body = `{"vipServices":[{"name":"svc:demo-speedtest"}],"extra":"kept","count":1}`
+
+	for _, mode := range []string{"json", "yaml"} {
+		t.Run(mode, func(t *testing.T) {
+			mock := apimock.New(t)
+			env := map[string]string{"TSCLI_OUTPUT": mode, "TSCLI_BASE_URL": mock.URL()}
+			mock.AddRaw(http.MethodGet, "/services", http.StatusOK, body)
+
+			res := executeCLI(t, []string{"list", "services"}, env)
+			if res.err != nil {
+				t.Fatalf("unexpected error: %v\nstderr:\n%s", res.err, res.stderr)
+			}
+
+			switch mode {
+			case "json":
+				var payload map[string]any
+				if err := json.Unmarshal([]byte(res.stdout), &payload); err != nil {
+					t.Fatalf("json output is invalid: %v\n%s", err, res.stdout)
+				}
+				if got := payload["extra"]; got != "kept" {
+					t.Fatalf("expected extra field to be preserved, got %#v", payload)
+				}
+				if got := payload["count"]; got != float64(1) {
+					t.Fatalf("expected count field to be preserved, got %#v", payload)
+				}
+			case "yaml":
+				assertTextOutput(t, res.stdout, "extra: kept", "count: 1")
+			}
+		})
+	}
+}
+
+func TestListServicesStructuredModesDoNotMaterializeMissingVIPServices(t *testing.T) {
+	const body = `{"extra":"kept"}`
+
+	for _, mode := range []string{"json", "yaml"} {
+		t.Run(mode, func(t *testing.T) {
+			mock := apimock.New(t)
+			env := map[string]string{"TSCLI_OUTPUT": mode, "TSCLI_BASE_URL": mock.URL()}
+			mock.AddRaw(http.MethodGet, "/services", http.StatusOK, body)
+
+			res := executeCLI(t, []string{"list", "services"}, env)
+			if res.err != nil {
+				t.Fatalf("unexpected error: %v\nstderr:\n%s", res.err, res.stderr)
+			}
+
+			if strings.Contains(res.stdout, "vipServices") {
+				t.Fatalf("did not expect vipServices to be materialized in %s output:\n%s", mode, res.stdout)
 			}
 		})
 	}

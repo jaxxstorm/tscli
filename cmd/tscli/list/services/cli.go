@@ -27,25 +27,33 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			var resp listResponse
+			var raw json.RawMessage
 			if _, err := tscli.Do(
 				context.Background(),
 				client,
 				http.MethodGet,
 				"/tailnet/{tailnet}/services",
 				nil,
-				&resp,
+				&raw,
 			); err != nil {
 				return fmt.Errorf("failed to list services: %w", err)
 			}
 
-			payload := any(resp)
+			out := raw
 			switch viper.GetString("output") {
 			case "pretty", "human":
-				payload = resp.VIPServices
+				var resp listResponse
+				if err := json.Unmarshal(raw, &resp); err != nil {
+					return fmt.Errorf("decode service list response: %w", err)
+				}
+
+				out, _ = json.MarshalIndent(resp.VIPServices, "", "  ")
 			}
 
-			out, _ := json.MarshalIndent(payload, "", "  ")
+			if viper.GetString("output") != "pretty" && viper.GetString("output") != "human" {
+				out, _ = json.MarshalIndent(raw, "", "  ")
+			}
+
 			return output.Print(viper.GetString("output"), out)
 		},
 	}

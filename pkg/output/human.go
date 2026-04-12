@@ -154,10 +154,13 @@ func inlineMap(m map[string]any) (string, bool) {
 		}
 		entry := k + ": " + part
 		totalLen += len(entry) + 2
+		if totalLen > 80 {
+			return "", false
+		}
 		parts = append(parts, entry)
 	}
 
-	return trunc("{" + strings.Join(parts, ", ") + "}"), true
+	return "{" + strings.Join(parts, ", ") + "}", true
 }
 
 func trunc(s string) string {
