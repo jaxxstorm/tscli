@@ -135,6 +135,117 @@ func TestUpdateRefreshesManagedFilesFromManifest(t *testing.T) {
 	}
 }
 
+func TestInitRemovesStaleManagedFilesWhenToolSelectionNarrows(t *testing.T) {
+	root := testRoot()
+	repo := t.TempDir()
+
+	if _, err := Init(root, InstallOptions{RootDir: repo}); err != nil {
+		t.Fatalf("init full agent bundle: %v", err)
+	}
+
+	stalePaths := []string{
+		localAgentsRelPath,
+		localClaudeRelPath,
+		localGitHubSkillRelPath,
+		localGitHubInspectRelPath,
+		localGitHubOperateRelPath,
+	}
+	for _, rel := range stalePaths {
+		if _, err := os.Stat(filepath.Join(repo, filepath.FromSlash(rel))); err != nil {
+			t.Fatalf("expected %s to exist before narrowing tools: %v", rel, err)
+		}
+	}
+
+	result, err := Init(root, InstallOptions{RootDir: repo, Tools: []string{ToolCodex}})
+	if err != nil {
+		t.Fatalf("re-init narrowed bundle: %v", err)
+	}
+	if got := strings.Join(result.Tools, ","); got != ToolCodex {
+		t.Fatalf("expected codex-only re-init, got %q", got)
+	}
+
+	for _, rel := range stalePaths {
+		if _, err := os.Stat(filepath.Join(repo, filepath.FromSlash(rel))); !os.IsNotExist(err) {
+			t.Fatalf("expected stale managed file %s to be removed, got err=%v", rel, err)
+		}
+	}
+
+	if _, err := os.Stat(filepath.Join(repo, filepath.FromSlash(localCodexSkillRelPath))); err != nil {
+		t.Fatalf("expected codex skill to remain after narrowing tools: %v", err)
+	}
+}
+
+func TestLoadManifestRejectsUnsupportedSchemaVersion(t *testing.T) {
+	repo := t.TempDir()
+	target := installTarget{
+		Scope:              ScopeLocal,
+		RootDir:            repo,
+		ManifestRelPath:    localManifestRelPath,
+		CommandCatalogPath: localCommandCatalogRelPath,
+	}
+
+	if err := os.MkdirAll(filepath.Join(repo, filepath.FromSlash(".tscli/agent")), 0o755); err != nil {
+		t.Fatalf("mkdir manifest dir: %v", err)
+	}
+	content := strings.Join([]string{
+		"managed-by: tscli-agent",
+		"schema-version: 99",
+		"bundle-version: vFuture",
+		"install-scope: local",
+		"tools: [codex]",
+		"files: [.tscli/agent/commands.md, .codex/skills/tscli/SKILL.md, .tscli/agent/manifest.yaml]",
+		"command-count: 1",
+		"command-catalog: .tscli/agent/commands.md",
+		"",
+	}, "\n")
+	if err := os.WriteFile(filepath.Join(repo, filepath.FromSlash(localManifestRelPath)), []byte(content), 0o644); err != nil {
+		t.Fatalf("write manifest: %v", err)
+	}
+
+	_, err := loadManifest(target)
+	if err == nil || !strings.Contains(err.Error(), "unsupported schema-version 99") {
+		t.Fatalf("expected unsupported schema version error, got %v", err)
+	}
+}
+
+func TestLoadManifestAllowsLegacySchemaVersionZero(t *testing.T) {
+	repo := t.TempDir()
+	target := installTarget{
+		Scope:              ScopeLocal,
+		RootDir:            repo,
+		ManifestRelPath:    localManifestRelPath,
+		CommandCatalogPath: localCommandCatalogRelPath,
+	}
+
+	if err := os.MkdirAll(filepath.Join(repo, filepath.FromSlash(".tscli/agent")), 0o755); err != nil {
+		t.Fatalf("mkdir manifest dir: %v", err)
+	}
+	content := strings.Join([]string{
+		"managed-by: tscli-agent",
+		"schema-version: 0",
+		"bundle-version: v1",
+		"tools: [codex]",
+		"files: [.tscli/agent/commands.md, .codex/skills/tscli/SKILL.md, .tscli/agent/manifest.yaml]",
+		"command-count: 1",
+		"command-catalog: .tscli/agent/commands.md",
+		"",
+	}, "\n")
+	if err := os.WriteFile(filepath.Join(repo, filepath.FromSlash(localManifestRelPath)), []byte(content), 0o644); err != nil {
+		t.Fatalf("write manifest: %v", err)
+	}
+
+	manifest, err := loadManifest(target)
+	if err != nil {
+		t.Fatalf("load legacy manifest: %v", err)
+	}
+	if manifest.SchemaVersion != 0 {
+		t.Fatalf("expected legacy schema version 0, got %d", manifest.SchemaVersion)
+	}
+	if manifest.InstallScope != ScopeLocal {
+		t.Fatalf("expected legacy manifest scope to default to %q, got %q", ScopeLocal, manifest.InstallScope)
+	}
+}
+
 func testRoot() *cobra.Command {
 	root := &cobra.Command{Use: "tscli"}
 

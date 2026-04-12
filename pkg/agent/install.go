@@ -170,15 +170,22 @@ func install(root *cobra.Command, target installTarget, tools []string, force bo
 		CommandCount:   len(commands),
 		CommandCatalog: target.CommandCatalogPath,
 	}
-	assets = append(assets, asset{
+	manifestAsset := asset{
 		Path:    target.ManifestRelPath,
 		Content: renderManifest(manifest),
-	})
+	}
+	nextManagedPaths := pathSet(manifest.Files)
 
 	for _, generated := range assets {
 		if err := writeManagedFile(target.RootDir, generated, force, managedPaths); err != nil {
 			return Result{}, err
 		}
+	}
+	if err := removeStaleManagedFiles(target.RootDir, managedPaths, nextManagedPaths); err != nil {
+		return Result{}, err
+	}
+	if err := writeManagedFile(target.RootDir, manifestAsset, force, managedPaths); err != nil {
+		return Result{}, err
 	}
 
 	return Result{
@@ -306,6 +313,11 @@ func loadManifest(target installTarget) (Manifest, error) {
 	}
 	if manifest.ManagedBy != managedBy {
 		return Manifest{}, fmt.Errorf("manifest at %s is not managed by tscli agent", target.ManifestRelPath)
+	}
+	switch manifest.SchemaVersion {
+	case 0, manifestSchema:
+	default:
+		return Manifest{}, fmt.Errorf("manifest at %s uses unsupported schema-version %d (expected %d); rerun `tscli agent init` to regenerate it", target.ManifestRelPath, manifest.SchemaVersion, manifestSchema)
 	}
 	if manifest.InstallScope == "" {
 		manifest.InstallScope = target.Scope
@@ -719,12 +731,36 @@ func loadManagedPaths(target installTarget) map[string]struct{} {
 	return pathSet(manifest.Files)
 }
 
+func removeStaleManagedFiles(rootDir string, previousPaths, nextPaths map[string]struct{}) error {
+	for relPath := range previousPaths {
+		if _, keep := nextPaths[relPath]; keep {
+			continue
+		}
+		path := filepath.Join(rootDir, filepath.FromSlash(relPath))
+		if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("remove stale managed file %s: %w", relPath, err)
+		}
+		pruneEmptyParents(rootDir, filepath.Dir(path))
+	}
+	return nil
+}
+
 func pathSet(paths []string) map[string]struct{} {
 	set := make(map[string]struct{}, len(paths))
 	for _, path := range paths {
 		set[path] = struct{}{}
 	}
 	return set
+}
+
+func pruneEmptyParents(rootDir, dir string) {
+	rootDir = filepath.Clean(rootDir)
+	for dir != "." && dir != string(filepath.Separator) && dir != rootDir {
+		if err := os.Remove(dir); err != nil {
+			return
+		}
+		dir = filepath.Dir(dir)
+	}
 }
 
 func relativeReference(fromRelPath, toRelPath string) string {
