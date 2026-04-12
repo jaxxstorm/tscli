@@ -207,13 +207,33 @@ func PostureIntegrationList() map[string]any {
 
 func Service() map[string]any {
 	return map[string]any{
-		"name":  "svc",
-		"ports": []int{443},
+		"name":    "svc:demo-speedtest",
+		"addrs":   []string{"100.82.154.103", "fd7a:115c:a1e0::b101:9bb1"},
+		"comment": "This Tailscale Service is managed by the Tailscale Kubernetes Operator",
+		"ports":   []string{"tcp:443"},
+		"tags":    []string{"tag:demo-speedtest"},
+		"annotations": map[string]any{
+			"tailscale.com/owner-references": `{"ownerRefs":[{"operatorID":"nbFLzCnzKQ11CNTRL"}]}`,
+		},
 	}
 }
 
-func ServiceList() []map[string]any {
-	return []map[string]any{Service()}
+func ServiceList() map[string]any {
+	return map[string]any{
+		"vipServices": []map[string]any{
+			Service(),
+			{
+				"name":    "svc:demo-streamer",
+				"addrs":   []string{"100.106.40.81", "fd7a:115c:a1e0::da01:2897"},
+				"comment": "This Tailscale Service is managed by the Tailscale Kubernetes Operator",
+				"ports":   []string{"tcp:443"},
+				"tags":    []string{"tag:demo-streamer"},
+				"annotations": map[string]any{
+					"tailscale.com/owner-references": `{"ownerRefs":[{"operatorID":"nP1yvuuBKr11CNTRL"}]}`,
+				},
+			},
+		},
+	}
 }
 
 func ServiceDevices() []map[string]any {

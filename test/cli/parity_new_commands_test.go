@@ -24,7 +24,7 @@ func TestParityCommandsWithMockedAPI(t *testing.T) {
 		{name: "set logs stream", args: []string{"set", "logs", "stream", "--type", "network", "--body", `{"endpoint":"https://example"}`}, method: http.MethodPut, pathHint: "/logging/network/stream", successBody: map[string]any{"enabled": true}},
 		{name: "delete logs stream", args: []string{"delete", "logs", "stream", "--type", "network"}, method: http.MethodDelete, pathHint: "/logging/network/stream", successBody: map[string]any{}},
 		{name: "set device attributes", args: []string{"set", "device", "attributes", "--body", `{"nodes":{}}`}, method: http.MethodPatch, pathHint: "/device-attributes", successBody: map[string]any{"ok": true}},
-		{name: "list services", args: []string{"list", "services"}, method: http.MethodGet, pathHint: "/services", successBody: []map[string]any{{"name": "svc"}}},
+		{name: "list services", args: []string{"list", "services"}, method: http.MethodGet, pathHint: "/services", successBody: map[string]any{"vipServices": []map[string]any{{"name": "svc"}}}},
 		{name: "list services devices", args: []string{"list", "services", "devices", "--service", "svc"}, method: http.MethodGet, pathHint: "/services/svc/devices", successBody: []map[string]any{{"nodeId": "node-1"}}},
 		{name: "get service", args: []string{"get", "service", "--service", "svc"}, method: http.MethodGet, pathHint: "/services/svc", successBody: map[string]any{"name": "svc"}},
 		{name: "get service approval", args: []string{"get", "service", "approval", "--service", "svc", "--device", "node-1"}, method: http.MethodGet, pathHint: "/services/svc/device/node-1/approved", successBody: map[string]any{"approved": true}},

@@ -13,6 +13,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+type listResponse struct {
+	VIPServices []map[string]any `json:"vipServices"`
+}
+
 func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "services",
@@ -23,19 +27,25 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			var raw json.RawMessage
+			var resp listResponse
 			if _, err := tscli.Do(
 				context.Background(),
 				client,
 				http.MethodGet,
 				"/tailnet/{tailnet}/services",
 				nil,
-				&raw,
+				&resp,
 			); err != nil {
 				return fmt.Errorf("failed to list services: %w", err)
 			}
 
-			out, _ := json.MarshalIndent(raw, "", "  ")
+			payload := any(resp)
+			switch viper.GetString("output") {
+			case "pretty", "human":
+				payload = resp.VIPServices
+			}
+
+			out, _ := json.MarshalIndent(payload, "", "  ")
 			return output.Print(viper.GetString("output"), out)
 		},
 	}

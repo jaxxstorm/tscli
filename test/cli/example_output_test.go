@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/jaxxstorm/tscli/internal/testutil/apimock"
@@ -78,6 +79,91 @@ func TestExampleCommandOutputModes(t *testing.T) {
 				assertOutputForMode(t, mode, res.stdout)
 			})
 		}
+	}
+}
+
+func TestServiceCommandRenderedOutput(t *testing.T) {
+	cases := []struct {
+		name     string
+		args     []string
+		mode     string
+		contains []string
+		absent   []string
+		counts   map[string]int
+	}{
+		{
+			name:     "list services pretty",
+			args:     []string{"list", "services"},
+			mode:     "pretty",
+			contains: []string{"svc:demo-speedtest", "svc:demo-streamer", "addrs:", "annotations:", "tailscale.com/owner-references", "─"},
+			absent:   []string{"vipServices:"},
+			counts: map[string]int{
+				"svc:demo-speedtest": 1,
+				"svc:demo-streamer":  1,
+			},
+		},
+		{
+			name:     "list services human",
+			args:     []string{"list", "services"},
+			mode:     "human",
+			contains: []string{"svc:demo-speedtest", "svc:demo-streamer", "annotations", "tailscale.com/owner-references", "─"},
+			absent:   []string{"vipServices:"},
+			counts: map[string]int{
+				"svc:demo-speedtest": 1,
+				"svc:demo-streamer":  1,
+			},
+		},
+		{
+			name:     "get service pretty",
+			args:     []string{"get", "service", "--service", "svc"},
+			mode:     "pretty",
+			contains: []string{"svc:demo-speedtest", "addrs:", "annotations:", "tailscale.com/owner-references"},
+			absent:   []string{"vipServices:"},
+			counts: map[string]int{
+				"svc:demo-speedtest": 1,
+			},
+		},
+		{
+			name:     "get service human",
+			args:     []string{"get", "service", "--service", "svc"},
+			mode:     "human",
+			contains: []string{"svc:demo-speedtest", "annotations", "tailscale.com/owner-references"},
+			absent:   []string{"vipServices:"},
+			counts: map[string]int{
+				"svc:demo-speedtest": 1,
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			mock := apimock.New(t)
+			env := map[string]string{"TSCLI_OUTPUT": tc.mode, "TSCLI_BASE_URL": mock.URL()}
+
+			switch tc.args[0] {
+			case "list":
+				addJSONForMethods(mock, apimock.ServiceList(), http.MethodGet)
+			default:
+				addJSONForMethods(mock, apimock.Service(), http.MethodGet)
+			}
+
+			res := executeCLI(t, tc.args, env)
+			if res.err != nil {
+				t.Fatalf("unexpected error: %v\nstderr:\n%s", res.err, res.stderr)
+			}
+			assertTextOutput(t, res.stdout, tc.contains...)
+			for _, part := range tc.absent {
+				if strings.Contains(res.stdout, part) {
+					t.Fatalf("did not expect output to contain %q, got:\n%s", part, res.stdout)
+				}
+			}
+			for part, want := range tc.counts {
+				if got := strings.Count(res.stdout, part); got != want {
+					t.Fatalf("expected %q count %d, got %d\noutput:\n%s", part, want, got, res.stdout)
+				}
+			}
+		})
 	}
 }
 
@@ -178,7 +264,7 @@ func exampleOutputCases() []exampleOutputCase {
 		apiObjectCase("get policy preview", []string{"get", "policy", "preview", "--type", "user", "--value", "user@example.com", "--body", "{}"}, apimock.PolicyPreview(), "matches"),
 		apiObjectCase("get policy validate", []string{"get", "policy", "validate", "--body", "{}"}, apimock.PolicyValidation(), "valid"),
 		apiObjectCase("get posture-integration", []string{"get", "posture-integration", "--id", "pi-1"}, apimock.PostureIntegration(), "id", "provider"),
-		apiObjectCase("get service", []string{"get", "service", "--service", "svc"}, apimock.Service(), "name"),
+		apiObjectCase("get service", []string{"get", "service", "--service", "svc"}, apimock.Service(), "name", "addrs", "ports", "annotations"),
 		apiObjectCase("get service approval", []string{"get", "service", "approval", "--service", "svc", "--device", "node-123"}, apimock.ServiceApproval(), "approved"),
 		apiObjectCase("get settings", []string{"get", "settings"}, apimock.TailnetSettings(), "devicesApprovalOn", "postureIdentityCollectionOn"),
 		apiObjectCase("get user", []string{"get", "user", "--user", "user@example.com"}, apimock.User(), "id", "loginName"),
@@ -200,7 +286,13 @@ func exampleOutputCases() []exampleOutputCase {
 		apiArrayCase("list nameservers", []string{"list", "nameservers"}, apimock.DNSNameservers(), nil),
 		apiObjectCase("list posture-integrations", []string{"list", "posture-integrations"}, apimock.PostureIntegrationList(), "integrations"),
 		apiObjectCase("list routes", []string{"list", "routes", "--device", "node-123"}, apimock.DeviceRoutes(), "advertisedRoutes", "enabledRoutes"),
-		apiArrayCase("list services", []string{"list", "services"}, apimock.ServiceList(), []string{"name"}),
+		customCase("list services", []string{"list", "services"}, jsonShapeExpectation{
+			TopLevel:   jsonTopLevelObject,
+			ObjectKeys: []string{"vipServices"},
+		}, true, func(t *testing.T, mock *apimock.Server, env map[string]string) {
+			env["TSCLI_BASE_URL"] = mock.URL()
+			addJSONForMethods(mock, apimock.ServiceList(), http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete)
+		}),
 		apiArrayCase("list services devices", []string{"list", "services", "devices", "--service", "svc"}, apimock.ServiceDevices(), []string{"nodeId"}),
 		apiArrayCase("list users", []string{"list", "users"}, apimock.UserListEnvelope(), []string{"id", "loginName"}),
 		apiArrayCase("list webhooks", []string{"list", "webhooks"}, apimock.WebhookListEnvelope(), []string{"endpointUrl"}),

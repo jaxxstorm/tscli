@@ -33,19 +33,19 @@ func Command() *cobra.Command {
 			}
 
 			path := fmt.Sprintf("/tailnet/{tailnet}/services/%s", url.PathEscape(serviceName))
-			var raw json.RawMessage
+			var resp map[string]any
 			if _, err := tscli.Do(
 				context.Background(),
 				client,
 				http.MethodGet,
 				path,
 				nil,
-				&raw,
+				&resp,
 			); err != nil {
 				return fmt.Errorf("failed to get service %s: %w", serviceName, err)
 			}
 
-			out, _ := json.MarshalIndent(raw, "", "  ")
+			out, _ := json.MarshalIndent(resp, "", "  ")
 			return output.Print(viper.GetString("output"), out)
 		},
 	}
