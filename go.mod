@@ -3,7 +3,7 @@ module github.com/jaxxstorm/tscli
 go 1.26.0
 
 require (
-	github.com/charmbracelet/fang v1.0.0
+	github.com/charmbracelet/fang/v2 v2.0.1
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/jaxxstorm/vers v0.0.3
 	github.com/spf13/cobra v1.10.2
