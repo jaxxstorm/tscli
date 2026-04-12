@@ -20,6 +20,7 @@ A CLI tool for interacting with the Tailscale API.
 
 ### SEE ALSO
 
+* [tscli agent](tscli_agent.md)	 - Manage AI agent integrations for tscli
 * [tscli config](tscli_config.md)	 - Config commands
 * [tscli create](tscli_create.md)	 - Create commands
 * [tscli delete](tscli_delete.md)	 - Delete commands

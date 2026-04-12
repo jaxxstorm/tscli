@@ -13,6 +13,7 @@ import (
 type exampleOutputCase struct {
 	command       string
 	args          []string
+	argsFunc      func(*testing.T, map[string]string) []string
 	shape         jsonShapeExpectation
 	textContains  []string
 	supportsModes bool
@@ -87,11 +88,15 @@ func runExampleOutputCase(t *testing.T, tc exampleOutputCase, mode string) execR
 	env := map[string]string{
 		"TSCLI_OUTPUT": mode,
 	}
+	args := tc.args
+	if tc.argsFunc != nil {
+		args = tc.argsFunc(t, env)
+	}
 	if tc.setup != nil {
 		tc.setup(t, mock, env)
 	}
 
-	res := executeCLI(t, tc.args, env)
+	res := executeCLI(t, args, env)
 	if res.err != nil {
 		t.Fatalf("unexpected error for %q: %v\nstderr:\n%s", tc.command, res.err, res.stderr)
 	}
@@ -100,6 +105,20 @@ func runExampleOutputCase(t *testing.T, tc exampleOutputCase, mode string) execR
 
 func exampleOutputCases() []exampleOutputCase {
 	return []exampleOutputCase{
+		localTextCaseWithArgs("agent init", func(t *testing.T, _ map[string]string) []string {
+			return []string{"agent", "init", "--dir", t.TempDir()}
+		}, nil, "tscli agent integrations initialized"),
+		localTextCaseWithArgs("agent update", func(t *testing.T, env map[string]string) []string {
+			repo := t.TempDir()
+			env["TSCLI_AGENT_TEST_DIR"] = repo
+			return []string{"agent", "update", "--dir", repo}
+		}, func(t *testing.T, _ *apimock.Server, env map[string]string) {
+			repo := env["TSCLI_AGENT_TEST_DIR"]
+			res := executeCLINoDefaults(t, []string{"agent", "init", "--dir", repo}, nil)
+			if res.err != nil {
+				t.Fatalf("prepare agent update example: %v\nstderr:\n%s", res.err, res.stderr)
+			}
+		}, "tscli agent integrations updated"),
 		localTextCase("config get", []string{"config", "get", "output"}, nil, "json"),
 		localTextCase("config profiles delete", []string{"config", "profiles", "delete", "sandbox"}, setupProfileHome, "tailnet profile sandbox removed"),
 		localObjectCase("config profiles list", []string{"config", "profiles", "list"}, setupProfileHome, jsonShapeExpectation{
@@ -268,6 +287,17 @@ func localObjectCase(command string, args []string, setup func(*testing.T, *apim
 
 func localTextCase(command string, args []string, setup func(*testing.T, *apimock.Server, map[string]string), contains ...string) exampleOutputCase {
 	return customCase(command, args, jsonShapeExpectation{}, false, setup, contains...)
+}
+
+func localTextCaseWithArgs(command string, argsFunc func(*testing.T, map[string]string) []string, setup func(*testing.T, *apimock.Server, map[string]string), contains ...string) exampleOutputCase {
+	return exampleOutputCase{
+		command:       command,
+		argsFunc:      argsFunc,
+		shape:         jsonShapeExpectation{},
+		textContains:  contains,
+		supportsModes: false,
+		setup:         setup,
+	}
 }
 
 func customCase(command string, args []string, shape jsonShapeExpectation, supportsModes bool, setup func(*testing.T, *apimock.Server, map[string]string), contains ...string) exampleOutputCase {

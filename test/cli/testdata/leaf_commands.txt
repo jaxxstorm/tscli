@@ -1,3 +1,5 @@
+agent init
+agent update
 config get
 config profiles delete
 config profiles list

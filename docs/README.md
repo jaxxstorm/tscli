@@ -9,6 +9,7 @@ This docs site is the source of truth for setup, authentication, configuration, 
 New users:
 
 - [Getting Started](getting-started.md)
+- [AI Agent Integrations](agents.md)
 - [Authentication](authentication.md)
 - [Configuration](configuration.md)
 
@@ -16,6 +17,7 @@ New users:
 Existing users:
 
 - [Command Reference](command-reference.md)
+- [AI Agent Integrations](agents.md)
 - [Configuration](configuration.md)
 
 Contributors:
