@@ -88,7 +88,7 @@ func fmtVal(v any) string {
 		// join scalars, otherwise indicate array length
 		var parts []string
 		for _, el := range x {
-			if s, ok := el.(string); ok && len(s) <= 40 {
+			if s, ok := inlineVal(el); ok {
 				parts = append(parts, s)
 			} else {
 				return fmt.Sprintf("[%d items]", len(x))
@@ -96,11 +96,71 @@ func fmtVal(v any) string {
 		}
 		return strings.Join(parts, "  ")
 	case map[string]any:
-		return fmt.Sprintf("{%d fields}", len(x))
+		if s, ok := inlineMap(x); ok {
+			return s
+		}
+		b, _ := json.Marshal(x)
+		return trunc(string(b))
 	default:
 		b, _ := json.Marshal(x)
 		return trunc(string(b))
 	}
+}
+
+func inlineVal(v any) (string, bool) {
+	switch x := v.(type) {
+	case nil:
+		return "null", true
+	case string:
+		return trunc(x), true
+	case json.Number:
+		return x.String(), true
+	case bool:
+		return fmt.Sprintf("%v", x), true
+	case []any:
+		var parts []string
+		for _, el := range x {
+			part, ok := inlineVal(el)
+			if !ok {
+				return "", false
+			}
+			parts = append(parts, part)
+		}
+		return "[" + strings.Join(parts, ", ") + "]", true
+	case map[string]any:
+		return inlineMap(x)
+	default:
+		return "", false
+	}
+}
+
+func inlineMap(m map[string]any) (string, bool) {
+	if len(m) == 0 {
+		return "{}", true
+	}
+
+	var keys []string
+	for k := range maps.Keys(m) {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	var parts []string
+	totalLen := 2 // {}
+	for _, k := range keys {
+		part, ok := inlineVal(m[k])
+		if !ok {
+			return "", false
+		}
+		entry := k + ": " + part
+		totalLen += len(entry) + 2
+		if totalLen > 80 {
+			return "", false
+		}
+		parts = append(parts, entry)
+	}
+
+	return "{" + strings.Join(parts, ", ") + "}", true
 }
 
 func trunc(s string) string {

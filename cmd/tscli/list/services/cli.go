@@ -13,6 +13,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+type listResponse struct {
+	VIPServices []map[string]any `json:"vipServices"`
+}
+
 func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "services",
@@ -35,7 +39,21 @@ func Command() *cobra.Command {
 				return fmt.Errorf("failed to list services: %w", err)
 			}
 
-			out, _ := json.MarshalIndent(raw, "", "  ")
+			out := raw
+			switch viper.GetString("output") {
+			case "pretty", "human":
+				var resp listResponse
+				if err := json.Unmarshal(raw, &resp); err != nil {
+					return fmt.Errorf("decode service list response: %w", err)
+				}
+
+				out, _ = json.MarshalIndent(resp.VIPServices, "", "  ")
+			}
+
+			if viper.GetString("output") != "pretty" && viper.GetString("output") != "human" {
+				out, _ = json.MarshalIndent(raw, "", "  ")
+			}
+
 			return output.Print(viper.GetString("output"), out)
 		},
 	}
