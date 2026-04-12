@@ -2,8 +2,10 @@
   "openapi_operations": 85,
   "excluded_operations": [],
   "in_scope_operations": 85,
-  "manifest_commands": 89,
+  "manifest_commands": 91,
   "excluded_commands": [
+    "agent init",
+    "agent update",
     "config get",
     "config profiles delete",
     "config profiles list",

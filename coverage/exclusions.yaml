@@ -3,6 +3,8 @@
 operations: {}
 
 commands:
+  agent init: "Local agent bundle generation command; no Tailscale API call."
+  agent update: "Local agent bundle refresh command; no Tailscale API call."
   config get: "Local config lookup command; no Tailscale API call."
   config profiles delete: "Local profile management command; no Tailscale API call."
   config profiles list: "Local profile management command; no Tailscale API call."
