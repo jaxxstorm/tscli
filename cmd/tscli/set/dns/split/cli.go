@@ -45,7 +45,7 @@ func Command() *cobra.Command {
 		Aliases: []string{"splitdns", "split", "sd"},
 		Short:   "Set or patch split-DNS domains → nameservers",
 
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			if !cmd.Flags().Lookup("entry").Changed {
 				return fmt.Errorf("at least one --entry is required (domain=nameserver)")
 			}

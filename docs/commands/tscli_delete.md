@@ -33,5 +33,5 @@ Commands that delete from the Tailscale API
 * [tscli delete posture-integration](tscli_delete_posture-integration.md)	 - Delete a posture integration
 * [tscli delete service](tscli_delete_service.md)	 - Delete a service
 * [tscli delete user](tscli_delete_user.md)	 - Delete a tailnet user
-* [tscli delete webhook](tscli_delete_webhook.md)	 - Deletea webhook
+* [tscli delete webhook](tscli_delete_webhook.md)	 - Delete a webhook
 

@@ -32,7 +32,7 @@ func Command() *cobra.Command {
 		Use:   "posture",
 		Short: "Delete a posture attribute",
 		Long:  "Remove (unset) a custom:* posture attribute from the specified device.",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if !keyRe.MatchString(attrKey) {
 				return errors.New(`--key must start with "custom:" and contain only letters, numbers, underscores or colons (≤ 50 chars)`)
 			}

@@ -26,7 +26,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ip",
 		Short: "Set a device's Tailscale IPv4 address",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			ip := net.ParseIP(ipv4)
 			if ip == nil || ip.To4() == nil {
 				return fmt.Errorf("invalid IPv4 address: %s", ipv4)

@@ -22,7 +22,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "configuration",
 		Short: "Set tailnet DNS configuration",
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			if filePath == "" && inline == "" {
 				return fmt.Errorf("one of --file or --body is required")
 			}

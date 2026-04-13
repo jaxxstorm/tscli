@@ -45,7 +45,7 @@ func Command() *cobra.Command {
 		Use:   "user",
 		Short: "Create a user invite",
 		Long:  "Invite a user to the current Tailscale tailnet with an optional role.",
-		PersistentPreRunE: func(*cobra.Command, []string) error {
+		PreRunE: func(*cobra.Command, []string) error {
 			if _, err := mail.ParseAddress(email); err != nil {
 				return fmt.Errorf("invalid email: %w", err)
 			}

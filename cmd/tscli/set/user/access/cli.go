@@ -27,7 +27,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "access",
 		Short: "Approve, suspend, or restore a user",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			actions := 0
 			if approve {
 				actions++

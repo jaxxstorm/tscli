@@ -38,6 +38,9 @@ func Configure() *cobra.Command {
 			if isLocalCommand(cmd) {
 				return nil
 			}
+			if isUnauthenticatedCommand(cmd) {
+				return nil
+			}
 
 			_ = v.BindPFlags(cmd.Flags())
 
@@ -88,4 +91,20 @@ func isLocalCommand(cmd *cobra.Command) bool {
 		}
 	}
 	return false
+}
+
+func isUnauthenticatedCommand(cmd *cobra.Command) bool {
+	segments := make([]string, 0, 4)
+	for current := cmd; current != nil; current = current.Parent() {
+		if current.Name() == "tscli" {
+			break
+		}
+		segments = append([]string{current.Name()}, segments...)
+	}
+
+	if len(segments) != 2 {
+		return false
+	}
+
+	return segments[0] == "create" && segments[1] == "token"
 }

@@ -22,7 +22,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "approval",
 		Short: "Get service approval state for a device",
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			if serviceName == "" {
 				return fmt.Errorf("--service is required")
 			}

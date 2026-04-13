@@ -36,7 +36,7 @@ Examples
 
 Structured output prints the updated routes object returned by the API.
 `,
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(routes) == 0 {
 				return errors.New("at least one --route must be supplied")
 			}

@@ -66,7 +66,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "webhook",
 		Short: "Create a new tailnet webhook",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			// validate URL
 			if _, err := url.ParseRequestURI(rawURL); err != nil {
 				return fmt.Errorf("invalid --url: %v", err)

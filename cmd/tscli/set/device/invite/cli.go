@@ -34,7 +34,7 @@ func Command() *cobra.Command {
 		Use:   "invite",
 		Short: "Set device invite status",
 		Long:  "Resend or accept a device invite. Valid statuses: resend, accept",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			if inviteID == "" {
 				return fmt.Errorf("--id is required")
 			}

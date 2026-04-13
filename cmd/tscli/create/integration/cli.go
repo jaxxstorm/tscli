@@ -38,7 +38,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "posture-integration",
 		Short: "Create a new posture integration",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			provider = strings.ToLower(provider)
 			if _, ok := providerEnum[provider]; !ok {
 				return fmt.Errorf("invalid --provider: %s", provider)

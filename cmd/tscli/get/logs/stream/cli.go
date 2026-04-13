@@ -43,7 +43,7 @@ Use --status to fetch the current stream status.`,
 
 		Args: cobra.NoArgs,
 
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			if _, ok := allowed[logType]; !ok {
 				return fmt.Errorf(`--type must be "configuration" or "network"`)
 			}

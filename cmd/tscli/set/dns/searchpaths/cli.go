@@ -35,7 +35,7 @@ func Command() *cobra.Command {
 		Aliases: []string{"sp", "search"},
 		Short:   "Set (replace) DNS search-paths for the tailnet",
 
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			f := cmd.Flags().Lookup("searchpath")
 			if !f.Changed {
 				return fmt.Errorf("--searchpath is required (use --searchpath \"\" to clear)")

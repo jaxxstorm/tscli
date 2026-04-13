@@ -31,7 +31,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "posture-integration",
 		Short: "Create or update a posture integration",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			// ensure at least one field besides --id was supplied
 			changed := 0
 			cmd.Flags().VisitAll(func(f *pflag.Flag) {

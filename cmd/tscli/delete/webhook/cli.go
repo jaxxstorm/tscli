@@ -18,8 +18,8 @@ func Command() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "webhook",
-		Short: "Deletea webhook",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		Short: "Delete a webhook",
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {

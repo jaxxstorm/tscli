@@ -28,7 +28,7 @@ func Command() *cobra.Command {
 
   Optional optimistic lock:
   --if-match ts-default  OR  value from previous GET /acl ETag`,
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			if filePath == "" && inline == "" {
 				return errors.New("one of --file or --body is required")
 			}

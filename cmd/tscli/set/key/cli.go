@@ -23,7 +23,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "key",
 		Short: "Update a tailnet key",
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			if keyID == "" {
 				return fmt.Errorf("--key is required")
 			}
