@@ -2,7 +2,7 @@
 
 ## tscli delete webhook
 
-Deletea webhook
+Delete a webhook
 
 ```
 tscli delete webhook [flags]
