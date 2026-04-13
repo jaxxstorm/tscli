@@ -28,7 +28,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "user",
 		Short: "List user invites in the tailnet",
-		PersistentPreRunE: func(*cobra.Command, []string) error {
+		PreRunE: func(*cobra.Command, []string) error {
 			if state != "" {
 				if _, ok := validState[strings.ToLower(state)]; !ok {
 					return fmt.Errorf("invalid --state %q (pending|accepted|all)", state)

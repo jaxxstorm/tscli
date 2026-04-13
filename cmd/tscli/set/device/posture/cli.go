@@ -79,7 +79,7 @@ Examples:
   # Set an attribute with expiry
   tscli set device posture --device node-abc123 --key custom:temp --value test --expiry 2024-12-31T23:59:59Z
 `,
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if deviceID == "" {
 				return fmt.Errorf("--device is required")
 			}

@@ -29,7 +29,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "role",
 		Short: "Update a user's role",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			if role == "" {
 				return fmt.Errorf("--role is required")
 			}

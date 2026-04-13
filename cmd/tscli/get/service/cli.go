@@ -20,7 +20,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "service",
 		Short: "Get a service",
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			if serviceName == "" {
 				return fmt.Errorf("--service is required")
 			}

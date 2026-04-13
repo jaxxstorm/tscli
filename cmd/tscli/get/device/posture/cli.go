@@ -28,7 +28,7 @@ Example
 
   tscli get device posture --device node-abcdef123456
 `,
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if deviceID == "" {
 				return fmt.Errorf("--device is required")
 			}

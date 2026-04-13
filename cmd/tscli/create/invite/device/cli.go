@@ -42,7 +42,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "device",
 		Short: "Create share invite(s) for a device",
-		PersistentPreRunE: func(*cobra.Command, []string) error {
+		PreRunE: func(*cobra.Command, []string) error {
 			if deviceID == "" {
 				return errors.New("--device is required")
 			}

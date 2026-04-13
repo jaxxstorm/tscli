@@ -29,7 +29,7 @@ func Command() *cobra.Command {
 		Long: `Validate a policy file using the Tailscale API.
 The policy can be provided via --file or --body flag.`,
 
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			// exactly one source
 			sources := 0
 			if file != "" {

@@ -29,7 +29,7 @@ func Command() *cobra.Command {
 		Example: `  tscli create token \
       --client-id     "$OAUTH_CLIENT_ID" \
       --client-secret "$OAUTH_CLIENT_SECRET"`,
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			if clientID == "" || clientSecret == "" {
 				return errors.New("--client-id and --client-secret are both required")
 			}

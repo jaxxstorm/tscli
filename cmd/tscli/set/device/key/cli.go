@@ -33,7 +33,7 @@ func Command() *cobra.Command {
 		Use:   "key",
 		Short: "Set device key settings",
 		Long:  "Update device key settings such as expiry behavior",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			if deviceID == "" {
 				return fmt.Errorf("--device is required")
 			}

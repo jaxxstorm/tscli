@@ -28,7 +28,7 @@ func Command() *cobra.Command {
 		Use:     "nameservers",
 		Aliases: []string{"ns"},
 		Short:   "Set the DNS nameservers for the tailnet",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			if !cmd.Flags().Lookup("nameserver").Changed {
 				return fmt.Errorf("at least one --nameserver is required")
 			}

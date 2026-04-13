@@ -28,7 +28,7 @@ func Command() *cobra.Command {
 		Use:   "invite",
 		Short: "Set user invite status",
 		Long:  "Resend a user invite",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			if inviteID == "" {
 				return fmt.Errorf("--id is required")
 			}

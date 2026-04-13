@@ -112,7 +112,7 @@ func Command() *cobra.Command {
 		Example: "  tscli create key --type authkey --description \"CI runner\" --expiry 720h --reusable --preauthorized --tags tag:ci\n" +
 			"  tscli create key --type oauthclient --scope users:read --scope devices:read\n" +
 			"  tscli create key --type federated --scope users:read --issuer https://example.com --subject example-*",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			kind = strings.ToLower(kind)
 			if kind == "" {
 				kind = "authkey"

@@ -44,7 +44,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "users",
 		Short: "List tailnet users",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			if typeStr != "" {
 				if t, ok := validTypes[strings.ToLower(typeStr)]; ok {
 					ut = &t

@@ -23,7 +23,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "posture-integration",
 		Short: "Get a posture integration",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {

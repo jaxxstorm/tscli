@@ -19,7 +19,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "devices",
 		Short: "List service hosts",
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			if serviceName == "" {
 				return fmt.Errorf("--service is required")
 			}

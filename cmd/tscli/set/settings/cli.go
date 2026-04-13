@@ -29,7 +29,7 @@ func Command() *cobra.Command {
 		Use:   "settings",
 		Short: "Update tailnet settings",
 		Long:  "Update tailnet settings and print the authoritative settings object returned by the API.",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			f := cmd.Flags()
 
 			// require at least one flag

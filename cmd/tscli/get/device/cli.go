@@ -45,7 +45,7 @@ func Command() *cobra.Command {
 		Use:   "device",
 		Short: "Get a device's information",
 		Long:  "Return a single device record from the Tailscale API.",
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			chosen := 0
 			if deviceID != "" {
 				chosen++

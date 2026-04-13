@@ -38,7 +38,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "preview",
 		Short: "Preview which ACL rules match a user or IP:port",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			kind = strings.ToLower(kind)
 			if kind != "user" && kind != "ipport" {
 				return errors.New(`--type must be "user" or "ipport"`)

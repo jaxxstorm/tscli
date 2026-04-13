@@ -26,7 +26,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tags",
 		Short: "Set a device's tags",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			for _, t := range tags {
 				if !tagRe.MatchString(t) {
 					return fmt.Errorf("invalid tag %q: must match tag:<n> and contain only letters, numbers, dashes, or underscores", t)

@@ -22,7 +22,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "attributes",
 		Short: "Batch update custom device posture attributes",
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			if filePath == "" && inline == "" {
 				return fmt.Errorf("one of --file or --body is required")
 			}

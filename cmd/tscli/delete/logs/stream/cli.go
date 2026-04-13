@@ -25,7 +25,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stream",
 		Short: "Disable log streaming",
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			if _, ok := validLogTypes[logType]; !ok {
 				return fmt.Errorf(`--type must be "configuration" or "network"`)
 			}

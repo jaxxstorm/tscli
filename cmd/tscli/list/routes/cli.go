@@ -24,7 +24,7 @@ func Command() *cobra.Command {
 		Use:   "routes",
 		Short: "List a device's subnet routes",
 		Long:  "Show both advertised and enabled subnet routes for a device.",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if deviceID == "" {
 				return fmt.Errorf("--device is required")
 			}

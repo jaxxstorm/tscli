@@ -33,7 +33,7 @@ func Command() *cobra.Command {
 		Use:   "contact",
 		Short: "Update a contact record or resend verification email",
 		Long:  "Update contact info or resend verification email. Allowed types: primary | billing | security. Use --resend to send verification email for a contact type.",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			if !resend && email == "" {
 				return fmt.Errorf("--email is required when not using --resend")
 			}
