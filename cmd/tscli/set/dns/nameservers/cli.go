@@ -1,7 +1,7 @@
 // cmd/tscli/set/nameservers/cli.go
 //
-// `tscli set nameservers --nameserver 1.1.1.1 --nameserver 8.8.8.8`
-// Replace the tailnet-wide DNS nameserver list.
+// `tscli set nameservers --nameserver 1.1.1.1 --nameserver https://dns.google/dns-query`
+// Replace the tailnet-wide DNS nameserver list with IPs or DoH endpoints.
 //
 // If you pass an empty slice (`--nameserver ""`) the custom list is removed
 // and Tailscale falls back to its defaults.
@@ -11,9 +11,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 
+	cldns "github.com/jaxxstorm/tscli/pkg/dns"
 	"github.com/jaxxstorm/tscli/pkg/output"
 
 	"github.com/jaxxstorm/tscli/pkg/tscli"
@@ -32,9 +32,9 @@ func Command() *cobra.Command {
 			if len(ns) == 0 {
 				return fmt.Errorf("at least one --nameserver is required")
 			}
-			for _, ip := range ns {
-				if net.ParseIP(ip) == nil {
-					return fmt.Errorf("invalid IP address: %s", ip)
+			for _, nameserver := range ns {
+				if err := cldns.ValidateNameserver(nameserver); err != nil {
+					return err
 				}
 			}
 			return nil
@@ -70,7 +70,7 @@ func Command() *cobra.Command {
 		&ns,
 		"nameserver", "N",
 		nil,
-		"DNS nameserver IP (repeatable). Example: --nameserver 1.1.1.1 --nameserver 8.8.8.8",
+		"DNS nameserver IP or DoH endpoint (repeatable). Example: --nameserver 1.1.1.1 --nameserver https://dns.google/dns-query",
 	)
 	_ = cmd.MarkFlagRequired("nameserver")
 

@@ -2,11 +2,11 @@
 //
 // Replace *or* patch the split-DNS mapping.
 //
-//	# add two nameservers for example.com, one for other.com
+//	# add two nameservers for example.com, one DoH endpoint for other.com
 //	tscli set splitdns \
 //	   --entry example.com=1.1.1.1 \
 //	   --entry example.com=8.8.8.8 \
-//	   --entry other.com=2.2.2.2
+//	   --entry other.com=https://dns.google/dns-query
 //
 //	# clear a single domain (entry with empty RHS)
 //	tscli set splitdns --entry stale.com=
@@ -19,11 +19,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 	"regexp"
 	"strings"
 
+	cldns "github.com/jaxxstorm/tscli/pkg/dns"
 	"github.com/jaxxstorm/tscli/pkg/output"
 
 	"github.com/jaxxstorm/tscli/pkg/tscli"
@@ -75,8 +75,8 @@ func Command() *cobra.Command {
 					continue
 				}
 
-				if net.ParseIP(ip) == nil {
-					return fmt.Errorf("invalid IP %q for %s", ip, dom)
+				if err := cldns.ValidateNameserver(ip); err != nil {
+					return fmt.Errorf("invalid nameserver %q for %s", ip, dom)
 				}
 				tmp[dom] = append(tmp[dom], ip)
 			}
@@ -122,7 +122,7 @@ func Command() *cobra.Command {
 		&entries,
 		"entry", "e",
 		nil,
-		`Mapping "domain=ip". Repeat --entry for multiple IPs or domains. Set an empty IP to clear.`,
+		`Mapping "domain=nameserver". Repeat --entry for multiple IP/DoH values or domains. Set an empty value to clear.`,
 	)
 	cmd.Flags().BoolVar(&replace, "replace", false,
 		"Replace the entire mapping (PUT) instead of patching (PATCH).")
