@@ -11,7 +11,7 @@ tscli set dns split-dns [flags]
 ### Options
 
 ```
-  -e, --entry stringArray   Mapping "domain=ip". Repeat --entry for multiple IPs or domains. Set an empty IP to clear.
+  -e, --entry stringArray   Mapping "domain=nameserver". Repeat --entry for multiple IP or DoH endpoint values. Set an empty value to clear.
   -h, --help                help for split-dns
       --replace             Replace the entire mapping (PUT) instead of patching (PATCH).
 ```

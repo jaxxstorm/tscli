@@ -12,7 +12,7 @@ tscli set dns nameservers [flags]
 
 ```
   -h, --help                 help for nameservers
-  -N, --nameserver strings   DNS nameserver IP (repeatable). Example: --nameserver 1.1.1.1 --nameserver 8.8.8.8
+  -N, --nameserver strings   DNS nameserver IP or DoH endpoint (repeatable). Use --nameserver "" to clear the custom list.
 ```
 
 ### Options inherited from parent commands

@@ -1,10 +1,10 @@
-// cmd/tscli/set/nameservers/cli.go
+// cmd/tscli/set/dns/nameservers/cli.go
 //
-// `tscli set nameservers --nameserver 1.1.1.1 --nameserver https://dns.google/dns-query`
+// `tscli set dns nameservers --nameserver 1.1.1.1 --nameserver https://dns.google/dns-query`
 // Replace the tailnet-wide DNS nameserver list with IPs or DoH endpoints.
 //
-// If you pass an empty slice (`--nameserver ""`) the custom list is removed
-// and Tailscale falls back to its defaults.
+// If you pass `--nameserver ""`, the custom list is removed and Tailscale
+// falls back to its defaults.
 package nameservers
 
 import (
@@ -29,7 +29,7 @@ func Command() *cobra.Command {
 		Aliases: []string{"ns"},
 		Short:   "Set the DNS nameservers for the tailnet",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			if len(ns) == 0 {
+			if !cmd.Flags().Lookup("nameserver").Changed {
 				return fmt.Errorf("at least one --nameserver is required")
 			}
 			for _, nameserver := range ns {
@@ -46,7 +46,12 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			body := map[string][]string{"dns": ns}
+			nameservers := ns
+			if len(nameservers) == 0 {
+				nameservers = []string{}
+			}
+
+			body := map[string][]string{"dns": nameservers}
 
 			var resp json.RawMessage // <- receives the body untouched
 			if _, err := tscli.Do(
@@ -70,7 +75,7 @@ func Command() *cobra.Command {
 		&ns,
 		"nameserver", "N",
 		nil,
-		"DNS nameserver IP or DoH endpoint (repeatable). Example: --nameserver 1.1.1.1 --nameserver https://dns.google/dns-query",
+		"DNS nameserver IP or DoH endpoint (repeatable). Use --nameserver \"\" to clear the custom list.",
 	)
 	_ = cmd.MarkFlagRequired("nameserver")
 
