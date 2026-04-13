@@ -1,29 +1,29 @@
-// cmd/tscli/set/splitdns/cli.go
+// cmd/tscli/set/dns/split/cli.go
 //
 // Replace *or* patch the split-DNS mapping.
 //
-//	# add two nameservers for example.com, one for other.com
-//	tscli set splitdns \
+//	# add two nameservers for example.com, one DoH endpoint for other.com
+//	tscli set dns split-dns \
 //	   --entry example.com=1.1.1.1 \
 //	   --entry example.com=8.8.8.8 \
-//	   --entry other.com=2.2.2.2
+//	   --entry other.com=https://dns.google/dns-query
 //
 //	# clear a single domain (entry with empty RHS)
-//	tscli set splitdns --entry stale.com=
+//	tscli set dns split-dns --entry stale.com=
 //
 //	# replace the whole mapping (PUT, drop everything else)
-//	tscli set splitdns --replace --entry corp.local=10.0.0.53
+//	tscli set dns split-dns --replace --entry corp.local=10.0.0.53
 package split
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 	"regexp"
 	"strings"
 
+	cldns "github.com/jaxxstorm/tscli/pkg/dns"
 	"github.com/jaxxstorm/tscli/pkg/output"
 
 	"github.com/jaxxstorm/tscli/pkg/tscli"
@@ -36,7 +36,7 @@ var domainRE = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9\.\-]*\.[a-zA-Z]{2,}$`)
 // Command registers `tscli set dns split-dns`.
 func Command() *cobra.Command {
 	var (
-		entries []string // domain=ip (repeatable, one per IP)
+		entries []string // domain=nameserver (repeatable, one per nameserver)
 		replace bool
 	)
 
@@ -47,7 +47,7 @@ func Command() *cobra.Command {
 
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			if !cmd.Flags().Lookup("entry").Changed {
-				return fmt.Errorf("at least one --entry is required (domain=ip)")
+				return fmt.Errorf("at least one --entry is required (domain=nameserver)")
 			}
 			return nil
 		},
@@ -61,24 +61,24 @@ func Command() *cobra.Command {
 			for _, e := range entries {
 				parts := strings.SplitN(e, "=", 2)
 				if len(parts) != 2 {
-					return fmt.Errorf("invalid --entry %q (expect domain=ip)", e)
+					return fmt.Errorf("invalid --entry %q (expect domain=nameserver)", e)
 				}
-				dom, ip := strings.ToLower(parts[0]), parts[1]
+				dom, nameserver := strings.ToLower(parts[0]), parts[1]
 
 				if !domainRE.MatchString(dom) {
 					return fmt.Errorf("invalid domain: %q", dom)
 				}
 
 				// empty RHS → clear this domain
-				if ip == "" {
+				if nameserver == "" {
 					payload[dom] = nil
 					continue
 				}
 
-				if net.ParseIP(ip) == nil {
-					return fmt.Errorf("invalid IP %q for %s", ip, dom)
+				if err := cldns.ValidateNameserver(nameserver); err != nil {
+					return fmt.Errorf("invalid nameserver %q for %q", nameserver, dom)
 				}
-				tmp[dom] = append(tmp[dom], ip)
+				tmp[dom] = append(tmp[dom], nameserver)
 			}
 
 			// merge temp slices unless domain already set to nil
@@ -122,7 +122,7 @@ func Command() *cobra.Command {
 		&entries,
 		"entry", "e",
 		nil,
-		`Mapping "domain=ip". Repeat --entry for multiple IPs or domains. Set an empty IP to clear.`,
+		`Mapping "domain=nameserver". Repeat --entry for multiple IP or DoH endpoint values. Set an empty value to clear.`,
 	)
 	cmd.Flags().BoolVar(&replace, "replace", false,
 		"Replace the entire mapping (PUT) instead of patching (PATCH).")

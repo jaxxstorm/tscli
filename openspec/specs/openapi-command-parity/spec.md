@@ -14,6 +14,10 @@ The CLI SHALL provide command coverage for every in-scope Tailscale OpenAPI oper
 - **WHEN** an in-scope operation is classified as missing-command
 - **THEN** a CLI command SHALL be added that invokes that operation with validated flags and structured output/error handling
 
+#### Scenario: Existing DNS mutation command matches supported nameserver formats
+- **WHEN** the upstream DNS nameserver API accepts DNS-over-HTTPS endpoint addresses in addition to literal IP nameservers
+- **THEN** the existing `set dns nameservers` and `set dns split-dns` commands SHALL accept those same supported nameserver value formats without requiring a raw API fallback
+
 ### Requirement: Command-to-operation mapping is explicit
 Each implemented CLI command SHALL declare at least one OpenAPI operation mapping in the command-operation map.
 
@@ -31,4 +35,3 @@ Parity implementation SHALL cover currently uncovered operations across device, 
 #### Scenario: Domain gap report is generated
 - **WHEN** parity analysis completes
 - **THEN** the report SHALL include uncovered operation counts grouped by API domain
-
