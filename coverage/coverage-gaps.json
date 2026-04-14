@@ -2,7 +2,7 @@
   "openapi_operations": 85,
   "excluded_operations": [],
   "in_scope_operations": 85,
-  "manifest_commands": 91,
+  "manifest_commands": 94,
   "excluded_commands": [
     "agent init",
     "agent update",
@@ -188,7 +188,11 @@
     "set webhook",
     "set webhook test"
   ],
-  "unmapped_commands": [],
+  "unmapped_commands": [
+    "create tailnet",
+    "delete tailnet",
+    "list tailnets"
+  ],
   "unknown_mapped_commands": [],
   "command_mappings": {
     "create invite device": "post /device/{deviceId}/device-invites",
