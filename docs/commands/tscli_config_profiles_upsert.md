@@ -6,7 +6,7 @@ Create or update a tailnet profile
 
 ### Synopsis
 
-Create or update a named tailnet profile with its API key and persist it in the config file.
+Create or update a named tailnet profile with either an API key or OAuth client credentials and persist it in the config file.
 
 ```
 tscli config profiles upsert <name> [flags]
@@ -16,21 +16,24 @@ tscli config profiles upsert <name> [flags]
 
 ```
 tscli config profiles upsert _lbr_sandbox --api-key tskey-xxx
+tscli config profiles upsert org-admin --oauth-client-id cid --oauth-client-secret secret
 ```
 
 ### Options
 
 ```
-      --api-key string   API key for the tailnet profile
-  -h, --help             help for upsert
+      --api-key string               API key for the tailnet profile
+  -h, --help                         help for upsert
+      --oauth-client-id string       OAuth client ID for the tailnet profile
+      --oauth-client-secret string   OAuth client secret for the tailnet profile
+      --tailnet string               Explicit tailnet value for this profile (defaults to the profile name)
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -d, --debug           Dump HTTP requests/responses
+  -o, --output string   Output: [human json pretty yaml]
 ```
 
 ### SEE ALSO

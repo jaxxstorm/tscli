@@ -11,6 +11,7 @@ create invite device
 create invite user
 create key
 create posture-integration
+create tailnet
 create token
 create webhook
 delete device
@@ -21,6 +22,7 @@ delete key
 delete logs stream
 delete posture-integration
 delete service
+delete tailnet
 delete user
 delete user invite
 delete webhook
@@ -55,6 +57,7 @@ list logs config
 list logs network
 list nameservers
 list posture-integrations
+list tailnets
 list routes
 list services
 list services devices

@@ -12,5 +12,8 @@ commands:
   config profiles upsert: "Local profile management command; no Tailscale API call."
   config set: "Local config mutation command; no Tailscale API call."
   config show: "Local config display command; no Tailscale API call."
+  create tailnet: "Tailnet lifecycle endpoint is outside the pinned /api/v2 OpenAPI schema."
   create token: "OAuth token exchange endpoint is outside pinned /api/v2 OpenAPI schema."
+  delete tailnet: "Tailnet lifecycle endpoint is outside the pinned /api/v2 OpenAPI schema."
+  list tailnets: "Tailnet lifecycle endpoint is outside the pinned /api/v2 OpenAPI schema."
   version: "Local version command; no Tailscale API call."

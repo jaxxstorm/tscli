@@ -168,6 +168,74 @@ func TestServiceCommandRenderedOutput(t *testing.T) {
 	}
 }
 
+func TestTailnetListRenderedOutput(t *testing.T) {
+	cases := []struct {
+		name     string
+		mode     string
+		contains []string
+		absent   []string
+		counts   map[string]int
+	}{
+		{
+			name:     "list tailnets pretty",
+			mode:     "pretty",
+			contains: []string{"Sandbox", "createdAt:", "id:", "orgId:"},
+			absent:   []string{"tailnets:"},
+			counts: map[string]int{
+				"Sandbox": 1,
+			},
+		},
+		{
+			name:     "list tailnets human",
+			mode:     "human",
+			contains: []string{"Sandbox", "createdAt", "id", "orgId"},
+			absent:   []string{"tailnets:"},
+			counts: map[string]int{
+				"Sandbox": 1,
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			mock := apimock.New(t)
+			env := map[string]string{
+				"TSCLI_OUTPUT":          tc.mode,
+				"TSCLI_BASE_URL":        mock.URL(),
+				"TSCLI_OAUTH_TOKEN_URL": mock.URL() + "/api/v2/oauth/token",
+			}
+
+			mock.AddRaw(http.MethodPost, "/api/v2/oauth/token", http.StatusOK, `{"access_token":"tok-123","token_type":"Bearer","expires_in":3600}`)
+			mock.AddJSON(http.MethodGet, "/api/v2/organizations/-/tailnets", http.StatusOK, map[string]any{
+				"tailnets": []map[string]any{{
+					"id":          "T123",
+					"displayName": "Sandbox",
+					"orgId":       "o123",
+					"createdAt":   "2025-01-01T12:00:00Z",
+				}},
+			})
+
+			res := executeCLI(t, []string{"list", "tailnets", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, env)
+			if res.err != nil {
+				t.Fatalf("unexpected error: %v\nstderr:\n%s", res.err, res.stderr)
+			}
+
+			assertTextOutput(t, res.stdout, tc.contains...)
+			for _, part := range tc.absent {
+				if strings.Contains(res.stdout, part) {
+					t.Fatalf("did not expect output to contain %q, got:\n%s", part, res.stdout)
+				}
+			}
+			for part, want := range tc.counts {
+				if got := strings.Count(res.stdout, part); got != want {
+					t.Fatalf("expected %q count %d, got %d\noutput:\n%s", part, want, got, res.stdout)
+				}
+			}
+		})
+	}
+}
+
 func TestListServicesStructuredModesPreserveRawEnvelope(t *testing.T) {
 	const body = `{"vipServices":[{"name":"svc:demo-speedtest"}],"extra":"kept","count":1}`
 
@@ -268,6 +336,7 @@ func exampleOutputCases() []exampleOutputCase {
 		}),
 		localTextCase("config profiles set-active", []string{"config", "profiles", "set-active", "sandbox"}, setupProfileHome, "active tailnet set to sandbox"),
 		localTextCase("config profiles upsert", []string{"config", "profiles", "upsert", "sandbox", "--api-key", "tskey-sandbox"}, nil, "tailnet profile sandbox created"),
+		localTextCase("config profiles upsert", []string{"config", "profiles", "upsert", "org-admin", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, nil, "tailnet profile org-admin created"),
 		localTextCase("config set", []string{"config", "set", "output", "yaml"}, nil, "output saved"),
 		localObjectCase("config show", []string{"config", "show"}, nil, jsonShapeExpectation{
 			TopLevel:   jsonTopLevelObject,
@@ -277,6 +346,7 @@ func exampleOutputCases() []exampleOutputCase {
 		apiArrayCase("create invite user", []string{"create", "invite", "user", "--email", "user@example.com"}, apimock.InviteList(), []string{"id", "email"}),
 		apiObjectCase("create key", []string{"create", "key"}, apimock.KeyResponse(), "id", "key"),
 		apiObjectCase("create posture-integration", []string{"create", "posture-integration", "--provider", "falcon", "--client-secret", "secret"}, apimock.PostureIntegration(), "id", "provider"),
+		lifecycleObjectCase("create tailnet", []string{"create", "tailnet", "--display-name", "Sandbox", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, map[string]any{"id": "T123", "displayName": "Sandbox", "oauthClient": map[string]any{"id": "k123", "secret": "tskey-client-secret"}}, "id", "displayName", "oauthClient"),
 		oauthObjectCase("create token", []string{"create", "token", "--client-id", "cid", "--client-secret", "secret"}, "access_token", "token_type"),
 		apiObjectCase("create webhook", []string{"create", "webhook", "--url", "https://example.com/hook", "--subscription", "nodeCreated"}, apimock.Webhook(), "endpointUrl"),
 		summaryObjectCase("delete device", []string{"delete", "device", "--device", "node-123"}, "result"),
@@ -292,6 +362,7 @@ func exampleOutputCases() []exampleOutputCase {
 		summaryObjectCase("delete key", []string{"delete", "key", "--key", "k123"}, "result"),
 		summaryObjectCase("delete logs stream", []string{"delete", "logs", "stream", "--type", "network"}, "result"),
 		apiObjectCase("delete posture-integration", []string{"delete", "posture-integration", "--id", "pi-1"}, map[string]any{"id": "pi-1", "deleted": true}, "id", "deleted"),
+		summaryLifecycleCase("delete tailnet", []string{"delete", "tailnet", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, "result"),
 		summaryObjectCase("delete service", []string{"delete", "service", "--service", "svc"}, "result"),
 		summaryObjectCase("delete user", []string{"delete", "user", "--user", "user@example.com"}, "result"),
 		summaryObjectCase("delete user invite", []string{"delete", "user", "invite", "--id", "invite-1"}, "result"),
@@ -340,6 +411,7 @@ func exampleOutputCases() []exampleOutputCase {
 		apiArrayCase("list logs network", []string{"list", "logs", "network"}, apimock.LogsNetwork(), []string{"id", "srcIP"}),
 		apiArrayCase("list nameservers", []string{"list", "nameservers"}, apimock.DNSNameservers(), nil),
 		apiObjectCase("list posture-integrations", []string{"list", "posture-integrations"}, apimock.PostureIntegrationList(), "integrations"),
+		lifecycleObjectCase("list tailnets", []string{"list", "tailnets", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, map[string]any{"tailnets": []map[string]any{{"id": "T123", "displayName": "Sandbox", "orgId": "o123", "createdAt": "2025-01-01T12:00:00Z"}}}, "tailnets"),
 		apiObjectCase("list routes", []string{"list", "routes", "--device", "node-123"}, apimock.DeviceRoutes(), "advertisedRoutes", "enabledRoutes"),
 		customCase("list services", []string{"list", "services"}, jsonShapeExpectation{
 			TopLevel:   jsonTopLevelObject,
@@ -425,6 +497,31 @@ func oauthObjectCase(command string, args []string, keys ...string) exampleOutpu
 	}, true, func(t *testing.T, mock *apimock.Server, env map[string]string) {
 		env["TSCLI_OAUTH_TOKEN_URL"] = mock.URL() + "/api/v2/oauth/token"
 		mock.AddRaw(http.MethodPost, "/api/v2/oauth/token", http.StatusOK, `{"access_token":"tok-123","token_type":"Bearer","expires_in":3600}`)
+	})
+}
+
+func lifecycleObjectCase(command string, args []string, body any, keys ...string) exampleOutputCase {
+	return customCase(command, args, jsonShapeExpectation{
+		TopLevel:   jsonTopLevelObject,
+		ObjectKeys: keys,
+	}, true, func(t *testing.T, mock *apimock.Server, env map[string]string) {
+		env["TSCLI_BASE_URL"] = mock.URL()
+		env["TSCLI_OAUTH_TOKEN_URL"] = mock.URL() + "/api/v2/oauth/token"
+		mock.AddRaw(http.MethodPost, "/api/v2/oauth/token", http.StatusOK, `{"access_token":"tok-123","token_type":"Bearer","expires_in":3600}`)
+		mock.AddJSON(http.MethodGet, "/api/v2/organizations/-/tailnets", http.StatusOK, body)
+		mock.AddJSON(http.MethodPost, "/api/v2/organizations/-/tailnets", http.StatusOK, body)
+	})
+}
+
+func summaryLifecycleCase(command string, args []string, keys ...string) exampleOutputCase {
+	return customCase(command, args, jsonShapeExpectation{
+		TopLevel:   jsonTopLevelObject,
+		ObjectKeys: keys,
+	}, true, func(t *testing.T, mock *apimock.Server, env map[string]string) {
+		env["TSCLI_BASE_URL"] = mock.URL()
+		env["TSCLI_OAUTH_TOKEN_URL"] = mock.URL() + "/api/v2/oauth/token"
+		mock.AddRaw(http.MethodPost, "/api/v2/oauth/token", http.StatusOK, `{"access_token":"tok-123","token_type":"Bearer","expires_in":3600}`)
+		mock.AddRaw(http.MethodDelete, "/api/v2/tailnet/-", http.StatusOK, `{}`)
 	})
 }
 

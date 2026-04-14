@@ -16,6 +16,7 @@ type Request struct {
 	Path   string
 	Query  string
 	Body   string
+	Header http.Header
 }
 
 type Route struct {
@@ -88,6 +89,7 @@ func (s *Server) handle(w http.ResponseWriter, r *http.Request) {
 		Path:   r.URL.Path,
 		Query:  r.URL.RawQuery,
 		Body:   string(body),
+		Header: r.Header.Clone(),
 	})
 	routes := make([]Route, len(s.routes))
 	copy(routes, s.routes)

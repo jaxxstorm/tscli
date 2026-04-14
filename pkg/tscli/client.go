@@ -89,12 +89,7 @@ func Do(
 	body any,
 	out any,
 ) (http.Header, error) {
-
-	base := c.BaseURL
-	if base == nil {
-		b, _ := url.Parse(defaultBaseURL)
-		base = b
-	}
+	base := resolveBaseURL(c.BaseURL)
 
 	u, err := url.Parse(path)
 	if err != nil {
@@ -137,6 +132,84 @@ func Do(
 		req.SetBasicAuth(c.APIKey, "")
 	}
 
+	return doRequest(c.HTTP, req, method, path, out)
+}
+
+func DoBearer(
+	ctx context.Context,
+	method, path string,
+	accessToken string,
+	body any,
+	out any,
+) (http.Header, error) {
+	base := resolveBaseURL(nil)
+
+	u, err := url.Parse(path)
+	if err != nil {
+		return nil, fmt.Errorf("invalid path: %w", err)
+	}
+
+	full := base.ResolveReference(&url.URL{
+		Path:     "/api/v2" + u.Path,
+		RawQuery: u.RawQuery,
+	})
+
+	var rdr io.Reader
+	if body != nil {
+		switch v := body.(type) {
+		case []byte:
+			rdr = bytes.NewReader(v)
+		case string:
+			rdr = strings.NewReader(v)
+		default:
+			b, err := json.Marshal(v)
+			if err != nil {
+				return nil, fmt.Errorf("marshal body: %w", err)
+			}
+			rdr = bytes.NewReader(b)
+		}
+	}
+
+	req, err := http.NewRequestWithContext(ctx, method, full.String(), rdr)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", getUserAgent())
+	req.Header.Set("Accept", defaultContentType)
+	if body != nil {
+		req.Header.Set("Content-Type", defaultContentType)
+	}
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+
+	transport := &userAgentTransport{
+		rt:        http.DefaultTransport,
+		userAgent: getUserAgent(),
+	}
+	if viper.GetBool("debug") {
+		transport.rt = &logTransport{rt: transport.rt}
+	}
+
+	return doRequest(&http.Client{Transport: transport}, req, method, path, out)
+}
+
+func resolveBaseURL(current *url.URL) *url.URL {
+	if current != nil {
+		return current
+	}
+
+	baseURL := viper.GetString("base-url")
+	if baseURL != "" {
+		if parsed, err := url.Parse(baseURL); err == nil {
+			return parsed
+		}
+	}
+
+	b, _ := url.Parse(defaultBaseURL)
+	return b
+}
+
+func doRequest(httpc *http.Client, req *http.Request, method string, path string, out any) (http.Header, error) {
+
 	// dump request information if debug is enabled
 	if viper.GetBool("debug") {
 		if dump, _ := httputil.DumpRequestOut(req, true); len(dump) > 0 {
@@ -144,7 +217,6 @@ func Do(
 		}
 	}
 
-	httpc := c.HTTP
 	if httpc == nil {
 		httpc = http.DefaultClient
 	}
