@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/spf13/viper"
 	tsapi "tailscale.com/client/tailscale/v2"
 )
 
@@ -85,5 +86,35 @@ func TestDoReturnsAPIErrorPayload(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "tailscale API") {
 		t.Fatalf("expected wrapped API error, got %v", err)
+	}
+}
+
+func TestDoBearerReturnsInvalidBaseURLError(t *testing.T) {
+	viper.Reset()
+	t.Cleanup(viper.Reset)
+	viper.Set("base-url", "://bad-url")
+
+	_, err := DoBearer(context.Background(), http.MethodGet, "/organizations/-/tailnets", "tok-123", nil, nil)
+	if err == nil {
+		t.Fatalf("expected invalid base-url error")
+	}
+	if !strings.Contains(err.Error(), "invalid base-url") {
+		t.Fatalf("expected invalid base-url error, got %v", err)
+	}
+}
+
+func TestDoRejectsNonAbsoluteClientBaseURL(t *testing.T) {
+	client := &tsapi.Client{
+		Tailnet: "example.com",
+		APIKey:  "tskey-test",
+		BaseURL: &url.URL{Path: "relative-only"},
+	}
+
+	_, err := Do(context.Background(), client, http.MethodGet, "/tailnet/{tailnet}/settings", nil, nil)
+	if err == nil {
+		t.Fatalf("expected invalid base-url error")
+	}
+	if !strings.Contains(err.Error(), "invalid base-url") {
+		t.Fatalf("expected invalid base-url error, got %v", err)
 	}
 }

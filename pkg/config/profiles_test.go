@@ -192,6 +192,36 @@ func TestResolveRuntimeConfigPrecedence(t *testing.T) {
 			t.Fatalf("expected missing api-key error, got %v", err)
 		}
 	})
+
+	t.Run("explicit empty api-key flag does not fall back", func(t *testing.T) {
+		v := viper.New()
+		v.Set("active-tailnet", "profile-tailnet")
+		v.Set("tailnets", []map[string]any{{
+			"name":    "profile-tailnet",
+			"api-key": "profile-key",
+		}})
+		v.Set("api-key", "")
+
+		_, err := resolveRuntimeConfig(v, map[string]struct{}{"api-key": {}})
+		if err == nil || !strings.Contains(err.Error(), "API key is required") {
+			t.Fatalf("expected empty api-key flag to fail, got %v", err)
+		}
+	})
+
+	t.Run("explicit empty api-key env does not fall back", func(t *testing.T) {
+		v := viper.New()
+		v.Set("active-tailnet", "profile-tailnet")
+		v.Set("tailnets", []map[string]any{{
+			"name":    "profile-tailnet",
+			"api-key": "profile-key",
+		}})
+		t.Setenv("TAILSCALE_API_KEY", "")
+
+		_, err := resolveRuntimeConfig(v, nil)
+		if err == nil || !strings.Contains(err.Error(), "API key is required") {
+			t.Fatalf("expected empty api-key env to fail, got %v", err)
+		}
+	})
 }
 
 func TestResolveOAuthRuntimeConfigPrecedence(t *testing.T) {
@@ -268,6 +298,43 @@ func TestResolveOAuthRuntimeConfigPrecedence(t *testing.T) {
 		_, err := resolveOAuthRuntimeConfig(v, nil)
 		if err == nil || !strings.Contains(err.Error(), "OAuth client credentials are required") {
 			t.Fatalf("expected missing oauth credentials error, got %v", err)
+		}
+	})
+
+	t.Run("explicit empty oauth flag does not fall back", func(t *testing.T) {
+		v := viper.New()
+		v.Set("active-tailnet", "sandbox")
+		v.Set("tailnets", []map[string]any{{
+			"name":                "sandbox",
+			"oauth-client-id":     "profile-id",
+			"oauth-client-secret": "profile-secret",
+		}})
+		v.Set("oauth-client-id", "")
+		v.Set("oauth-client-secret", "flag-secret")
+
+		_, err := resolveOAuthRuntimeConfig(v, map[string]struct{}{
+			"oauth-client-id":     {},
+			"oauth-client-secret": {},
+		})
+		if err == nil || !strings.Contains(err.Error(), "OAuth client credentials are required") {
+			t.Fatalf("expected empty oauth flag to fail, got %v", err)
+		}
+	})
+
+	t.Run("explicit empty oauth env does not fall back", func(t *testing.T) {
+		v := viper.New()
+		v.Set("active-tailnet", "sandbox")
+		v.Set("tailnets", []map[string]any{{
+			"name":                "sandbox",
+			"oauth-client-id":     "profile-id",
+			"oauth-client-secret": "profile-secret",
+		}})
+		t.Setenv("TSCLI_OAUTH_CLIENT_ID", "")
+		t.Setenv("TSCLI_OAUTH_CLIENT_SECRET", "env-secret")
+
+		_, err := resolveOAuthRuntimeConfig(v, nil)
+		if err == nil || !strings.Contains(err.Error(), "OAuth client credentials are required") {
+			t.Fatalf("expected empty oauth env to fail, got %v", err)
 		}
 	})
 }

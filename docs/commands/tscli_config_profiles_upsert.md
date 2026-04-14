@@ -17,6 +17,7 @@ tscli config profiles upsert <name> [flags]
 ```
 tscli config profiles upsert _lbr_sandbox --api-key tskey-xxx
 tscli config profiles upsert org-admin --oauth-client-id cid --oauth-client-secret secret
+tscli config profiles upsert sandbox --api-key tskey-xxx --profile-tailnet example.ts.net
 ```
 
 ### Options
@@ -26,7 +27,7 @@ tscli config profiles upsert org-admin --oauth-client-id cid --oauth-client-secr
   -h, --help                         help for upsert
       --oauth-client-id string       OAuth client ID for the tailnet profile
       --oauth-client-secret string   OAuth client secret for the tailnet profile
-      --tailnet string               Explicit tailnet value for this profile (defaults to the profile name)
+      --profile-tailnet string       Explicit effective tailnet value for this profile (defaults to the profile name)
 ```
 
 ### Options inherited from parent commands

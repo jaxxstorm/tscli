@@ -161,4 +161,20 @@ func TestTailnetLifecycleCommandErrorsAreActionable(t *testing.T) {
 			t.Fatalf("expected wrapped lifecycle API error, got %v", res.err)
 		}
 	})
+
+	t.Run("invalid base-url fails instead of defaulting", func(t *testing.T) {
+		mock := apimock.New(t)
+		mock.AddRaw(http.MethodPost, "/api/v2/oauth/token", http.StatusOK, `{"access_token":"tok-123","token_type":"Bearer","expires_in":3600}`)
+
+		res := executeCLINoDefaults(t, []string{"list", "tailnets", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, map[string]string{
+			"TSCLI_BASE_URL":        "://bad-url",
+			"TSCLI_OAUTH_TOKEN_URL": mock.URL() + "/api/v2/oauth/token",
+		})
+		if res.err == nil {
+			t.Fatalf("expected invalid base-url error")
+		}
+		if !strings.Contains(res.err.Error(), "invalid base-url") {
+			t.Fatalf("expected invalid base-url error, got %v", res.err)
+		}
+	})
 }

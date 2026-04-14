@@ -69,9 +69,9 @@ func New() (*tsapi.Client, error) {
 	}
 
 	if baseURL != "" {
-		parsed, err := url.Parse(baseURL)
+		parsed, err := parseBaseURL(baseURL)
 		if err != nil {
-			return nil, fmt.Errorf("invalid base-url: %w", err)
+			return nil, err
 		}
 		client.BaseURL = parsed
 	}
@@ -89,7 +89,10 @@ func Do(
 	body any,
 	out any,
 ) (http.Header, error) {
-	base := resolveBaseURL(c.BaseURL)
+	base, err := resolveBaseURL(c.BaseURL)
+	if err != nil {
+		return nil, err
+	}
 
 	u, err := url.Parse(path)
 	if err != nil {
@@ -142,7 +145,10 @@ func DoBearer(
 	body any,
 	out any,
 ) (http.Header, error) {
-	base := resolveBaseURL(nil)
+	base, err := resolveBaseURL(nil)
+	if err != nil {
+		return nil, err
+	}
 
 	u, err := url.Parse(path)
 	if err != nil {
@@ -185,27 +191,50 @@ func DoBearer(
 		rt:        http.DefaultTransport,
 		userAgent: getUserAgent(),
 	}
-	if viper.GetBool("debug") {
-		transport.rt = &logTransport{rt: transport.rt}
-	}
 
 	return doRequest(&http.Client{Transport: transport}, req, method, path, out)
 }
 
-func resolveBaseURL(current *url.URL) *url.URL {
+func resolveBaseURL(current *url.URL) (*url.URL, error) {
 	if current != nil {
-		return current
+		if err := validateBaseURL(current); err != nil {
+			return nil, err
+		}
+		return current, nil
 	}
 
 	baseURL := viper.GetString("base-url")
 	if baseURL != "" {
-		if parsed, err := url.Parse(baseURL); err == nil {
-			return parsed
+		parsed, err := parseBaseURL(baseURL)
+		if err != nil {
+			return nil, err
 		}
+		return parsed, nil
 	}
 
-	b, _ := url.Parse(defaultBaseURL)
-	return b
+	b, err := parseBaseURL(defaultBaseURL)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+func parseBaseURL(raw string) (*url.URL, error) {
+	parsed, err := url.Parse(raw)
+	if err != nil {
+		return nil, fmt.Errorf("invalid base-url: %w", err)
+	}
+	if err := validateBaseURL(parsed); err != nil {
+		return nil, err
+	}
+	return parsed, nil
+}
+
+func validateBaseURL(u *url.URL) error {
+	if u == nil || !u.IsAbs() || u.Scheme == "" || u.Host == "" || u.Opaque != "" {
+		return fmt.Errorf("invalid base-url: must be an absolute URL with scheme and host")
+	}
+	return nil
 }
 
 func doRequest(httpc *http.Client, req *http.Request, method string, path string, out any) (http.Header, error) {

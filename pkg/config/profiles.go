@@ -237,12 +237,12 @@ func resolveWithPrecedence(
 ) (string, bool) {
 	if _, ok := flagOverrides[key]; ok {
 		value := strings.TrimSpace(v.GetString(key))
-		return value, value != ""
+		return value, true
 	}
 
 	if envValue, ok := os.LookupEnv(envKey); ok {
 		envValue = strings.TrimSpace(envValue)
-		return envValue, envValue != ""
+		return envValue, true
 	}
 
 	if state.ActiveTailnet != "" {
