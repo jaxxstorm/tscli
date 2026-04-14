@@ -362,7 +362,7 @@ func exampleOutputCases() []exampleOutputCase {
 		summaryObjectCase("delete key", []string{"delete", "key", "--key", "k123"}, "result"),
 		summaryObjectCase("delete logs stream", []string{"delete", "logs", "stream", "--type", "network"}, "result"),
 		apiObjectCase("delete posture-integration", []string{"delete", "posture-integration", "--id", "pi-1"}, map[string]any{"id": "pi-1", "deleted": true}, "id", "deleted"),
-		summaryLifecycleCase("delete tailnet", []string{"delete", "tailnet", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, "result"),
+		summaryLifecycleCase("delete tailnet", []string{"delete", "tailnet", "--id", "T123", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, "result"),
 		summaryObjectCase("delete service", []string{"delete", "service", "--service", "svc"}, "result"),
 		summaryObjectCase("delete user", []string{"delete", "user", "--user", "user@example.com"}, "result"),
 		summaryObjectCase("delete user invite", []string{"delete", "user", "invite", "--id", "invite-1"}, "result"),
@@ -521,7 +521,7 @@ func summaryLifecycleCase(command string, args []string, keys ...string) example
 		env["TSCLI_BASE_URL"] = mock.URL()
 		env["TSCLI_OAUTH_TOKEN_URL"] = mock.URL() + "/api/v2/oauth/token"
 		mock.AddRaw(http.MethodPost, "/api/v2/oauth/token", http.StatusOK, `{"access_token":"tok-123","token_type":"Bearer","expires_in":3600}`)
-		mock.AddRaw(http.MethodDelete, "/api/v2/tailnet/-", http.StatusOK, `{}`)
+		mock.AddRaw(http.MethodDelete, "/api/v2/tailnet/T123", http.StatusOK, `{}`)
 	})
 }
 

@@ -14,6 +14,7 @@ import (
 
 func Command() *cobra.Command {
 	var (
+		tailnetID         string
 		oauthClientID     string
 		oauthClientSecret string
 	)
@@ -21,7 +22,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tailnet",
 		Short: "Delete an API-driven tailnet",
-		Long:  "Delete the current API-driven tailnet using that tailnet's OAuth client credentials.",
+		Long:  "Delete an API-driven tailnet by ID using organization-approved OAuth client credentials.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			v := viper.GetViper()
 			_ = v.BindPFlags(cmd.Flags())
@@ -36,7 +37,8 @@ func Command() *cobra.Command {
 				return fmt.Errorf("failed to exchange OAuth credentials: %w", err)
 			}
 
-			if _, err := tscli.DoBearer(cmd.Context(), "DELETE", "/tailnet/-", tokenResp.AccessToken, nil, nil); err != nil {
+			path := fmt.Sprintf("/tailnet/%s", tailnetID)
+			if _, err := tscli.DoBearer(cmd.Context(), "DELETE", path, tokenResp.AccessToken, nil, nil); err != nil {
 				return fmt.Errorf("delete tailnet: %w", err)
 			}
 
@@ -50,8 +52,10 @@ func Command() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().StringVar(&tailnetID, "id", "", "Tailnet ID to delete")
 	cmd.Flags().StringVar(&oauthClientID, "oauth-client-id", "", "OAuth client ID for deleting the API-driven tailnet")
 	cmd.Flags().StringVar(&oauthClientSecret, "oauth-client-secret", "", "OAuth client secret for deleting the API-driven tailnet")
+	_ = cmd.MarkFlagRequired("id")
 
 	return cmd
 }

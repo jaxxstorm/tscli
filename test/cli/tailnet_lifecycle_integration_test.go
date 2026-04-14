@@ -17,7 +17,7 @@ func TestTailnetLifecycleCommands(t *testing.T) {
 	mock.AddRaw(http.MethodPost, "/api/v2/oauth/token", http.StatusOK, `{"access_token":"tok-123","token_type":"Bearer","expires_in":3600}`)
 	mock.AddRaw(http.MethodPost, "/api/v2/organizations/-/tailnets", http.StatusOK, `{"id":"T123","displayName":"Sandbox","orgId":"o123","dnsName":"tail123.ts.net","createdAt":"2025-01-01T12:00:00Z","oauthClient":{"id":"k123","secret":"tskey-client-secret"}}`)
 	mock.AddRaw(http.MethodGet, "/api/v2/organizations/-/tailnets", http.StatusOK, `{"tailnets":[{"id":"T123","displayName":"Sandbox","orgId":"o123","createdAt":"2025-01-01T12:00:00Z"}]}`)
-	mock.AddRaw(http.MethodDelete, "/api/v2/tailnet/-", http.StatusOK, `{}`)
+	mock.AddRaw(http.MethodDelete, "/api/v2/tailnet/T123", http.StatusOK, `{}`)
 
 	env := map[string]string{
 		"TSCLI_BASE_URL":        mock.URL(),
@@ -49,7 +49,7 @@ func TestTailnetLifecycleCommands(t *testing.T) {
 		t.Fatalf("expected authoritative list response, got %s", res.stdout)
 	}
 
-	res = executeCLINoDefaults(t, []string{"delete", "tailnet", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, env)
+	res = executeCLINoDefaults(t, []string{"delete", "tailnet", "--id", "T123", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, env)
 	if res.err != nil {
 		t.Fatalf("delete tailnet: %v\nstderr:\n%s", res.err, res.stderr)
 	}
@@ -69,7 +69,7 @@ func TestTailnetLifecycleCommands(t *testing.T) {
 		t.Fatalf("expected create request body to include displayName, got %s", reqs[1].Body)
 	}
 	for _, req := range reqs {
-		if strings.Contains(req.Path, "/organizations/-/tailnets") || strings.Contains(req.Path, "/tailnet/-") {
+		if strings.Contains(req.Path, "/organizations/-/tailnets") || strings.Contains(req.Path, "/tailnet/T123") {
 			if got := req.Header.Get("Authorization"); got != "Bearer tok-123" {
 				t.Fatalf("expected bearer auth on lifecycle request, got %q for %s", got, req.Path)
 			}
@@ -123,6 +123,13 @@ func TestTailnetLifecycleCommandErrorsAreActionable(t *testing.T) {
 		res := executeCLINoDefaults(t, []string{"create", "tailnet", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, nil)
 		if res.err == nil || !strings.Contains(res.err.Error(), "--display-name is required") {
 			t.Fatalf("expected display-name validation error, got %v", res.err)
+		}
+	})
+
+	t.Run("delete tailnet requires id", func(t *testing.T) {
+		res := executeCLINoDefaults(t, []string{"delete", "tailnet", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, nil)
+		if res.err == nil || !strings.Contains(res.err.Error(), "required flag(s) \"id\" not set") {
+			t.Fatalf("expected id validation error, got %v", res.err)
 		}
 	})
 
