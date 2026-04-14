@@ -47,6 +47,8 @@ func Command() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&tailnet, "profile-tailnet", "", "Explicit effective tailnet value for this profile (defaults to the profile name)")
+	cmd.Flags().StringVar(&tailnet, "tailnet", "", "Deprecated alias for --profile-tailnet")
+	_ = cmd.Flags().MarkDeprecated("tailnet", "use --profile-tailnet instead")
 	cmd.Flags().StringVar(&apiKey, "api-key", "", "API key for the tailnet profile")
 	cmd.Flags().StringVar(&oauthClientID, "oauth-client-id", "", "OAuth client ID for the tailnet profile")
 	cmd.Flags().StringVar(&oauthClientSecret, "oauth-client-secret", "", "OAuth client secret for the tailnet profile")

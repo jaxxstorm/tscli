@@ -102,3 +102,19 @@ func TestDoBearerReturnsInvalidBaseURLError(t *testing.T) {
 		t.Fatalf("expected invalid base-url error, got %v", err)
 	}
 }
+
+func TestDoRejectsNonAbsoluteClientBaseURL(t *testing.T) {
+	client := &tsapi.Client{
+		Tailnet: "example.com",
+		APIKey:  "tskey-test",
+		BaseURL: &url.URL{Path: "relative-only"},
+	}
+
+	_, err := Do(context.Background(), client, http.MethodGet, "/tailnet/{tailnet}/settings", nil, nil)
+	if err == nil {
+		t.Fatalf("expected invalid base-url error")
+	}
+	if !strings.Contains(err.Error(), "invalid base-url") {
+		t.Fatalf("expected invalid base-url error, got %v", err)
+	}
+}

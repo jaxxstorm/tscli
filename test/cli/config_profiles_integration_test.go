@@ -181,6 +181,26 @@ func TestConfigProfilesUpsertUsesProfileTailnetFlag(t *testing.T) {
 	}
 }
 
+func TestConfigProfilesUpsertAcceptsDeprecatedTailnetAlias(t *testing.T) {
+	home := t.TempDir()
+
+	res := executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "sandbox", "--api-key", "tskey-sandbox", "--tailnet", "example.ts.net"}, map[string]string{
+		"HOME": home,
+	})
+	if res.err != nil {
+		t.Fatalf("upsert profile tailnet alias: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg, err := os.ReadFile(configFile)
+	if err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+	if !strings.Contains(string(cfg), "tailnet: example.ts.net") {
+		t.Fatalf("expected persisted profile tailnet from deprecated alias, got:\n%s", string(cfg))
+	}
+}
+
 func TestConfigProfilesUpsertRejectsMixedAuthShapes(t *testing.T) {
 	res := executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "mixed", "--api-key", "tskey-mixed", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, nil)
 	if res.err == nil {
