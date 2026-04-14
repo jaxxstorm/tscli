@@ -6,7 +6,7 @@ Delete an API-driven tailnet
 
 ### Synopsis
 
-Delete the current API-driven tailnet using that tailnet's OAuth client credentials.
+Delete an API-driven tailnet by ID using organization-approved OAuth client credentials.
 
 ```
 tscli delete tailnet [flags]
@@ -16,6 +16,7 @@ tscli delete tailnet [flags]
 
 ```
   -h, --help                         help for tailnet
+      --id string                    Tailnet ID to delete
       --oauth-client-id string       OAuth client ID for deleting the API-driven tailnet
       --oauth-client-secret string   OAuth client secret for deleting the API-driven tailnet
 ```
