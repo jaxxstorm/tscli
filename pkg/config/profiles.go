@@ -11,8 +11,11 @@ import (
 
 // TailnetProfile represents one named tailnet credential profile.
 type TailnetProfile struct {
-	Name   string `mapstructure:"name" json:"name" yaml:"name"`
-	APIKey string `mapstructure:"api-key" json:"api-key" yaml:"api-key"`
+	Name              string `mapstructure:"name" json:"name" yaml:"name"`
+	Tailnet           string `mapstructure:"tailnet" json:"tailnet,omitempty" yaml:"tailnet,omitempty"`
+	APIKey            string `mapstructure:"api-key" json:"api-key,omitempty" yaml:"api-key,omitempty"`
+	OAuthClientID     string `mapstructure:"oauth-client-id" json:"oauth-client-id,omitempty" yaml:"oauth-client-id,omitempty"`
+	OAuthClientSecret string `mapstructure:"oauth-client-secret" json:"oauth-client-secret,omitempty" yaml:"oauth-client-secret,omitempty"`
 }
 
 // TailnetProfilesState represents profile-backed configuration.
@@ -25,6 +28,11 @@ type TailnetProfilesState struct {
 type ResolvedRuntimeConfig struct {
 	APIKey  string
 	Tailnet string
+}
+
+type ResolvedOAuthConfig struct {
+	ClientID     string
+	ClientSecret string
 }
 
 func ListTailnetProfiles() (TailnetProfilesState, error) {
@@ -52,7 +60,7 @@ func SetActiveTailnet(name string) error {
 	return persistTailnetProfilesState(v, state)
 }
 
-func UpsertTailnetProfile(name, apiKey string) (bool, error) {
+func UpsertTailnetProfile(profile TailnetProfile) (bool, error) {
 	v := viper.GetViper()
 
 	state, err := loadTailnetProfilesState(v)
@@ -60,33 +68,29 @@ func UpsertTailnetProfile(name, apiKey string) (bool, error) {
 		return false, err
 	}
 
-	name = strings.TrimSpace(name)
-	apiKey = strings.TrimSpace(apiKey)
+	profile = normalizeProfile(profile)
 
-	if name == "" {
+	if profile.Name == "" {
 		return false, fmt.Errorf("tailnet profile name is required")
 	}
-	if apiKey == "" {
-		return false, fmt.Errorf("tailnet profile api-key is required")
+	if err := validateProfileAuthShape(profile); err != nil {
+		return false, err
 	}
 
 	created := true
 	for i := range state.Tailnets {
-		if state.Tailnets[i].Name == name {
-			state.Tailnets[i].APIKey = apiKey
+		if state.Tailnets[i].Name == profile.Name {
+			state.Tailnets[i] = profile
 			created = false
 			break
 		}
 	}
 	if created {
-		state.Tailnets = append(state.Tailnets, TailnetProfile{
-			Name:   name,
-			APIKey: apiKey,
-		})
+		state.Tailnets = append(state.Tailnets, profile)
 	}
 
 	if strings.TrimSpace(state.ActiveTailnet) == "" {
-		state.ActiveTailnet = name
+		state.ActiveTailnet = profile.Name
 	}
 
 	if err := persistTailnetProfilesState(v, state); err != nil {
@@ -131,6 +135,10 @@ func ResolveRuntimeConfig(flagOverrides map[string]struct{}) (ResolvedRuntimeCon
 	return resolveRuntimeConfig(viper.GetViper(), flagOverrides)
 }
 
+func ResolveOAuthRuntimeConfig(flagOverrides map[string]struct{}) (ResolvedOAuthConfig, error) {
+	return resolveOAuthRuntimeConfig(viper.GetViper(), flagOverrides)
+}
+
 func resolveRuntimeConfig(v *viper.Viper, flagOverrides map[string]struct{}) (ResolvedRuntimeConfig, error) {
 	state, err := loadTailnetProfilesState(v)
 	if err != nil {
@@ -147,6 +155,7 @@ func resolveRuntimeConfig(v *viper.Viper, flagOverrides map[string]struct{}) (Re
 		legacyAPIKey,
 		state,
 		flagOverrides,
+		func(profile TailnetProfile) string { return profile.APIKey },
 	)
 	tailnet, tailnetSet := resolveWithPrecedence(
 		v,
@@ -155,6 +164,7 @@ func resolveRuntimeConfig(v *viper.Viper, flagOverrides map[string]struct{}) (Re
 		legacyTailnet,
 		state,
 		flagOverrides,
+		func(profile TailnetProfile) string { return profile.EffectiveTailnet() },
 	)
 
 	if !tailnetSet || strings.TrimSpace(tailnet) == "" {
@@ -176,6 +186,46 @@ func resolveRuntimeConfig(v *viper.Viper, flagOverrides map[string]struct{}) (Re
 	return resolved, nil
 }
 
+func resolveOAuthRuntimeConfig(v *viper.Viper, flagOverrides map[string]struct{}) (ResolvedOAuthConfig, error) {
+	state, err := loadTailnetProfilesState(v)
+	if err != nil {
+		return ResolvedOAuthConfig{}, err
+	}
+
+	clientID, clientIDSet := resolveWithPrecedence(
+		v,
+		"oauth-client-id",
+		"TSCLI_OAUTH_CLIENT_ID",
+		strings.TrimSpace(v.GetString("oauth-client-id")),
+		state,
+		flagOverrides,
+		func(profile TailnetProfile) string { return profile.OAuthClientID },
+	)
+	clientSecret, clientSecretSet := resolveWithPrecedence(
+		v,
+		"oauth-client-secret",
+		"TSCLI_OAUTH_CLIENT_SECRET",
+		strings.TrimSpace(v.GetString("oauth-client-secret")),
+		state,
+		flagOverrides,
+		func(profile TailnetProfile) string { return profile.OAuthClientSecret },
+	)
+
+	if !clientIDSet || clientID == "" || !clientSecretSet || clientSecret == "" {
+		return ResolvedOAuthConfig{}, fmt.Errorf("OAuth client credentials are required; provide --oauth-client-id and --oauth-client-secret, set TSCLI_OAUTH_CLIENT_ID and TSCLI_OAUTH_CLIENT_SECRET, or configure them on the active profile")
+	}
+
+	resolved := ResolvedOAuthConfig{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+	}
+
+	v.Set("oauth-client-id", resolved.ClientID)
+	v.Set("oauth-client-secret", resolved.ClientSecret)
+
+	return resolved, nil
+}
+
 func resolveWithPrecedence(
 	v *viper.Viper,
 	key string,
@@ -183,28 +233,32 @@ func resolveWithPrecedence(
 	legacyValue string,
 	state TailnetProfilesState,
 	flagOverrides map[string]struct{},
+	profileValue func(TailnetProfile) string,
 ) (string, bool) {
 	if _, ok := flagOverrides[key]; ok {
-		return strings.TrimSpace(v.GetString(key)), true
+		value := strings.TrimSpace(v.GetString(key))
+		return value, value != ""
 	}
 
 	if envValue, ok := os.LookupEnv(envKey); ok {
-		return strings.TrimSpace(envValue), true
+		envValue = strings.TrimSpace(envValue)
+		return envValue, envValue != ""
 	}
 
 	if state.ActiveTailnet != "" {
 		if profile, found := findTailnetProfile(state.Tailnets, state.ActiveTailnet); found {
-			if key == "tailnet" {
-				return profile.Name, true
-			}
-			if key == "api-key" {
-				return profile.APIKey, true
+			if profileValue != nil {
+				value := strings.TrimSpace(profileValue(profile))
+				if value != "" {
+					return value, true
+				}
 			}
 		}
 	}
 
-	if strings.TrimSpace(legacyValue) != "" {
-		return strings.TrimSpace(legacyValue), true
+	legacyValue = strings.TrimSpace(legacyValue)
+	if legacyValue != "" {
+		return legacyValue, true
 	}
 
 	return "", false
@@ -231,10 +285,7 @@ func loadTailnetProfilesState(v *viper.Viper) (TailnetProfilesState, error) {
 func normalizeProfiles(profiles []TailnetProfile) []TailnetProfile {
 	normalized := make([]TailnetProfile, 0, len(profiles))
 	for _, profile := range profiles {
-		normalized = append(normalized, TailnetProfile{
-			Name:   strings.TrimSpace(profile.Name),
-			APIKey: strings.TrimSpace(profile.APIKey),
-		})
+		normalized = append(normalized, normalizeProfile(profile))
 	}
 
 	slices.SortFunc(normalized, func(a, b TailnetProfile) int {
@@ -251,8 +302,8 @@ func validateTailnetProfilesState(state TailnetProfilesState) error {
 		if profile.Name == "" {
 			return fmt.Errorf("tailnet profile at index %d is missing name", i)
 		}
-		if profile.APIKey == "" {
-			return fmt.Errorf("tailnet profile %q is missing api-key", profile.Name)
+		if err := validateProfileAuthShape(profile); err != nil {
+			return err
 		}
 		if _, exists := seen[profile.Name]; exists {
 			return fmt.Errorf("duplicate tailnet profile name %q", profile.Name)
@@ -267,6 +318,53 @@ func validateTailnetProfilesState(state TailnetProfilesState) error {
 	}
 
 	return nil
+}
+
+func normalizeProfile(profile TailnetProfile) TailnetProfile {
+	return TailnetProfile{
+		Name:              strings.TrimSpace(profile.Name),
+		Tailnet:           strings.TrimSpace(profile.Tailnet),
+		APIKey:            strings.TrimSpace(profile.APIKey),
+		OAuthClientID:     strings.TrimSpace(profile.OAuthClientID),
+		OAuthClientSecret: strings.TrimSpace(profile.OAuthClientSecret),
+	}
+}
+
+func validateProfileAuthShape(profile TailnetProfile) error {
+	hasAPIKey := profile.APIKey != ""
+	hasOAuthID := profile.OAuthClientID != ""
+	hasOAuthSecret := profile.OAuthClientSecret != ""
+	hasOAuth := hasOAuthID || hasOAuthSecret
+
+	switch {
+	case hasAPIKey && hasOAuth:
+		return fmt.Errorf("tailnet profile %q must use either api-key auth or oauth-client-id/oauth-client-secret auth, not both", profile.Name)
+	case hasAPIKey:
+		return nil
+	case hasOAuthID && hasOAuthSecret:
+		return nil
+	case hasOAuth:
+		return fmt.Errorf("tailnet profile %q must include both oauth-client-id and oauth-client-secret", profile.Name)
+	default:
+		return fmt.Errorf("tailnet profile %q must include api-key or both oauth-client-id and oauth-client-secret", profile.Name)
+	}
+}
+
+func (p TailnetProfile) EffectiveTailnet() string {
+	if p.Tailnet != "" {
+		return p.Tailnet
+	}
+	return p.Name
+}
+
+func (p TailnetProfile) AuthType() string {
+	if p.APIKey != "" {
+		return "api-key"
+	}
+	if p.OAuthClientID != "" || p.OAuthClientSecret != "" {
+		return "oauth"
+	}
+	return "unknown"
 }
 
 func findTailnetProfile(profiles []TailnetProfile, name string) (TailnetProfile, bool) {
@@ -295,6 +393,8 @@ func persistTailnetProfilesState(v *viper.Viper, state TailnetProfilesState) err
 	settings["active-tailnet"] = state.ActiveTailnet
 	delete(settings, "tailnet")
 	delete(settings, "api-key")
+	delete(settings, "oauth-client-id")
+	delete(settings, "oauth-client-secret")
 
 	v.Set("tailnets", state.Tailnets)
 	v.Set("active-tailnet", state.ActiveTailnet)

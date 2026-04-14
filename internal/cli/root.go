@@ -38,7 +38,7 @@ func Configure() *cobra.Command {
 			if isLocalCommand(cmd) {
 				return nil
 			}
-			if isUnauthenticatedCommand(cmd) {
+			if skipsAPIKeyPreRun(cmd) {
 				return nil
 			}
 
@@ -93,7 +93,7 @@ func isLocalCommand(cmd *cobra.Command) bool {
 	return false
 }
 
-func isUnauthenticatedCommand(cmd *cobra.Command) bool {
+func skipsAPIKeyPreRun(cmd *cobra.Command) bool {
 	segments := make([]string, 0, 4)
 	for current := cmd; current != nil; current = current.Parent() {
 		if current.Name() == "tscli" {
@@ -102,9 +102,12 @@ func isUnauthenticatedCommand(cmd *cobra.Command) bool {
 		segments = append([]string{current.Name()}, segments...)
 	}
 
-	if len(segments) != 2 {
-		return false
+	if len(segments) == 2 {
+		return (segments[0] == "create" && segments[1] == "token") ||
+			(segments[0] == "create" && segments[1] == "tailnet") ||
+			(segments[0] == "list" && segments[1] == "tailnets") ||
+			(segments[0] == "delete" && segments[1] == "tailnet")
 	}
 
-	return segments[0] == "create" && segments[1] == "token"
+	return false
 }

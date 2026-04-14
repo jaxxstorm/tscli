@@ -1,4 +1,4 @@
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Configuration structure is documented
 The documentation SHALL describe supported configuration keys, including legacy and profile-based tailnet fields, with examples. The documented profile schema SHALL include `name`, optional `tailnet`, `api-key`, `oauth-client-id`, and `oauth-client-secret`, plus `active-tailnet`.
@@ -12,23 +12,14 @@ The documentation SHALL describe supported configuration keys, including legacy 
 - **THEN** docs SHALL state precedence order of flags over environment variables over config file values
 - **AND** docs SHALL explain that lifecycle commands resolve OAuth credentials from the same precedence layers used for other command auth inputs
 
-### Requirement: API key authentication workflow is documented
-The documentation SHALL explain how to authenticate using a Tailscale API key via CLI flags, environment variables, and config.
-
-#### Scenario: User reads authentication docs
-- **WHEN** a user opens auth documentation
-- **THEN** they SHALL see instructions for `--api-key`, `TAILSCALE_API_KEY`, and config file usage
-
-#### Scenario: Security guidance is provided
-- **WHEN** users follow authentication documentation
-- **THEN** docs SHALL include guidance to avoid committing secrets and to prefer secure environment/secret management
-
 ### Requirement: Config and auth docs are validated by tests/checks
 The project SHALL include checks that required configuration and authentication documentation pages and links exist, including the new OAuth lifecycle guidance.
 
 #### Scenario: Required docs page is missing
-- **WHEN** docs validation runs and a required config/auth page is absent
+- **WHEN** docs validation runs and a required config or auth page is absent
 - **THEN** validation SHALL fail with a message identifying missing documentation artifacts
+
+## ADDED Requirements
 
 ### Requirement: OAuth client credential authentication workflow is documented
 The documentation SHALL explain how to authenticate lifecycle commands using an OAuth client id and secret via CLI flags, environment variables, and config profiles, and SHALL describe how this differs from API-key authentication.

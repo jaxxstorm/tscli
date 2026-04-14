@@ -1,4 +1,4 @@
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Multi-tailnet profile schema is supported
 The CLI configuration SHALL support an `active-tailnet` key and a `tailnets` collection of profile objects. Each profile SHALL include a `name` field and MAY include `tailnet`, `api-key`, `oauth-client-id`, and `oauth-client-secret`. A valid profile SHALL contain either `api-key`, or both `oauth-client-id` and `oauth-client-secret`. When profile-backed configuration is persisted, that profile schema SHALL be the canonical stored representation and SHALL NOT require duplicate top-level `tailnet` or `api-key` keys.
@@ -51,22 +51,6 @@ For operational commands, effective values SHALL be resolved in this order: flag
 #### Scenario: OAuth credentials are missing from all sources
 - **WHEN** an OAuth-authenticated command runs and flags, environment variables, and the active profile do not provide a complete OAuth client id and secret pair
 - **THEN** command execution SHALL fail with an actionable required OAuth credentials error
-
-### Requirement: Legacy single-tailnet configuration remains valid
-Existing config files that only define `tailnet` and `api-key` SHALL continue to work without modification. Once profile data exists, those legacy flat keys SHALL be treated as backward-compatibility input only rather than canonical persisted profile state.
-
-#### Scenario: Legacy-only config executes commands
-- **WHEN** `tailnets` and `active-tailnet` are not set and legacy keys are present
-- **THEN** the CLI SHALL resolve runtime credentials from legacy keys exactly as before
-
-#### Scenario: Active profile and legacy values coexist
-- **WHEN** profile keys and legacy keys are both present
-- **THEN** the CLI SHALL prefer profile-derived values over legacy keys when flags and environment variables are not set
-
-#### Scenario: Profile rewrite removes duplicated legacy mirrors
-- **WHEN** a profile command rewrites a mixed config file that contains both profile data and flat legacy keys copied from the active profile
-- **THEN** the rewritten config SHALL preserve the profile data and active selection
-- **AND** the rewritten config SHALL NOT re-persist the duplicated flat `tailnet` and `api-key` values as part of the canonical profile representation
 
 ### Requirement: Config commands manage tailnet profiles
 The `config` command group SHALL provide operations to list profiles, set active profile, upsert profile credentials, and remove profiles for both API-key-backed and OAuth-backed profile entries.

@@ -31,8 +31,26 @@ func TestLoadTailnetProfilesStateValidation(t *testing.T) {
 		})
 
 		_, err := loadTailnetProfilesState(v)
-		if err == nil || !strings.Contains(err.Error(), "missing api-key") {
-			t.Fatalf("expected missing api-key validation error, got %v", err)
+		if err == nil || !strings.Contains(err.Error(), "must include api-key or both oauth-client-id and oauth-client-secret") {
+			t.Fatalf("expected missing auth-shape validation error, got %v", err)
+		}
+	})
+
+	t.Run("oauth profile loads", func(t *testing.T) {
+		v := viper.New()
+		v.Set("active-tailnet", "sandbox")
+		v.Set("tailnets", []map[string]any{{
+			"name":                "sandbox",
+			"oauth-client-id":     "cid",
+			"oauth-client-secret": "secret",
+		}})
+
+		state, err := loadTailnetProfilesState(v)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got := state.Tailnets[0].AuthType(); got != "oauth" {
+			t.Fatalf("expected oauth auth type, got %q", got)
 		}
 	})
 
@@ -52,7 +70,7 @@ func TestLoadTailnetProfilesStateValidation(t *testing.T) {
 	t.Run("profiles are normalized and sorted", func(t *testing.T) {
 		v := viper.New()
 		v.Set("tailnets", []map[string]any{
-			{"name": " zeta ", "api-key": " tskey-z "},
+			{"name": " zeta ", "tailnet": "  tagged-zeta  ", "api-key": " tskey-z "},
 			{"name": "alpha", "api-key": "tskey-a"},
 		})
 
@@ -68,6 +86,9 @@ func TestLoadTailnetProfilesStateValidation(t *testing.T) {
 		}
 		if state.Tailnets[1].APIKey != "tskey-z" {
 			t.Fatalf("expected trimmed api-key, got %q", state.Tailnets[1].APIKey)
+		}
+		if state.Tailnets[1].Tailnet != "tagged-zeta" {
+			t.Fatalf("expected trimmed tailnet, got %q", state.Tailnets[1].Tailnet)
 		}
 	})
 }
@@ -122,7 +143,7 @@ func TestResolveRuntimeConfigPrecedence(t *testing.T) {
 		v := viper.New()
 		v.Set("active-tailnet", "profile-tailnet")
 		v.Set("tailnets", []map[string]any{
-			{"name": "profile-tailnet", "api-key": "profile-key"},
+			{"name": "profile-tailnet", "tailnet": "custom-tailnet", "api-key": "profile-key"},
 		})
 		v.Set("tailnet", "legacy-tailnet")
 		v.Set("api-key", "legacy-key")
@@ -131,7 +152,7 @@ func TestResolveRuntimeConfigPrecedence(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if resolved.Tailnet != "profile-tailnet" || resolved.APIKey != "profile-key" {
+		if resolved.Tailnet != "custom-tailnet" || resolved.APIKey != "profile-key" {
 			t.Fatalf("expected profile values, got %+v", resolved)
 		}
 	})
@@ -173,6 +194,84 @@ func TestResolveRuntimeConfigPrecedence(t *testing.T) {
 	})
 }
 
+func TestResolveOAuthRuntimeConfigPrecedence(t *testing.T) {
+	t.Run("flags override env profile and config", func(t *testing.T) {
+		v := viper.New()
+		v.Set("active-tailnet", "sandbox")
+		v.Set("tailnets", []map[string]any{{
+			"name":                "sandbox",
+			"oauth-client-id":     "profile-id",
+			"oauth-client-secret": "profile-secret",
+		}})
+		v.Set("oauth-client-id", "config-id")
+		v.Set("oauth-client-secret", "config-secret")
+		v.Set("oauth-client-id", "flag-id")
+		v.Set("oauth-client-secret", "flag-secret")
+		t.Setenv("TSCLI_OAUTH_CLIENT_ID", "env-id")
+		t.Setenv("TSCLI_OAUTH_CLIENT_SECRET", "env-secret")
+
+		resolved, err := resolveOAuthRuntimeConfig(v, map[string]struct{}{
+			"oauth-client-id":     {},
+			"oauth-client-secret": {},
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if resolved.ClientID != "flag-id" || resolved.ClientSecret != "flag-secret" {
+			t.Fatalf("expected flag oauth values, got %+v", resolved)
+		}
+	})
+
+	t.Run("env overrides profile", func(t *testing.T) {
+		v := viper.New()
+		v.Set("active-tailnet", "sandbox")
+		v.Set("tailnets", []map[string]any{{
+			"name":                "sandbox",
+			"oauth-client-id":     "profile-id",
+			"oauth-client-secret": "profile-secret",
+		}})
+		t.Setenv("TSCLI_OAUTH_CLIENT_ID", "env-id")
+		t.Setenv("TSCLI_OAUTH_CLIENT_SECRET", "env-secret")
+
+		resolved, err := resolveOAuthRuntimeConfig(v, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if resolved.ClientID != "env-id" || resolved.ClientSecret != "env-secret" {
+			t.Fatalf("expected env oauth values, got %+v", resolved)
+		}
+	})
+
+	t.Run("active profile overrides config", func(t *testing.T) {
+		v := viper.New()
+		v.Set("active-tailnet", "sandbox")
+		v.Set("tailnets", []map[string]any{{
+			"name":                "sandbox",
+			"oauth-client-id":     "profile-id",
+			"oauth-client-secret": "profile-secret",
+		}})
+		v.Set("oauth-client-id", "config-id")
+		v.Set("oauth-client-secret", "config-secret")
+
+		resolved, err := resolveOAuthRuntimeConfig(v, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if resolved.ClientID != "profile-id" || resolved.ClientSecret != "profile-secret" {
+			t.Fatalf("expected profile oauth values, got %+v", resolved)
+		}
+	})
+
+	t.Run("missing oauth credentials fails", func(t *testing.T) {
+		v := viper.New()
+
+		_, err := resolveOAuthRuntimeConfig(v, nil)
+		if err == nil || !strings.Contains(err.Error(), "OAuth client credentials are required") {
+			t.Fatalf("expected missing oauth credentials error, got %v", err)
+		}
+	})
+}
+
 func TestTailnetProfilePersistenceHelpers(t *testing.T) {
 	viper.Reset()
 	t.Cleanup(viper.Reset)
@@ -180,7 +279,7 @@ func TestTailnetProfilePersistenceHelpers(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 
-	created, err := UpsertTailnetProfile("sandbox", "tskey-sandbox")
+	created, err := UpsertTailnetProfile(TailnetProfile{Name: "sandbox", APIKey: "tskey-sandbox"})
 	if err != nil {
 		t.Fatalf("upsert sandbox: %v", err)
 	}
@@ -188,7 +287,7 @@ func TestTailnetProfilePersistenceHelpers(t *testing.T) {
 		t.Fatalf("expected first upsert to create profile")
 	}
 
-	created, err = UpsertTailnetProfile("prod", "tskey-prod")
+	created, err = UpsertTailnetProfile(TailnetProfile{Name: "prod", APIKey: "tskey-prod"})
 	if err != nil {
 		t.Fatalf("upsert prod: %v", err)
 	}
@@ -245,6 +344,49 @@ func TestTailnetProfilePersistenceHelpers(t *testing.T) {
 
 	if err := RemoveTailnetProfile("sandbox"); err != nil {
 		t.Fatalf("remove non-active profile: %v", err)
+	}
+}
+
+func TestTailnetProfilePersistenceSupportsOAuthProfiles(t *testing.T) {
+	viper.Reset()
+	t.Cleanup(viper.Reset)
+
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	created, err := UpsertTailnetProfile(TailnetProfile{
+		Name:              "org-admin",
+		OAuthClientID:     "cid-org",
+		OAuthClientSecret: "secret-org",
+	})
+	if err != nil {
+		t.Fatalf("upsert oauth profile: %v", err)
+	}
+	if !created {
+		t.Fatalf("expected oauth profile to be created")
+	}
+
+	state, err := ListTailnetProfiles()
+	if err != nil {
+		t.Fatalf("list profiles: %v", err)
+	}
+	if len(state.Tailnets) != 1 {
+		t.Fatalf("expected 1 profile, got %d", len(state.Tailnets))
+	}
+	if got := state.Tailnets[0].AuthType(); got != "oauth" {
+		t.Fatalf("expected oauth auth type, got %q", got)
+	}
+	if got := state.Tailnets[0].EffectiveTailnet(); got != "org-admin" {
+		t.Fatalf("expected profile name to be effective tailnet, got %q", got)
+	}
+
+	cfg, err := os.ReadFile(filepath.Join(home, ".tscli.yaml"))
+	if err != nil {
+		t.Fatalf("read persisted config: %v", err)
+	}
+	body := string(cfg)
+	if !strings.Contains(body, "oauth-client-id: cid-org") || !strings.Contains(body, "oauth-client-secret: secret-org") {
+		t.Fatalf("expected oauth credentials in persisted profile config, got:\n%s", body)
 	}
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/jaxxstorm/tscli/cmd/tscli/delete/key"
 	"github.com/jaxxstorm/tscli/cmd/tscli/delete/logs"
 	"github.com/jaxxstorm/tscli/cmd/tscli/delete/service"
+	"github.com/jaxxstorm/tscli/cmd/tscli/delete/tailnet"
 	"github.com/jaxxstorm/tscli/cmd/tscli/delete/user"
 	"github.com/jaxxstorm/tscli/cmd/tscli/delete/webhook"
 	"github.com/spf13/cobra"
@@ -27,6 +28,7 @@ func Command() *cobra.Command {
 	command.AddCommand(webhook.Command())
 	command.AddCommand(postureintegration.Command())
 	command.AddCommand(logs.Command())
+	command.AddCommand(tailnet.Command())
 
 	return command
 }

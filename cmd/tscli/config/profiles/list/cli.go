@@ -10,8 +10,10 @@ import (
 )
 
 type listProfile struct {
-	Name   string `json:"name"`
-	Active bool   `json:"active"`
+	Name     string `json:"name"`
+	Tailnet  string `json:"tailnet"`
+	AuthType string `json:"auth-type"`
+	Active   bool   `json:"active"`
 }
 
 func Command() *cobra.Command {
@@ -28,8 +30,10 @@ func Command() *cobra.Command {
 			profiles := make([]listProfile, 0, len(state.Tailnets))
 			for _, profile := range state.Tailnets {
 				profiles = append(profiles, listProfile{
-					Name:   profile.Name,
-					Active: profile.Name == state.ActiveTailnet,
+					Name:     profile.Name,
+					Tailnet:  profile.EffectiveTailnet(),
+					AuthType: profile.AuthType(),
+					Active:   profile.Name == state.ActiveTailnet,
 				})
 			}
 

@@ -34,6 +34,7 @@ Commands that list information from the Tailscale API
 * [tscli list posture-integrations](tscli_list_posture-integrations.md)	 - List posture integrations
 * [tscli list routes](tscli_list_routes.md)	 - List a device's subnet routes
 * [tscli list services](tscli_list_services.md)	 - List tailnet services
+* [tscli list tailnets](tscli_list_tailnets.md)	 - List organization tailnets
 * [tscli list users](tscli_list_users.md)	 - List tailnet users
 * [tscli list webhooks](tscli_list_webhooks.md)	 - List tailnet webhooks
 

@@ -29,6 +29,7 @@ Commands that create in the Tailscale API
 * [tscli create invite](tscli_create_invite.md)	 - Create invite commands
 * [tscli create key](tscli_create_key.md)	 - Create an auth-key, OAuth client, or federated credential
 * [tscli create posture-integration](tscli_create_posture-integration.md)	 - Create a new posture integration
+* [tscli create tailnet](tscli_create_tailnet.md)	 - Create an API-driven tailnet
 * [tscli create token](tscli_create_token.md)	 - Create an OAuth access-token from a client_id / client_secret pair
 * [tscli create webhook](tscli_create_webhook.md)	 - Create a new tailnet webhook
 

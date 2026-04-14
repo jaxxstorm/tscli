@@ -51,6 +51,18 @@ func TestConfigProfilesCommandFlow(t *testing.T) {
 	if !strings.Contains(res.stdout, "sandbox") || !strings.Contains(res.stdout, "prod") {
 		t.Fatalf("expected both profile names in output, got %s", res.stdout)
 	}
+	var listed map[string]any
+	if err := json.Unmarshal([]byte(res.stdout), &listed); err != nil {
+		t.Fatalf("unmarshal profile list output: %v\noutput:\n%s", err, res.stdout)
+	}
+	tailnets, _ := listed["tailnets"].([]any)
+	if len(tailnets) == 0 {
+		t.Fatalf("expected tailnets in output, got %s", res.stdout)
+	}
+	first, _ := tailnets[0].(map[string]any)
+	if first["auth-type"] != "api-key" {
+		t.Fatalf("expected auth-type api-key, got %v", first["auth-type"])
+	}
 
 	res = executeCLINoDefaults(t, []string{"config", "profiles", "delete", "sandbox"}, map[string]string{
 		"HOME": home,
@@ -82,6 +94,77 @@ func TestConfigProfilesCommandFlow(t *testing.T) {
 	}
 	if strings.Contains(string(cfg), "\napi-key:") {
 		t.Fatalf("did not expect duplicated top-level api-key in config file, got:\n%s", string(cfg))
+	}
+}
+
+func TestConfigProfilesSupportOAuthCredentials(t *testing.T) {
+	home := t.TempDir()
+
+	res := executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "org-admin", "--oauth-client-id", "cid-org", "--oauth-client-secret", "secret-org"}, map[string]string{
+		"HOME": home,
+	})
+	if res.err != nil {
+		t.Fatalf("upsert oauth profile: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+	if !strings.Contains(res.stdout, "created") {
+		t.Fatalf("expected created message, got %q", res.stdout)
+	}
+
+	res = executeCLINoDefaults(t, []string{"config", "profiles", "list"}, map[string]string{
+		"HOME":         home,
+		"TSCLI_OUTPUT": "json",
+	})
+	if res.err != nil {
+		t.Fatalf("list oauth profiles: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+	var listed map[string]any
+	if err := json.Unmarshal([]byte(res.stdout), &listed); err != nil {
+		t.Fatalf("unmarshal oauth profile list output: %v\noutput:\n%s", err, res.stdout)
+	}
+	tailnets, _ := listed["tailnets"].([]any)
+	if len(tailnets) != 1 {
+		t.Fatalf("expected one oauth profile in output, got %s", res.stdout)
+	}
+	first, _ := tailnets[0].(map[string]any)
+	if first["auth-type"] != "oauth" {
+		t.Fatalf("expected oauth auth type in list output, got %v", first["auth-type"])
+	}
+
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg, err := os.ReadFile(configFile)
+	if err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+	if !strings.Contains(string(cfg), "oauth-client-id: cid-org") || !strings.Contains(string(cfg), "oauth-client-secret: secret-org") {
+		t.Fatalf("expected persisted oauth profile credentials, got:\n%s", string(cfg))
+	}
+	if strings.Contains(string(cfg), "\noauth-client-id:") || strings.Contains(string(cfg), "\noauth-client-secret:") {
+		// top-level keys would appear at column 0; nested profile keys are indented
+		for _, line := range strings.Split(string(cfg), "\n") {
+			if strings.HasPrefix(line, "oauth-client-id:") || strings.HasPrefix(line, "oauth-client-secret:") {
+				t.Fatalf("did not expect duplicated top-level oauth keys in config file, got:\n%s", string(cfg))
+			}
+		}
+	}
+
+	res = executeCLINoDefaults(t, []string{"config", "profiles", "set-active", "org-admin"}, map[string]string{"HOME": home})
+	if res.err != nil {
+		t.Fatalf("set active oauth profile: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	res = executeCLINoDefaults(t, []string{"config", "profiles", "delete", "org-admin"}, map[string]string{"HOME": home})
+	if res.err == nil {
+		t.Fatalf("expected deleting active oauth profile to fail")
+	}
+}
+
+func TestConfigProfilesUpsertRejectsMixedAuthShapes(t *testing.T) {
+	res := executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "mixed", "--api-key", "tskey-mixed", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, nil)
+	if res.err == nil {
+		t.Fatalf("expected mixed auth shape to fail")
+	}
+	if !strings.Contains(strings.ToLower(res.err.Error()), "either api-key auth or oauth-client-id/oauth-client-secret auth") {
+		t.Fatalf("expected mixed auth shape error, got %v", res.err)
 	}
 }
 

@@ -124,6 +124,8 @@ func canonicalizePersistedSettings(settings map[string]any) map[string]any {
 	if hasProfileState(canonical) {
 		delete(canonical, "tailnet")
 		delete(canonical, "api-key")
+		delete(canonical, "oauth-client-id")
+		delete(canonical, "oauth-client-secret")
 	}
 
 	return canonical
