@@ -89,7 +89,10 @@ func Do(
 	body any,
 	out any,
 ) (http.Header, error) {
-	base := resolveBaseURL(c.BaseURL)
+	base, err := resolveBaseURL(c.BaseURL)
+	if err != nil {
+		return nil, err
+	}
 
 	u, err := url.Parse(path)
 	if err != nil {
@@ -142,7 +145,10 @@ func DoBearer(
 	body any,
 	out any,
 ) (http.Header, error) {
-	base := resolveBaseURL(nil)
+	base, err := resolveBaseURL(nil)
+	if err != nil {
+		return nil, err
+	}
 
 	u, err := url.Parse(path)
 	if err != nil {
@@ -185,27 +191,26 @@ func DoBearer(
 		rt:        http.DefaultTransport,
 		userAgent: getUserAgent(),
 	}
-	if viper.GetBool("debug") {
-		transport.rt = &logTransport{rt: transport.rt}
-	}
 
 	return doRequest(&http.Client{Transport: transport}, req, method, path, out)
 }
 
-func resolveBaseURL(current *url.URL) *url.URL {
+func resolveBaseURL(current *url.URL) (*url.URL, error) {
 	if current != nil {
-		return current
+		return current, nil
 	}
 
 	baseURL := viper.GetString("base-url")
 	if baseURL != "" {
-		if parsed, err := url.Parse(baseURL); err == nil {
-			return parsed
+		parsed, err := url.Parse(baseURL)
+		if err != nil {
+			return nil, fmt.Errorf("invalid base-url: %w", err)
 		}
+		return parsed, nil
 	}
 
 	b, _ := url.Parse(defaultBaseURL)
-	return b
+	return b, nil
 }
 
 func doRequest(httpc *http.Client, req *http.Request, method string, path string, out any) (http.Header, error) {
