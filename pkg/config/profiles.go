@@ -133,14 +133,11 @@ func RemoveTailnetProfile(name string) error {
 	if index < 0 {
 		return fmt.Errorf("tailnet profile %q not found", name)
 	}
+	if state.ActiveTailnet == name {
+		return fmt.Errorf("tailnet profile %q is active; set a different active profile before deleting it", name)
+	}
 
 	state.Tailnets = append(state.Tailnets[:index], state.Tailnets[index+1:]...)
-	if state.ActiveTailnet == name {
-		state.ActiveTailnet = ""
-		if len(state.Tailnets) > 0 {
-			state.ActiveTailnet = normalizeProfiles(state.Tailnets)[0].Name
-		}
-	}
 
 	return persistTailnetProfilesState(v, state)
 }

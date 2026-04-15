@@ -75,8 +75,8 @@ func TestConfigProfilesCommandFlow(t *testing.T) {
 	res = executeCLINoDefaults(t, []string{"config", "profiles", "delete", "prod"}, map[string]string{
 		"HOME": home,
 	})
-	if res.err != nil {
-		t.Fatalf("delete active profile: %v\nstderr:\n%s", res.err, res.stderr)
+	if res.err == nil {
+		t.Fatalf("expected deleting active profile to fail")
 	}
 
 	configFile := filepath.Join(home, ".tscli.yaml")
@@ -84,11 +84,11 @@ func TestConfigProfilesCommandFlow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read config file: %v", err)
 	}
-	if strings.Contains(string(cfg), "active-tailnet:") {
-		t.Fatalf("expected active-tailnet to be cleared after deleting last profile, got:\n%s", string(cfg))
+	if !strings.Contains(string(cfg), "active-tailnet: prod") {
+		t.Fatalf("expected active-tailnet to remain prod after failed delete, got:\n%s", string(cfg))
 	}
-	if strings.Contains(string(cfg), "tailnets:") {
-		t.Fatalf("expected tailnets block to be removed after deleting last profile, got:\n%s", string(cfg))
+	if !strings.Contains(string(cfg), "tailnets:") || !strings.Contains(string(cfg), "name: prod") {
+		t.Fatalf("expected remaining prod profile to stay persisted, got:\n%s", string(cfg))
 	}
 	if strings.Contains(string(cfg), "\ntailnet:") {
 		t.Fatalf("did not expect duplicated top-level tailnet in config file, got:\n%s", string(cfg))

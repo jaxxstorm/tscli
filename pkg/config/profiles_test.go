@@ -409,23 +409,23 @@ func TestTailnetProfilePersistenceHelpers(t *testing.T) {
 		t.Fatalf("remove non-active profile: %v", err)
 	}
 
-	if err := RemoveTailnetProfile("prod"); err != nil {
-		t.Fatalf("remove active profile: %v", err)
+	if err := RemoveTailnetProfile("prod"); err == nil || !strings.Contains(err.Error(), "is active") {
+		t.Fatalf("expected active profile delete to fail, got %v", err)
 	}
 
 	state, err = ListTailnetProfiles()
 	if err != nil {
 		t.Fatalf("list profiles after delete: %v", err)
 	}
-	if state.ActiveTailnet != "" {
-		t.Fatalf("expected active profile to be cleared, got %q", state.ActiveTailnet)
+	if state.ActiveTailnet != "prod" {
+		t.Fatalf("expected active profile to remain prod, got %q", state.ActiveTailnet)
 	}
-	if len(state.Tailnets) != 0 {
-		t.Fatalf("expected all profiles to be removed, got %+v", state.Tailnets)
+	if len(state.Tailnets) != 1 || state.Tailnets[0].Name != "prod" {
+		t.Fatalf("expected prod to remain after failed delete, got %+v", state.Tailnets)
 	}
 }
 
-func TestRemoveActiveTailnetProfilePromotesRemainingProfile(t *testing.T) {
+func TestRemoveActiveTailnetProfileFails(t *testing.T) {
 	viper.Reset()
 	t.Cleanup(viper.Reset)
 
@@ -439,19 +439,19 @@ func TestRemoveActiveTailnetProfilePromotesRemainingProfile(t *testing.T) {
 		t.Fatalf("upsert prod: %v", err)
 	}
 
-	if err := RemoveTailnetProfile("sandbox"); err != nil {
-		t.Fatalf("remove active profile: %v", err)
+	if err := RemoveTailnetProfile("sandbox"); err == nil || !strings.Contains(err.Error(), "is active") {
+		t.Fatalf("expected active profile delete to fail, got %v", err)
 	}
 
 	state, err := ListTailnetProfiles()
 	if err != nil {
 		t.Fatalf("list profiles: %v", err)
 	}
-	if state.ActiveTailnet != "prod" {
-		t.Fatalf("expected prod to become active, got %q", state.ActiveTailnet)
+	if state.ActiveTailnet != "sandbox" {
+		t.Fatalf("expected sandbox to remain active, got %q", state.ActiveTailnet)
 	}
-	if len(state.Tailnets) != 1 || state.Tailnets[0].Name != "prod" {
-		t.Fatalf("expected only prod to remain, got %+v", state.Tailnets)
+	if len(state.Tailnets) != 2 {
+		t.Fatalf("expected both profiles to remain, got %+v", state.Tailnets)
 	}
 }
 
