@@ -13,7 +13,7 @@ func Command() *cobra.Command {
 	var (
 		publicKey         string
 		privateKeySource  string
-		privateKey        string
+		privateKeyPath    string
 		privateKeyCommand string
 	)
 
@@ -44,16 +44,16 @@ func Command() *cobra.Command {
 
 			cfg := config.AgeEncryptionConfig{PublicKey: strings.TrimSpace(publicKey)}
 			switch strings.ToLower(strings.TrimSpace(privateKeySource)) {
-			case "config":
-				if strings.TrimSpace(privateKey) == "" {
-					fmt.Fprint(cmd.OutOrStdout(), "AGE private key: ")
+			case "path":
+				if strings.TrimSpace(privateKeyPath) == "" {
+					fmt.Fprint(cmd.OutOrStdout(), "AGE private key path: ")
 					value, err := reader.ReadString('\n')
 					if err != nil {
 						return err
 					}
-					privateKey = strings.TrimSpace(value)
+					privateKeyPath = strings.TrimSpace(value)
 				}
-				cfg.PrivateKey = strings.TrimSpace(privateKey)
+				cfg.PrivateKeyPath = strings.TrimSpace(privateKeyPath)
 			case "command":
 				if strings.TrimSpace(privateKeyCommand) == "" {
 					fmt.Fprint(cmd.OutOrStdout(), "Private key command: ")
@@ -69,7 +69,7 @@ func Command() *cobra.Command {
 			case "":
 				return fmt.Errorf("private key source is required")
 			default:
-				return fmt.Errorf("private key source must be one of: config, env, command")
+				return fmt.Errorf("private key source must be one of: path, env, command")
 			}
 
 			if err := config.SetAgeEncryptionConfig(cfg); err != nil {
@@ -81,8 +81,8 @@ func Command() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&publicKey, "public-key", "", "AGE public key used to encrypt persisted secrets")
-	cmd.Flags().StringVar(&privateKeySource, "private-key-source", "", "How to provide the AGE private key: config, env, or command")
-	cmd.Flags().StringVar(&privateKey, "private-key", "", "AGE private key stored in config when --private-key-source=config")
+	cmd.Flags().StringVar(&privateKeySource, "private-key-source", "", "How to provide the AGE private key: path, env, or command")
+	cmd.Flags().StringVar(&privateKeyPath, "private-key-path", "", "Path to an AGE private key file when --private-key-source=path")
 	cmd.Flags().StringVar(&privateKeyCommand, "private-key-command", "", "Command that returns the AGE private key when --private-key-source=command")
 
 	return cmd

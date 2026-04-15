@@ -39,12 +39,12 @@ The `config` command group SHALL provide a setup flow for secret encryption that
 When encryption is enabled, config writes that persist profile-backed secrets SHALL encrypt secret values with the configured AGE public key. API keys SHALL be persisted in `api-key-encrypted` instead of `api-key`, and OAuth client secrets SHALL be persisted in `oauth-client-secret-encrypted` instead of `oauth-client-secret`. The CLI SHALL decrypt those values before runtime auth resolution, SHALL leave non-secret fields such as `name`, `tailnet`, and `oauth-client-id` unencrypted, and SHALL NOT persist any exchanged runtime access token.
 
 #### Scenario: API-key profile is persisted with encryption enabled
-- **WHEN** a user runs `tscli config profiles upsert sandbox --api-key tskey-xxx` while AGE encryption is enabled
+- **WHEN** a user runs `tscli config profiles set sandbox --api-key tskey-xxx` while AGE encryption is enabled
 - **THEN** the saved profile SHALL contain `api-key-encrypted`
 - **AND** the saved profile SHALL NOT contain the plaintext `api-key`
 
 #### Scenario: OAuth profile is persisted with encryption enabled
-- **WHEN** a user runs `tscli config profiles upsert org-admin --oauth-client-id cid --oauth-client-secret secret` while AGE encryption is enabled
+- **WHEN** a user runs `tscli config profiles set org-admin --oauth-client-id cid --oauth-client-secret secret` while AGE encryption is enabled
 - **THEN** the saved profile SHALL contain plaintext `oauth-client-id`
 - **AND** the saved profile SHALL contain `oauth-client-secret-encrypted`
 - **AND** the saved profile SHALL NOT contain the plaintext `oauth-client-secret`

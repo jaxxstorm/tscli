@@ -7,7 +7,7 @@
 ## 2. Config command workflows
 
 - [x] 2.1 Add `config encryption setup` with the guided prompt flow for public-key entry and private-key source selection, and persist only the chosen AGE settings.
-- [x] 2.2 Update `config profiles upsert` so API keys and OAuth client secrets are written to encrypted sibling fields when encryption is enabled and remain plaintext when encryption is disabled.
+- [x] 2.2 Update `config profiles set` so API keys and OAuth client secrets are written to encrypted sibling fields when encryption is enabled and remain plaintext when encryption is disabled.
 - [x] 2.3 Update config profile command tests to cover plaintext and encrypted persistence, active-profile behavior, and actionable validation errors for conflicting or incomplete encryption settings.
 
 ## 3. Runtime authentication expansion

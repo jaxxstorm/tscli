@@ -16,7 +16,8 @@
 - `tailnets`: profile list with per-tailnet credentials
 - `active-tailnet`: selected profile from `tailnets`
 - `encryption.age.public-key`: AGE public key used to encrypt persisted secrets
-- `encryption.age.private-key`: optional AGE private key stored in config
+- `encryption.age.private-key-path`: optional path to an AGE private key file
+- `encryption.age.private-key`: legacy inline AGE private key stored in config
 - `encryption.age.private-key-command`: optional command that returns the AGE private key at runtime
 - `output`: output format (`json`, `yaml`, `human`, `pretty`)
 - `debug`: request/response debug logging
@@ -61,14 +62,15 @@ tailnets:
 
 `tailnets` + `active-tailnet` is the preferred multi-tailnet shape.
 Legacy `api-key` and `tailnet` are still supported for backward compatibility. If a profile omits `tailnet`, `tscli` uses the profile `name` as the effective tailnet.
-When encryption is enabled, `config profiles upsert` writes `api-key-encrypted` and `oauth-client-secret-encrypted` instead of the plaintext secret fields.
+When encryption is enabled, `config profiles set` writes `api-key-encrypted` and `oauth-client-secret-encrypted` instead of the plaintext secret fields.
 
 ## Profile commands
 
 ```bash
 tscli config profiles list
-tscli config profiles upsert _lbr_sandbox --api-key tskey-abc123
-tscli config profiles upsert org-admin --oauth-client-id cid --oauth-client-secret secret
+tscli config profiles set _lbr_sandbox --api-key tskey-abc123
+tscli config profiles set org-admin --oauth-client-id cid --oauth-client-secret secret
+tscli config profiles set org-admin
 tscli config profiles set-active _lbr_sandbox
 tscli config profiles delete _lbr_sandbox
 tscli config encryption setup
@@ -90,8 +92,9 @@ API-key commands resolve `--api-key` / `TAILSCALE_API_KEY` / profile `api-key` /
 Encrypted secret decryption uses this order for the AGE private key:
 
 1. `TSCLI_AGE_PRIVATE_KEY`
-2. `encryption.age.private-key-command`
-3. `encryption.age.private-key`
+2. `encryption.age.private-key-path`
+3. `encryption.age.private-key-command`
+4. `encryption.age.private-key`
 
 ### Practical examples
 

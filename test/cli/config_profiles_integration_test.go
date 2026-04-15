@@ -15,7 +15,7 @@ import (
 func TestConfigProfilesCommandFlow(t *testing.T) {
 	home := t.TempDir()
 
-	res := executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "sandbox", "--api-key", "tskey-sandbox"}, map[string]string{
+	res := executeCLINoDefaults(t, []string{"config", "profiles", "set", "sandbox", "--api-key", "tskey-sandbox"}, map[string]string{
 		"HOME": home,
 	})
 	if res.err != nil {
@@ -25,7 +25,7 @@ func TestConfigProfilesCommandFlow(t *testing.T) {
 		t.Fatalf("expected created message, got %q", res.stdout)
 	}
 
-	res = executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "prod", "--api-key", "tskey-prod"}, map[string]string{
+	res = executeCLINoDefaults(t, []string{"config", "profiles", "set", "prod", "--api-key", "tskey-prod"}, map[string]string{
 		"HOME": home,
 	})
 	if res.err != nil {
@@ -101,7 +101,7 @@ func TestConfigProfilesCommandFlow(t *testing.T) {
 func TestConfigProfilesSupportOAuthCredentials(t *testing.T) {
 	home := t.TempDir()
 
-	res := executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "org-admin", "--oauth-client-id", "cid-org", "--oauth-client-secret", "secret-org"}, map[string]string{
+	res := executeCLINoDefaults(t, []string{"config", "profiles", "set", "org-admin", "--oauth-client-id", "cid-org", "--oauth-client-secret", "secret-org"}, map[string]string{
 		"HOME": home,
 	})
 	if res.err != nil {
@@ -166,7 +166,12 @@ func TestConfigEncryptionSetupPersistsAgeConfig(t *testing.T) {
 	}
 
 	home := t.TempDir()
-	res := executeCLINoDefaults(t, []string{"config", "encryption", "setup", "--public-key", identity.Recipient().String(), "--private-key-source", "env"}, map[string]string{
+	privateKeyPath := filepath.Join(home, "age.txt")
+	if err := os.WriteFile(privateKeyPath, []byte(identity.String()+"\n"), 0o600); err != nil {
+		t.Fatalf("write private key file: %v", err)
+	}
+
+	res := executeCLINoDefaults(t, []string{"config", "encryption", "setup", "--public-key", identity.Recipient().String(), "--private-key-source", "path", "--private-key-path", privateKeyPath}, map[string]string{
 		"HOME": home,
 	})
 	if res.err != nil {
@@ -180,6 +185,33 @@ func TestConfigEncryptionSetupPersistsAgeConfig(t *testing.T) {
 	}
 	if !strings.Contains(string(cfg), "public-key: "+identity.Recipient().String()) {
 		t.Fatalf("expected persisted age public key, got:\n%s", string(cfg))
+	}
+	if !strings.Contains(string(cfg), "private-key-path: "+privateKeyPath) {
+		t.Fatalf("expected persisted age private key path, got:\n%s", string(cfg))
+	}
+}
+
+func TestConfigProfilesUpsertPromptsForOAuthCredentials(t *testing.T) {
+	home := t.TempDir()
+
+	res := executeCLINoDefaultsWithInput(t, []string{"config", "profiles", "set", "org-admin"}, map[string]string{
+		"HOME": home,
+	}, "oauth\ncid\nsecret\n")
+	if res.err != nil {
+		t.Fatalf("interactive oauth upsert: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+	if !strings.Contains(res.stdout, "Auth type [api-key|oauth]:") || !strings.Contains(res.stdout, "OAuth client ID:") || !strings.Contains(res.stdout, "OAuth client secret:") {
+		t.Fatalf("expected interactive oauth prompts, got:\n%s", res.stdout)
+	}
+
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg, err := os.ReadFile(configFile)
+	if err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+	body := string(cfg)
+	if !strings.Contains(body, "oauth-client-id: cid") || !strings.Contains(body, "oauth-client-secret: secret") {
+		t.Fatalf("expected oauth credentials in config file, got:\n%s", body)
 	}
 }
 
@@ -197,14 +229,14 @@ func TestConfigProfilesEncryptSecretsWhenEnabled(t *testing.T) {
 		t.Fatalf("config encryption setup: %v\nstderr:\n%s", res.err, res.stderr)
 	}
 
-	res = executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "sandbox", "--api-key", "tskey-sandbox"}, map[string]string{
+	res = executeCLINoDefaults(t, []string{"config", "profiles", "set", "sandbox", "--api-key", "tskey-sandbox"}, map[string]string{
 		"HOME": home,
 	})
 	if res.err != nil {
 		t.Fatalf("upsert encrypted api-key profile: %v\nstderr:\n%s", res.err, res.stderr)
 	}
 
-	res = executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "org-admin", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, map[string]string{
+	res = executeCLINoDefaults(t, []string{"config", "profiles", "set", "org-admin", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, map[string]string{
 		"HOME": home,
 	})
 	if res.err != nil {
@@ -238,7 +270,7 @@ func TestConfigProfilesEncryptSecretsWhenEnabled(t *testing.T) {
 func TestConfigProfilesUpsertUsesProfileTailnetFlag(t *testing.T) {
 	home := t.TempDir()
 
-	res := executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "sandbox", "--api-key", "tskey-sandbox", "--profile-tailnet", "example.ts.net"}, map[string]string{
+	res := executeCLINoDefaults(t, []string{"config", "profiles", "set", "sandbox", "--api-key", "tskey-sandbox", "--profile-tailnet", "example.ts.net"}, map[string]string{
 		"HOME": home,
 	})
 	if res.err != nil {
@@ -261,7 +293,7 @@ func TestConfigProfilesUpsertUsesProfileTailnetFlag(t *testing.T) {
 func TestConfigProfilesUpsertAcceptsDeprecatedTailnetAlias(t *testing.T) {
 	home := t.TempDir()
 
-	res := executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "sandbox", "--api-key", "tskey-sandbox", "--tailnet", "example.ts.net"}, map[string]string{
+	res := executeCLINoDefaults(t, []string{"config", "profiles", "set", "sandbox", "--api-key", "tskey-sandbox", "--tailnet", "example.ts.net"}, map[string]string{
 		"HOME": home,
 	})
 	if res.err != nil {
@@ -279,7 +311,7 @@ func TestConfigProfilesUpsertAcceptsDeprecatedTailnetAlias(t *testing.T) {
 }
 
 func TestConfigProfilesUpsertRejectsMixedAuthShapes(t *testing.T) {
-	res := executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "mixed", "--api-key", "tskey-mixed", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, nil)
+	res := executeCLINoDefaults(t, []string{"config", "profiles", "set", "mixed", "--api-key", "tskey-mixed", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, nil)
 	if res.err == nil {
 		t.Fatalf("expected mixed auth shape to fail")
 	}
@@ -326,8 +358,8 @@ func TestSwitchingActiveProfileChangesRuntimeTailnet(t *testing.T) {
 	home := t.TempDir()
 
 	for _, args := range [][]string{
-		{"config", "profiles", "upsert", "sandbox", "--api-key", "tskey-sandbox"},
-		{"config", "profiles", "upsert", "prod", "--api-key", "tskey-prod"},
+		{"config", "profiles", "set", "sandbox", "--api-key", "tskey-sandbox"},
+		{"config", "profiles", "set", "prod", "--api-key", "tskey-prod"},
 	} {
 		res := executeCLINoDefaults(t, args, map[string]string{"HOME": home})
 		if res.err != nil {

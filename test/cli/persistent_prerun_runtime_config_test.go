@@ -132,7 +132,7 @@ func TestCommandsWithPreRunDecryptEncryptedActiveProfile(t *testing.T) {
 		t.Fatalf("config encryption setup: %v\nstderr:\n%s", res.err, res.stderr)
 	}
 
-	res = executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "sandbox", "--api-key", "tskey-encrypted"}, map[string]string{
+	res = executeCLINoDefaults(t, []string{"config", "profiles", "set", "sandbox", "--api-key", "tskey-encrypted"}, map[string]string{
 		"HOME": home,
 	})
 	if res.err != nil {

@@ -46,7 +46,7 @@ The `config` command group should grow a focused setup flow, `config encryption 
 The main alternative was to document manual YAML edits only. That would be smaller in code, but it would not meet the requirement for a clear, easy setup path and would make schema discovery harder for users.
 
 ### Keep encryption integrated into existing profile mutation commands
-`config profiles upsert` should remain the primary way to create and update API-key-backed and OAuth-backed profiles. When encryption is enabled, it should transparently write encrypted secret fields instead of plaintext secret fields. Listing and active-profile selection do not need new flags; they only need to reflect the resulting auth shape consistently.
+`config profiles set` should remain the primary way to create and update API-key-backed and OAuth-backed profiles. When encryption is enabled, it should transparently write encrypted secret fields instead of plaintext secret fields. Listing and active-profile selection do not need new flags; they only need to reflect the resulting auth shape consistently.
 
 The alternative was to add separate encrypted-profile commands or per-command `--encrypt` flags. That would fragment the UX and make the optional encryption model harder to explain.
 
@@ -64,7 +64,7 @@ Unit tests should cover profile validation, encryption settings validation, priv
 ## Migration Plan
 
 1. Extend config models and validation to understand encrypted sibling fields and AGE settings without breaking existing plaintext configs.
-2. Add encryption helpers plus `config encryption setup` and update `config profiles upsert` persistence behavior.
+2. Add encryption helpers plus `config encryption setup` and update `config profiles set` persistence behavior.
 3. Introduce shared runtime auth resolution for commands that can use OAuth-backed bearer auth.
 4. Update documentation and command docs, then add or expand automated coverage for plaintext, encrypted, and OAuth-backed flows.
 

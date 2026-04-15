@@ -26,10 +26,11 @@ func TestValidateAgeEncryptionConfig(t *testing.T) {
 	t.Run("rejects conflicting private key sources", func(t *testing.T) {
 		err := validateAgeEncryptionConfig(AgeEncryptionConfig{
 			PublicKey:         identity.Recipient().String(),
+			PrivateKeyPath:    "/tmp/key.txt",
 			PrivateKey:        identity.String(),
 			PrivateKeyCommand: "op read secret",
 		})
-		if err == nil || !strings.Contains(err.Error(), "not both") {
+		if err == nil || !strings.Contains(err.Error(), "configure only one") {
 			t.Fatalf("expected conflicting private key source error, got %v", err)
 		}
 	})
@@ -50,7 +51,11 @@ func TestEncryptAndDecryptSecret(t *testing.T) {
 
 	v := viper.New()
 	v.Set("encryption.age.public-key", identity.Recipient().String())
-	v.Set("encryption.age.private-key", identity.String())
+	privateKeyPath := filepath.Join(t.TempDir(), "age.txt")
+	if err := os.WriteFile(privateKeyPath, []byte(identity.String()+"\n"), 0o600); err != nil {
+		t.Fatalf("write private key file: %v", err)
+	}
+	v.Set("encryption.age.private-key-path", privateKeyPath)
 
 	ciphertext, err := encryptSecret(v, "super-secret")
 	if err != nil {
@@ -77,7 +82,11 @@ func TestResolveRuntimeConfigDecryptsEncryptedProfileSecrets(t *testing.T) {
 
 	v := viper.New()
 	v.Set("encryption.age.public-key", identity.Recipient().String())
-	v.Set("encryption.age.private-key", identity.String())
+	privateKeyPath := filepath.Join(t.TempDir(), "age.txt")
+	if err := os.WriteFile(privateKeyPath, []byte(identity.String()+"\n"), 0o600); err != nil {
+		t.Fatalf("write private key file: %v", err)
+	}
+	v.Set("encryption.age.private-key-path", privateKeyPath)
 
 	ciphertext, err := encryptSecret(v, "tskey-encrypted")
 	if err != nil {
@@ -96,6 +105,30 @@ func TestResolveRuntimeConfigDecryptsEncryptedProfileSecrets(t *testing.T) {
 	}
 	if resolved.APIKey != "tskey-encrypted" {
 		t.Fatalf("expected decrypted api key, got %q", resolved.APIKey)
+	}
+}
+
+func TestResolveAgeIdentityFromPrivateKeyPath(t *testing.T) {
+	identity, err := age.GenerateX25519Identity()
+	if err != nil {
+		t.Fatalf("generate identity: %v", err)
+	}
+
+	privateKeyPath := filepath.Join(t.TempDir(), "keys.txt")
+	if err := os.WriteFile(privateKeyPath, []byte("# created by test\n"+identity.String()+"\n"), 0o600); err != nil {
+		t.Fatalf("write private key file: %v", err)
+	}
+
+	v := viper.New()
+	v.Set("encryption.age.public-key", identity.Recipient().String())
+	v.Set("encryption.age.private-key-path", privateKeyPath)
+
+	resolved, err := resolveAgeIdentity(v)
+	if err != nil {
+		t.Fatalf("resolve age identity: %v", err)
+	}
+	if resolved == nil {
+		t.Fatalf("expected resolved identity")
 	}
 }
 

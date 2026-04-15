@@ -24,15 +24,25 @@ var stdioMu sync.Mutex
 
 func executeCLI(t *testing.T, args []string, env map[string]string) execResult {
 	t.Helper()
-	return executeCLIWithDefaults(t, args, env, true)
+	return executeCLIWithInputAndDefaults(t, args, env, "", true)
 }
 
 func executeCLINoDefaults(t *testing.T, args []string, env map[string]string) execResult {
 	t.Helper()
-	return executeCLIWithDefaults(t, args, env, false)
+	return executeCLIWithInputAndDefaults(t, args, env, "", false)
 }
 
-func executeCLIWithDefaults(t *testing.T, args []string, env map[string]string, useDefaults bool) execResult {
+func executeCLIWithInput(t *testing.T, args []string, env map[string]string, input string) execResult {
+	t.Helper()
+	return executeCLIWithInputAndDefaults(t, args, env, input, true)
+}
+
+func executeCLINoDefaultsWithInput(t *testing.T, args []string, env map[string]string, input string) execResult {
+	t.Helper()
+	return executeCLIWithInputAndDefaults(t, args, env, input, false)
+}
+
+func executeCLIWithInputAndDefaults(t *testing.T, args []string, env map[string]string, input string, useDefaults bool) execResult {
 	t.Helper()
 
 	viper.Reset()
@@ -56,6 +66,7 @@ func executeCLIWithDefaults(t *testing.T, args []string, env map[string]string, 
 
 	cmd := cli.Configure()
 	cmd.SetArgs(args)
+	cmd.SetIn(strings.NewReader(input))
 
 	stdout, stderr, err := captureStdIO(func() error {
 		cmd.SetOut(os.Stdout)

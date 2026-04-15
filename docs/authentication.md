@@ -93,9 +93,9 @@ The setup flow asks for:
 
 - an AGE public key, stored as `encryption.age.public-key`
 - how the AGE private key will be supplied at runtime:
-  - `config`: store it as `encryption.age.private-key`
-  - `env`: provide it with `TSCLI_AGE_PRIVATE_KEY`
-  - `command`: configure `encryption.age.private-key-command`
+	- `path`: store a filesystem path as `encryption.age.private-key-path`
+	- `env`: provide it with `TSCLI_AGE_PRIVATE_KEY`
+	- `command`: configure `encryption.age.private-key-command`
 
 Example encrypted config:
 
@@ -116,6 +116,20 @@ tailnets:
 
 Command-based private-key lookup is useful with secret managers such as 1Password, but it can add command startup latency because the command runs each time `tscli` needs to decrypt a stored secret.
 
+To save OAuth credentials into config without editing YAML directly, use profile set either non-interactively:
+
+```bash
+tscli config profiles set org-admin --oauth-client-id cid --oauth-client-secret secret
+```
+
+or interactively:
+
+```bash
+tscli config profiles set org-admin
+```
+
+The interactive flow prompts for `api-key` vs `oauth`, then asks for the required values and writes them into the profile.
+
 ## Tailnet lifecycle notes
 
 - `create tailnet` and `list tailnets` require an organization-approved OAuth client.
@@ -126,7 +140,7 @@ Command-based private-key lookup is useful with secret managers such as 1Passwor
 
 - Never commit API keys to git.
 - Never commit OAuth client secrets to git.
-- Prefer `TSCLI_AGE_PRIVATE_KEY` or an external command over storing the AGE private key directly in config when possible.
+- Prefer `TSCLI_AGE_PRIVATE_KEY`, `encryption.age.private-key-path`, or an external command over storing the AGE private key directly in config when possible.
 - Prefer environment variables in CI via a secret manager.
 - Rotate leaked or shared credentials immediately.
 - Use least-privileged keys where possible.

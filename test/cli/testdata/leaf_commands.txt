@@ -5,7 +5,7 @@ config encryption setup
 config profiles delete
 config profiles list
 config profiles set-active
-config profiles upsert
+config profiles set
 config set
 config show
 create invite device

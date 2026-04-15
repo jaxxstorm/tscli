@@ -130,7 +130,7 @@ func canonicalizePersistedSettings(settings map[string]any) map[string]any {
 
 	if encryptionRaw, ok := canonical["encryption"].(map[string]any); ok {
 		if ageRaw, ok := encryptionRaw["age"].(map[string]any); ok {
-			for _, key := range []string{"public-key", "private-key", "private-key-command"} {
+			for _, key := range []string{"public-key", "private-key-path", "private-key", "private-key-command"} {
 				if isEmptyPersistedValue(ageRaw[key]) {
 					delete(ageRaw, key)
 				}

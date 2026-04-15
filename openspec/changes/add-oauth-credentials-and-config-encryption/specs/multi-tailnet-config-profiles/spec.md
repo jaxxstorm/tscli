@@ -98,22 +98,22 @@ The `config` command group SHALL provide operations to list profiles, set active
 - **THEN** the command SHALL fail with a validation error that names the missing profile
 
 #### Scenario: Upsert API-key profile writes persistent config
-- **WHEN** a user runs `config profiles upsert <name> --api-key <key>`
+- **WHEN** a user runs `config profiles set <name> --api-key <key>`
 - **THEN** the CLI SHALL persist an API-key-backed profile entry
 - **AND** the profile SHALL be available on the next command execution
 
 #### Scenario: Upsert OAuth profile writes persistent config
-- **WHEN** a user runs `config profiles upsert <name> --oauth-client-id <id> --oauth-client-secret <secret>`
+- **WHEN** a user runs `config profiles set <name> --oauth-client-id <id> --oauth-client-secret <secret>`
 - **THEN** the CLI SHALL persist an OAuth-backed profile entry
 - **AND** the profile SHALL be available on the next command execution
 
 #### Scenario: Upsert command writes encrypted secret fields when encryption is enabled
-- **WHEN** a user runs `config profiles upsert` for an API-key-backed or OAuth-backed profile while secret encryption is enabled
+- **WHEN** a user runs `config profiles set` for an API-key-backed or OAuth-backed profile while secret encryption is enabled
 - **THEN** the saved config SHALL persist ciphertext in the matching `*-encrypted` secret field
 - **AND** the saved config SHALL omit the plaintext secret field for that profile
 
 #### Scenario: Profile mutations keep canonical file shape
-- **WHEN** a user runs `config profiles upsert` or `config profiles set-active`
+- **WHEN** a user runs `config profiles set` or `config profiles set-active`
 - **THEN** the saved config SHALL retain the selected `active-tailnet` and `tailnets` entries
 - **AND** the saved config SHALL NOT add or refresh duplicated top-level `tailnet` and `api-key` keys for the active profile
 

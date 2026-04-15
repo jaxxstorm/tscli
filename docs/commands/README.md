@@ -24,7 +24,7 @@ make docs-generate
 - [tscli config profiles delete](tscli_config_profiles_delete.md)
 - [tscli config profiles list](tscli_config_profiles_list.md)
 - [tscli config profiles set-active](tscli_config_profiles_set-active.md)
-- [tscli config profiles upsert](tscli_config_profiles_upsert.md)
+- [tscli config profiles set](tscli_config_profiles_set.md)
 - [tscli config set](tscli_config_set.md)
 - [tscli config show](tscli_config_show.md)
 - [tscli create](tscli_create.md)

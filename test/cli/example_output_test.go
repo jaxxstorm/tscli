@@ -343,8 +343,8 @@ func exampleOutputCases() []exampleOutputCase {
 			ObjectKeys: []string{"active-tailnet", "tailnets"},
 		}),
 		localTextCase("config profiles set-active", []string{"config", "profiles", "set-active", "sandbox"}, setupProfileHome, "active tailnet set to sandbox"),
-		localTextCase("config profiles upsert", []string{"config", "profiles", "upsert", "sandbox", "--api-key", "tskey-sandbox"}, nil, "tailnet profile sandbox created"),
-		localTextCase("config profiles upsert", []string{"config", "profiles", "upsert", "org-admin", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, nil, "tailnet profile org-admin created"),
+		localTextCase("config profiles set", []string{"config", "profiles", "set", "sandbox", "--api-key", "tskey-sandbox"}, nil, "tailnet profile sandbox created"),
+		localTextCase("config profiles set", []string{"config", "profiles", "set", "org-admin", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, nil, "tailnet profile org-admin created"),
 		localTextCase("config set", []string{"config", "set", "output", "yaml"}, nil, "output saved"),
 		localObjectCase("config show", []string{"config", "show"}, nil, jsonShapeExpectation{
 			TopLevel:   jsonTopLevelObject,

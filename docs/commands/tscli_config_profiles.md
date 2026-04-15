@@ -29,5 +29,4 @@ Commands to list, switch, upsert, and delete multi-tailnet configuration profile
 * [tscli config profiles delete](tscli_config_profiles_delete.md)	 - Delete a tailnet profile
 * [tscli config profiles list](tscli_config_profiles_list.md)	 - List configured tailnet profiles
 * [tscli config profiles set-active](tscli_config_profiles_set-active.md)	 - Set the active tailnet profile
-* [tscli config profiles upsert](tscli_config_profiles_upsert.md)	 - Create or update a tailnet profile
-
+* [tscli config profiles set](tscli_config_profiles_set.md)	 - Create or update a tailnet profile
