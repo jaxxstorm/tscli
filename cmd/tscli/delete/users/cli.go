@@ -22,6 +22,14 @@ var validStatuses = map[string]struct{}{
 	"suspended": {},
 }
 
+var protectedRoles = map[string]struct{}{
+	"owner":         {},
+	"admin":         {},
+	"it-admin":      {},
+	"network-admin": {},
+	"billing-admin": {},
+}
+
 type DeletionResult struct {
 	UserID      string `json:"userId"`
 	LoginName   string `json:"loginName"`
@@ -67,7 +75,7 @@ func Command() *cobra.Command {
 
 This command evaluates users returned by the list users API and deletes matching users.
 By default, it performs a dry run and reports what would be deleted. Pass --confirm to
-actually delete users. Admin users are excluded unless --admins=true is provided.
+actually delete users. Privileged users are excluded unless --admins=true is provided.
 
 Examples:
 
@@ -87,7 +95,15 @@ Examples:
   tscli delete users --last-seen 24h --admins=true --confirm
 `,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			filters, err := buildFilters(status, lastSeenInput, deviceCount, cmd.Flags().Lookup("devices").Changed, includeAdmins, confirm)
+			filters, err := buildFilters(
+				status,
+				lastSeenInput,
+				cmd.Flags().Lookup("last-seen").Changed,
+				deviceCount,
+				cmd.Flags().Lookup("devices").Changed,
+				includeAdmins,
+				confirm,
+			)
 			if err != nil {
 				return err
 			}
@@ -114,13 +130,13 @@ Examples:
 	cmd.Flags().StringVar(&status, "status", "", "Delete users by status: inactive|suspended")
 	cmd.Flags().StringVar(&lastSeenInput, "last-seen", "", "Delete users last seen longer than this duration (e.g. 24h, 30m)")
 	cmd.Flags().IntVar(&deviceCount, "devices", 0, "Only delete users with this device count")
-	cmd.Flags().BoolVar(&includeAdmins, "admins", false, "Include admin users in deletion candidates")
+	cmd.Flags().BoolVar(&includeAdmins, "admins", false, "Include privileged users in deletion candidates")
 	cmd.Flags().BoolVar(&confirm, "confirm", false, "Actually delete users (default is a dry run)")
 
 	return cmd
 }
 
-func buildFilters(status, lastSeenInput string, deviceCount int, deviceCountSet, includeAdmins, confirm bool) (deleteUserFilters, error) {
+func buildFilters(status, lastSeenInput string, lastSeenSet bool, deviceCount int, deviceCountSet, includeAdmins, confirm bool) (deleteUserFilters, error) {
 	filters := deleteUserFilters{
 		status:         strings.ToLower(strings.TrimSpace(status)),
 		deviceCount:    deviceCount,
@@ -135,11 +151,11 @@ func buildFilters(status, lastSeenInput string, deviceCount int, deviceCountSet,
 		}
 	}
 
-	if filters.status != "" && strings.TrimSpace(lastSeenInput) != "" {
+	if filters.status != "" && lastSeenSet {
 		return deleteUserFilters{}, fmt.Errorf("--status and --last-seen are mutually exclusive; use one or the other")
 	}
 
-	if strings.TrimSpace(lastSeenInput) != "" {
+	if lastSeenSet {
 		lastSeenDuration, err := parseLastSeen(lastSeenInput)
 		if err != nil {
 			return deleteUserFilters{}, err
@@ -237,8 +253,8 @@ func filterUsers(users []tsapi.User, filters deleteUserFilters, now time.Time) (
 	var skipped []string
 
 	for _, user := range users {
-		if !filters.includeAdmins && strings.EqualFold(string(user.Role), "admin") {
-			skipped = append(skipped, fmt.Sprintf("%s (admin excluded)", user.LoginName))
+		if !filters.includeAdmins && isProtectedRole(user.Role) {
+			skipped = append(skipped, fmt.Sprintf("%s (protected role excluded)", user.LoginName))
 			continue
 		}
 
@@ -267,4 +283,9 @@ func filterUsers(users []tsapi.User, filters deleteUserFilters, now time.Time) (
 	}
 
 	return candidates, skipped, nil
+}
+
+func isProtectedRole(role tsapi.UserRole) bool {
+	_, ok := protectedRoles[strings.ToLower(string(role))]
+	return ok
 }

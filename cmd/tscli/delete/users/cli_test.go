@@ -75,25 +75,27 @@ func TestBuildFilters(t *testing.T) {
 		name           string
 		status         string
 		lastSeen       string
+		lastSeenSet    bool
 		devices        int
 		deviceCountSet bool
 		wantErr        string
 	}{
 		{name: "status ok", status: "suspended"},
-		{name: "last-seen duration ok", lastSeen: "24h"},
+		{name: "last-seen duration ok", lastSeen: "24h", lastSeenSet: true},
 		{name: "devices only ok", devices: 0, deviceCountSet: true},
 		{name: "status and devices ok", status: "inactive", devices: 0, deviceCountSet: true},
 		{name: "status invalid", status: "active", wantErr: "supported: inactive|suspended"},
-		{name: "mutually exclusive", status: "inactive", lastSeen: "24h", wantErr: "mutually exclusive"},
+		{name: "mutually exclusive", status: "inactive", lastSeen: "24h", lastSeenSet: true, wantErr: "mutually exclusive"},
 		{name: "no filters", wantErr: "at least one of --status, --last-seen, or --devices is required"},
 		{name: "negative devices", devices: -1, deviceCountSet: true, wantErr: "greater than or equal to 0"},
-		{name: "invalid last-seen", lastSeen: "yesterday", wantErr: "invalid --last-seen"},
+		{name: "invalid last-seen", lastSeen: "yesterday", lastSeenSet: true, wantErr: "invalid --last-seen"},
+		{name: "empty last-seen when set", lastSeen: "", lastSeenSet: true, wantErr: "--last-seen cannot be empty"},
 	}
 
 	for _, tc := range tests {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := buildFilters(tc.status, tc.lastSeen, tc.devices, tc.deviceCountSet, false, false)
+			_, err := buildFilters(tc.status, tc.lastSeen, tc.lastSeenSet, tc.devices, tc.deviceCountSet, false, false)
 			if tc.wantErr == "" && err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -131,8 +133,10 @@ func TestFilterUsers(t *testing.T) {
 		{ID: "u1", LoginName: "member-suspended@example.com", Role: tsapi.UserRole("member"), Status: tsapi.UserStatus("suspended"), DeviceCount: 0, LastSeen: now.Add(-48 * time.Hour)},
 		{ID: "u2", LoginName: "member-inactive@example.com", Role: tsapi.UserRole("member"), Status: tsapi.UserStatus("inactive"), DeviceCount: 1, LastSeen: now.Add(-72 * time.Hour)},
 		{ID: "u3", LoginName: "admin-suspended@example.com", Role: tsapi.UserRole("admin"), Status: tsapi.UserStatus("suspended"), DeviceCount: 0, LastSeen: now.Add(-72 * time.Hour)},
-		{ID: "u4", LoginName: "member-active@example.com", Role: tsapi.UserRole("member"), Status: tsapi.UserStatus("active"), DeviceCount: 0, LastSeen: now.Add(-2 * time.Hour)},
-		{ID: "u5", LoginName: "member-missing-lastseen@example.com", Role: tsapi.UserRole("member"), Status: tsapi.UserStatus("inactive"), DeviceCount: 0},
+		{ID: "u4", LoginName: "owner-suspended@example.com", Role: tsapi.UserRole("owner"), Status: tsapi.UserStatus("suspended"), DeviceCount: 0, LastSeen: now.Add(-96 * time.Hour)},
+		{ID: "u5", LoginName: "it-admin-suspended@example.com", Role: tsapi.UserRole("it-admin"), Status: tsapi.UserStatus("suspended"), DeviceCount: 0, LastSeen: now.Add(-96 * time.Hour)},
+		{ID: "u6", LoginName: "member-active@example.com", Role: tsapi.UserRole("member"), Status: tsapi.UserStatus("active"), DeviceCount: 0, LastSeen: now.Add(-2 * time.Hour)},
+		{ID: "u7", LoginName: "member-missing-lastseen@example.com", Role: tsapi.UserRole("member"), Status: tsapi.UserStatus("inactive"), DeviceCount: 0},
 	}
 
 	tests := []struct {
@@ -142,10 +146,10 @@ func TestFilterUsers(t *testing.T) {
 		wantSkipped    string
 	}{
 		{
-			name:           "status filter excludes admins by default",
+			name:           "status filter excludes protected roles by default",
 			filters:        deleteUserFilters{status: "suspended"},
 			wantCandidates: []string{"member-suspended@example.com"},
-			wantSkipped:    "admin excluded",
+			wantSkipped:    "protected role excluded",
 		},
 		{
 			name:           "last seen and device count",
@@ -156,12 +160,12 @@ func TestFilterUsers(t *testing.T) {
 		{
 			name:           "include admins explicitly",
 			filters:        deleteUserFilters{status: "suspended", includeAdmins: true},
-			wantCandidates: []string{"member-suspended@example.com", "admin-suspended@example.com"},
+			wantCandidates: []string{"member-suspended@example.com", "admin-suspended@example.com", "owner-suspended@example.com", "it-admin-suspended@example.com"},
 		},
 		{
 			name:           "missing last seen is skipped",
 			filters:        deleteUserFilters{lastSeen: 24 * time.Hour, lastSeenSet: true, deviceCount: 0, deviceCountSet: true, includeAdmins: true},
-			wantCandidates: []string{"member-suspended@example.com", "admin-suspended@example.com"},
+			wantCandidates: []string{"member-suspended@example.com", "admin-suspended@example.com", "owner-suspended@example.com", "it-admin-suspended@example.com"},
 			wantSkipped:    "missing lastSeen",
 		},
 	}
@@ -236,8 +240,6 @@ func TestDeleteUsersDryRunAndConfirm(t *testing.T) {
 }
 
 func TestCommandValidation(t *testing.T) {
-	t.Parallel()
-
 	fakeUsers := []tsapi.User{{ID: "u1", LoginName: "inactive@example.com", Role: tsapi.UserRole("member"), Status: tsapi.UserStatus("inactive"), DeviceCount: 0, LastSeen: time.Now().Add(-48 * time.Hour)}}
 	stubClient := func() (*tsapi.Client, error) {
 		client, _, err := newStubClientWithUsers(fakeUsers, nil)
@@ -245,9 +247,10 @@ func TestCommandValidation(t *testing.T) {
 	}
 
 	tests := []struct {
-		name    string
-		args    []string
-		wantErr bool
+		name           string
+		args           []string
+		wantErr        bool
+		wantErrContain string
 	}{
 		{name: "status ok", args: []string{"--status", "inactive"}},
 		{name: "last-seen ok", args: []string{"--last-seen", "24h"}},
@@ -255,6 +258,7 @@ func TestCommandValidation(t *testing.T) {
 		{name: "confirm ok", args: []string{"--status", "inactive", "--confirm"}},
 		{name: "invalid status", args: []string{"--status", "active"}, wantErr: true},
 		{name: "mutually exclusive", args: []string{"--status", "inactive", "--last-seen", "24h"}, wantErr: true},
+		{name: "empty last-seen", args: []string{"--last-seen="}, wantErr: true, wantErrContain: "--last-seen cannot be empty"},
 		{name: "missing filters", args: []string{}, wantErr: true},
 	}
 
@@ -287,6 +291,9 @@ func TestCommandValidation(t *testing.T) {
 			}
 			if !tc.wantErr && err != nil {
 				t.Fatalf("unexpected error: %v", err)
+			}
+			if tc.wantErrContain != "" && (err == nil || !strings.Contains(err.Error(), tc.wantErrContain)) {
+				t.Fatalf("error = %v, want substring %q", err, tc.wantErrContain)
 			}
 		})
 	}

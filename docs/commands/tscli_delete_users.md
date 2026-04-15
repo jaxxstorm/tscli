@@ -10,7 +10,7 @@ Delete multiple Tailscale users based on status, inactivity, and device count.
 
 This command evaluates users returned by the list users API and deletes matching users.
 By default, it performs a dry run and reports what would be deleted. Pass --confirm to
-actually delete users. Admin users are excluded unless --admins=true is provided.
+actually delete users. Privileged users are excluded unless --admins=true is provided.
 
 Examples:
 
@@ -37,7 +37,7 @@ tscli delete users [flags]
 ### Options
 
 ```
-      --admins             Include admin users in deletion candidates
+      --admins             Include privileged users in deletion candidates
       --confirm            Actually delete users (default is a dry run)
       --devices int        Only delete users with this device count
   -h, --help               help for users
