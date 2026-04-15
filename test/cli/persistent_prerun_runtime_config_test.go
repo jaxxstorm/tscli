@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -193,4 +194,118 @@ func TestCommandsWithPreRunDecryptEncryptedActiveProfile(t *testing.T) {
 	if len(reqs) == 0 || !strings.Contains(reqs[0].Path, "/tailnet/sandbox/devices") {
 		t.Fatalf("expected encrypted profile request path, got %+v", reqs)
 	}
+}
+
+func TestSavedOutputDefaultCanBeOverriddenForRuntimeCommands(t *testing.T) {
+	home := t.TempDir()
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg := strings.Join([]string{
+		"output: pretty",
+		"active-tailnet: profile-tailnet",
+		"tailnets:",
+		"  - name: profile-tailnet",
+		"    api-key: tskey-profile",
+		"",
+	}, "\n")
+	if err := os.WriteFile(configFile, []byte(cfg), 0o600); err != nil {
+		t.Fatalf("write config file: %v", err)
+	}
+
+	runListDevices := func(t *testing.T, args []string, env map[string]string) execResult {
+		t.Helper()
+		mock := apimock.New(t)
+		mock.AddJSON(http.MethodGet, "/tailnet/profile-tailnet/devices", http.StatusOK, apimock.DeviceList())
+		env["HOME"] = home
+		env["TSCLI_BASE_URL"] = mock.URL()
+		return executeCLINoDefaults(t, args, env)
+	}
+
+	t.Run("saved pretty output is used by default", func(t *testing.T) {
+		res := runListDevices(t, []string{"list", "devices"}, map[string]string{})
+		if res.err != nil {
+			t.Fatalf("unexpected error: %v\nstderr:\n%s", res.err, res.stderr)
+		}
+		var out any
+		if err := json.Unmarshal([]byte(res.stdout), &out); err == nil {
+			t.Fatalf("expected non-json pretty output by default, got:\n%s", res.stdout)
+		}
+	})
+
+	t.Run("env output overrides saved default", func(t *testing.T) {
+		res := runListDevices(t, []string{"list", "devices"}, map[string]string{"TSCLI_OUTPUT": "json"})
+		if res.err != nil {
+			t.Fatalf("unexpected error: %v\nstderr:\n%s", res.err, res.stderr)
+		}
+		var out any
+		if err := json.Unmarshal([]byte(res.stdout), &out); err != nil {
+			t.Fatalf("expected json output from env override: %v\noutput:\n%s", err, res.stdout)
+		}
+	})
+
+	t.Run("flag output overrides saved default", func(t *testing.T) {
+		res := runListDevices(t, []string{"--output", "json", "list", "devices"}, map[string]string{})
+		if res.err != nil {
+			t.Fatalf("unexpected error: %v\nstderr:\n%s", res.err, res.stderr)
+		}
+		var out any
+		if err := json.Unmarshal([]byte(res.stdout), &out); err != nil {
+			t.Fatalf("expected json output from flag override: %v\noutput:\n%s", err, res.stdout)
+		}
+	})
+}
+
+func TestSavedDebugDefaultCanBeOverriddenForRuntimeCommands(t *testing.T) {
+	home := t.TempDir()
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg := strings.Join([]string{
+		"output: json",
+		"debug: false",
+		"active-tailnet: profile-tailnet",
+		"tailnets:",
+		"  - name: profile-tailnet",
+		"    api-key: tskey-profile",
+		"",
+	}, "\n")
+	if err := os.WriteFile(configFile, []byte(cfg), 0o600); err != nil {
+		t.Fatalf("write config file: %v", err)
+	}
+
+	runListDevices := func(t *testing.T, args []string, env map[string]string) execResult {
+		t.Helper()
+		mock := apimock.New(t)
+		mock.AddJSON(http.MethodGet, "/tailnet/profile-tailnet/devices", http.StatusOK, apimock.DeviceList())
+		env["HOME"] = home
+		env["TSCLI_BASE_URL"] = mock.URL()
+		return executeCLINoDefaults(t, args, env)
+	}
+
+	t.Run("saved debug false stays quiet by default", func(t *testing.T) {
+		res := runListDevices(t, []string{"list", "devices"}, map[string]string{})
+		if res.err != nil {
+			t.Fatalf("unexpected error: %v\nstderr:\n%s", res.err, res.stderr)
+		}
+		if strings.Contains(res.stderr, "HTTP/") || strings.Contains(res.stderr, "Authorization:") {
+			t.Fatalf("did not expect debug output by default, got:\n%s", res.stderr)
+		}
+	})
+
+	t.Run("env debug overrides saved default", func(t *testing.T) {
+		res := runListDevices(t, []string{"list", "devices"}, map[string]string{"TSCLI_DEBUG": "1"})
+		if res.err != nil {
+			t.Fatalf("unexpected error: %v\nstderr:\n%s", res.err, res.stderr)
+		}
+		if !strings.Contains(res.stderr, "HTTP/") {
+			t.Fatalf("expected debug output from env override, got:\n%s", res.stderr)
+		}
+	})
+
+	t.Run("flag debug overrides saved default", func(t *testing.T) {
+		res := runListDevices(t, []string{"--debug", "list", "devices"}, map[string]string{})
+		if res.err != nil {
+			t.Fatalf("unexpected error: %v\nstderr:\n%s", res.err, res.stderr)
+		}
+		if !strings.Contains(res.stderr, "HTTP/") {
+			t.Fatalf("expected debug output from flag override, got:\n%s", res.stderr)
+		}
+	})
 }

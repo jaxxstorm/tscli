@@ -89,7 +89,7 @@ Existing config files that only define `tailnet` and `api-key` SHALL continue to
 - **AND** the rewritten config SHALL NOT re-persist the duplicated flat `tailnet` and `api-key` values as part of the canonical profile representation
 
 ### Requirement: Config commands manage tailnet profiles
-The `config` command group SHALL provide operations to list profiles, set active profile, upsert profile credentials, remove profiles, and run an interactive `config setup` flow for both API-key-backed and OAuth-backed profile entries. When secret encryption is enabled, profile mutation commands SHALL persist encrypted secret fields instead of plaintext secret fields.
+The `config` command group SHALL provide operations to list profiles, set active profile, upsert profile credentials, remove profiles, and run an interactive `config setup` flow for both API-key-backed and OAuth-backed profile entries. When secret encryption is enabled, profile mutation commands SHALL persist encrypted secret fields instead of plaintext secret fields. During initial `config setup`, after profile creation is complete, the command SHALL also persist the selected top-level `output` mode and `debug` preference in the config file.
 
 #### Scenario: List profiles displays active selection and auth shape
 - **WHEN** multiple profiles exist and one is active
@@ -118,6 +118,11 @@ The `config` command group SHALL provide operations to list profiles, set active
 #### Scenario: Interactive setup writes encrypted OAuth profile when encryption is configured
 - **WHEN** a user runs `config setup`, enables encryption, and saves an OAuth-backed profile
 - **THEN** the saved config SHALL persist `oauth-client-secret-encrypted` for that profile instead of plaintext `oauth-client-secret`
+
+#### Scenario: Interactive setup writes output and debug preferences during initial setup
+- **WHEN** a user runs `config setup` with no existing profiles, completes profile creation, selects `pretty` or `human` or `json`, and chooses whether debug logging is enabled
+- **THEN** the saved config SHALL persist the selected top-level `output` value
+- **AND** the saved config SHALL persist the selected top-level `debug` boolean value
 
 #### Scenario: Upsert command writes encrypted secret fields when encryption is enabled
 - **WHEN** a user runs `config profiles set` for an API-key-backed or OAuth-backed profile while secret encryption is enabled

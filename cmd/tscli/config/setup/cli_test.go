@@ -117,6 +117,68 @@ func TestAddAnotherNoTransitionsToDone(t *testing.T) {
 	}
 }
 
+func TestInitialSetupAddAnotherNoTransitionsToOutputChoice(t *testing.T) {
+	m := model{step: stepAddAnother, message: "Tailnet profile sandbox created.", initialSetup: true}
+	m.input = "no"
+
+	updatedModel, cmd := m.submit()
+	updated := updatedModel.(model)
+	if cmd != nil {
+		t.Fatalf("expected no quit command")
+	}
+	if updated.step != stepOutputChoice {
+		t.Fatalf("expected output choice step, got %q", updated.step)
+	}
+	if updated.choiceIndex != 0 {
+		t.Fatalf("expected json output choice by default, got %d", updated.choiceIndex)
+	}
+}
+
+func TestInitialSetupDebugChoicePersistsPreferences(t *testing.T) {
+	viper.Reset()
+	t.Cleanup(viper.Reset)
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	m := model{
+		step:             stepDebugChoice,
+		message:          "Tailnet profile sandbox created.",
+		initialSetup:     true,
+		outputPreference: "human",
+	}
+	m.input = "yes"
+
+	updatedModel, cmd := m.submit()
+	updated := updatedModel.(model)
+	if updated.err != nil {
+		t.Fatalf("expected no error, got %v", updated.err)
+	}
+	if updated.step != stepDone {
+		t.Fatalf("expected done step, got %q", updated.step)
+	}
+	if !updated.debugPreference {
+		t.Fatalf("expected debug preference to be enabled")
+	}
+	if cmd == nil {
+		t.Fatalf("expected quit command")
+	}
+	if msg := cmd(); msg != tea.Quit() {
+		t.Fatalf("expected tea quit command, got %v", msg)
+	}
+
+	cfg, err := os.ReadFile(filepath.Join(home, ".tscli.yaml"))
+	if err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+	body := string(cfg)
+	if !strings.Contains(body, "output: human") {
+		t.Fatalf("expected output preference in config, got:\n%s", body)
+	}
+	if !strings.Contains(body, "debug: true") {
+		t.Fatalf("expected debug preference in config, got:\n%s", body)
+	}
+}
+
 func TestSelectProfileUsesCurrentSelection(t *testing.T) {
 	m := model{
 		step: stepSelectProfile,

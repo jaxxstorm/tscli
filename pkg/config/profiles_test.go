@@ -589,12 +589,15 @@ func TestProfilePersistenceNormalizesMixedLegacyConfig(t *testing.T) {
 	if err := yaml.Unmarshal(cfg, &persisted); err != nil {
 		t.Fatalf("unmarshal normalized config: %v", err)
 	}
-	for _, unwanted := range []string{"tailnet", "api-key", "debug", "help"} {
+	for _, unwanted := range []string{"tailnet", "api-key", "help"} {
 		if _, ok := persisted[unwanted]; ok {
 			t.Fatalf("did not expect %q in normalized config:\n%s", unwanted, body)
 		}
 	}
 	if !strings.Contains(body, "output: pretty") {
 		t.Fatalf("expected unrelated persisted keys to remain, got:\n%s", body)
+	}
+	if !strings.Contains(body, "debug: false") {
+		t.Fatalf("expected persisted debug setting to remain, got:\n%s", body)
 	}
 }

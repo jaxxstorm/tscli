@@ -270,12 +270,15 @@ func TestConfigSetupCreatesPlaintextProfile(t *testing.T) {
 
 	res := executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
 		"HOME": home,
-	}, "no\napi-key\nsandbox\n\ntskey-sandbox\nno\n")
+	}, "no\napi-key\nsandbox\n\ntskey-sandbox\nno\njson\nno\n")
 	if res.err != nil {
 		t.Fatalf("config setup plaintext: %v\nstderr:\n%s", res.err, res.stderr)
 	}
 	if !strings.Contains(res.stdout, "Encrypt your credentials?") || !strings.Contains(res.stdout, "Use an API key (it will expire) or OAuth credentials?") {
 		t.Fatalf("expected setup prompts, got:\n%s", res.stdout)
+	}
+	if !strings.Contains(res.stdout, "Choose your default output format") || !strings.Contains(res.stdout, "Enable debug HTTP request/response logging by default?") {
+		t.Fatalf("expected output/debug prompts, got:\n%s", res.stdout)
 	}
 
 	configFile := filepath.Join(home, ".tscli.yaml")
@@ -287,6 +290,9 @@ func TestConfigSetupCreatesPlaintextProfile(t *testing.T) {
 	if !strings.Contains(body, "active-tailnet: sandbox") || !strings.Contains(body, "api-key: tskey-sandbox") {
 		t.Fatalf("expected plaintext profile in config file, got:\n%s", body)
 	}
+	if !strings.Contains(body, "output: json") || !strings.Contains(body, "debug: false") {
+		t.Fatalf("expected persisted output/debug defaults in config file, got:\n%s", body)
+	}
 	if strings.Contains(body, "api-key-encrypted:") {
 		t.Fatalf("did not expect encrypted api key in plaintext setup, got:\n%s", body)
 	}
@@ -297,7 +303,7 @@ func TestConfigSetupCreatesEncryptedProfileAndKeyFile(t *testing.T) {
 
 	res := executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
 		"HOME": home,
-	}, "yes\n\napi-key\nsandbox\n\ntskey-sandbox\nno\n")
+	}, "yes\n\napi-key\nsandbox\n\ntskey-sandbox\nno\npretty\nyes\n")
 	if res.err != nil {
 		t.Fatalf("config setup encrypted: %v\nstderr:\n%s", res.err, res.stderr)
 	}
@@ -319,6 +325,9 @@ func TestConfigSetupCreatesEncryptedProfileAndKeyFile(t *testing.T) {
 	body := string(cfg)
 	if !strings.Contains(body, "public-key:") || !strings.Contains(body, "private-key-path: "+keyFile) {
 		t.Fatalf("expected persisted encryption config, got:\n%s", body)
+	}
+	if !strings.Contains(body, "output: pretty") || !strings.Contains(body, "debug: true") {
+		t.Fatalf("expected persisted output/debug defaults, got:\n%s", body)
 	}
 	if !strings.Contains(body, "api-key-encrypted:") {
 		t.Fatalf("expected encrypted api key in config file, got:\n%s", body)
@@ -346,7 +355,7 @@ func TestConfigSetupReusesExistingAgeIdentityFile(t *testing.T) {
 
 	res := executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
 		"HOME": home,
-	}, "yes\n\nyes\napi-key\nsandbox\n\ntskey-sandbox\nno\n")
+	}, "yes\n\nyes\napi-key\nsandbox\n\ntskey-sandbox\nno\njson\nno\n")
 	if res.err != nil {
 		t.Fatalf("config setup reuse existing key: %v\nstderr:\n%s", res.err, res.stderr)
 	}
@@ -400,7 +409,7 @@ func TestConfigSetupCanReplaceExistingAgeIdentityFile(t *testing.T) {
 
 	res := executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
 		"HOME": home,
-	}, "yes\n\nno\napi-key\nsandbox\n\ntskey-sandbox\nno\n")
+	}, "yes\n\nno\napi-key\nsandbox\n\ntskey-sandbox\nno\njson\nno\n")
 	if res.err != nil {
 		t.Fatalf("config setup replace existing key: %v\nstderr:\n%s", res.err, res.stderr)
 	}
@@ -429,7 +438,7 @@ func TestConfigSetupInvalidExistingAgeIdentityFallsBackToGeneration(t *testing.T
 
 	res := executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
 		"HOME": home,
-	}, "yes\n\napi-key\nsandbox\n\ntskey-sandbox\nno\n")
+	}, "yes\n\napi-key\nsandbox\n\ntskey-sandbox\nno\njson\nno\n")
 	if res.err != nil {
 		t.Fatalf("config setup invalid existing key fallback: %v\nstderr:\n%s", res.err, res.stderr)
 	}
@@ -451,7 +460,7 @@ func TestConfigSetupRerunCanAddAndDeleteProfiles(t *testing.T) {
 
 	res := executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
 		"HOME": home,
-	}, "yes\n\napi-key\nsandbox\n\ntskey-sandbox\nyes\noauth\norg-admin\n\ncid\nsecret\nno\n")
+	}, "yes\n\napi-key\nsandbox\n\ntskey-sandbox\nyes\noauth\norg-admin\n\ncid\nsecret\nno\njson\nno\n")
 	if res.err != nil {
 		t.Fatalf("config setup initial run: %v\nstderr:\n%s", res.err, res.stderr)
 	}
@@ -464,6 +473,9 @@ func TestConfigSetupRerunCanAddAndDeleteProfiles(t *testing.T) {
 	}
 	if !strings.Contains(res.stdout, "Add, modify, or delete profiles?") {
 		t.Fatalf("expected rerun management prompt, got:\n%s", res.stdout)
+	}
+	if strings.Contains(res.stdout, "Choose your default output format") || strings.Contains(res.stdout, "Enable debug HTTP request/response logging by default?") {
+		t.Fatalf("did not expect initial setup preference prompts during rerun, got:\n%s", res.stdout)
 	}
 
 	configFile := filepath.Join(home, ".tscli.yaml")
@@ -488,7 +500,7 @@ func TestConfigSetupRerunCanModifySelectedProfile(t *testing.T) {
 
 	res := executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
 		"HOME": home,
-	}, "no\noauth\norg-admin\nexample.ts.net\ncid\nsecret\nno\n")
+	}, "no\noauth\norg-admin\nexample.ts.net\ncid\nsecret\nno\njson\nno\n")
 	if res.err != nil {
 		t.Fatalf("config setup initial run: %v\nstderr:\n%s", res.err, res.stderr)
 	}
@@ -501,6 +513,9 @@ func TestConfigSetupRerunCanModifySelectedProfile(t *testing.T) {
 	}
 	if !strings.Contains(res.stdout, "Select a profile to modify") {
 		t.Fatalf("expected modify selection prompt, got:\n%s", res.stdout)
+	}
+	if strings.Contains(res.stdout, "Choose your default output format") || strings.Contains(res.stdout, "Enable debug HTTP request/response logging by default?") {
+		t.Fatalf("did not expect initial setup preference prompts during rerun modify, got:\n%s", res.stdout)
 	}
 
 	configFile := filepath.Join(home, ".tscli.yaml")
@@ -751,7 +766,7 @@ func TestConfigShowNormalizesProfileBackedConfig(t *testing.T) {
 	if err := json.Unmarshal([]byte(res.stdout), &shown); err != nil {
 		t.Fatalf("unmarshal config show output: %v\noutput:\n%s", err, res.stdout)
 	}
-	for _, unwanted := range []string{"tailnet", "api-key", "debug", "help"} {
+	for _, unwanted := range []string{"tailnet", "api-key", "help"} {
 		if _, ok := shown[unwanted]; ok {
 			t.Fatalf("did not expect top-level %q in config show output: %s", unwanted, res.stdout)
 		}
@@ -761,6 +776,9 @@ func TestConfigShowNormalizesProfileBackedConfig(t *testing.T) {
 	}
 	if _, ok := shown["tailnets"]; !ok {
 		t.Fatalf("expected canonical profile keys in output, got %s", res.stdout)
+	}
+	if got, ok := shown["debug"].(bool); !ok || got {
+		t.Fatalf("expected persisted debug false in output, got %s", res.stdout)
 	}
 }
 
