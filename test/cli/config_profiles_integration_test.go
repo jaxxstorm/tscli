@@ -471,7 +471,7 @@ func TestConfigSetupRerunCanAddAndDeleteProfiles(t *testing.T) {
 	if res.err != nil {
 		t.Fatalf("config setup rerun delete: %v\nstderr:\n%s", res.err, res.stderr)
 	}
-	if !strings.Contains(res.stdout, "Add, modify, or delete profiles?") {
+	if !strings.Contains(res.stdout, "Manage profiles or preferences?") {
 		t.Fatalf("expected rerun management prompt, got:\n%s", res.stdout)
 	}
 	if strings.Contains(res.stdout, "Choose your default output format") || strings.Contains(res.stdout, "Enable debug HTTP request/response logging by default?") {
@@ -492,6 +492,46 @@ func TestConfigSetupRerunCanAddAndDeleteProfiles(t *testing.T) {
 	}
 	if strings.Contains(body, "name: org-admin") || strings.Contains(body, "oauth-client-id: cid") || strings.Contains(body, "oauth-client-secret-encrypted:") {
 		t.Fatalf("expected deleted oauth profile to be removed, got:\n%s", body)
+	}
+}
+
+func TestConfigSetupRerunCanModifyPreferences(t *testing.T) {
+	home := t.TempDir()
+
+	res := executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
+		"HOME": home,
+	}, "no\napi-key\nsandbox\n\ntskey-sandbox\nno\njson\nno\n")
+	if res.err != nil {
+		t.Fatalf("config setup initial run: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	res = executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
+		"HOME": home,
+	}, "settings\nhuman\nyes\n")
+	if res.err != nil {
+		t.Fatalf("config setup rerun settings: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+	if !strings.Contains(res.stdout, "Manage profiles or preferences?") {
+		t.Fatalf("expected rerun management prompt, got:\n%s", res.stdout)
+	}
+	if !strings.Contains(res.stdout, "Choose your default output format") {
+		t.Fatalf("expected output preference prompt, got:\n%s", res.stdout)
+	}
+	if !strings.Contains(res.stdout, "Enable debug HTTP request/response logging by default?") {
+		t.Fatalf("expected debug preference prompt, got:\n%s", res.stdout)
+	}
+
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg, err := os.ReadFile(configFile)
+	if err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+	body := string(cfg)
+	if !strings.Contains(body, "output: human") {
+		t.Fatalf("expected output preference to be updated, got:\n%s", body)
+	}
+	if !strings.Contains(body, "debug: true") {
+		t.Fatalf("expected debug preference to be updated, got:\n%s", body)
 	}
 }
 

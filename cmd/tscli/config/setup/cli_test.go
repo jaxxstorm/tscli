@@ -179,6 +179,38 @@ func TestInitialSetupDebugChoicePersistsPreferences(t *testing.T) {
 	}
 }
 
+func TestActionChoiceSettingsTransitionsToOutputChoice(t *testing.T) {
+	m := model{step: stepActionChoice, outputPreference: "human"}
+	m.input = "settings"
+
+	updatedModel, cmd := m.submit()
+	updated := updatedModel.(model)
+	if cmd != nil {
+		t.Fatalf("expected no quit command")
+	}
+	if updated.step != stepOutputChoice {
+		t.Fatalf("expected output choice step, got %q", updated.step)
+	}
+	if updated.choiceIndex != 2 {
+		t.Fatalf("expected human output choice index, got %d", updated.choiceIndex)
+	}
+}
+
+func TestActionChoiceIncludesPreferencesOption(t *testing.T) {
+	m := model{step: stepActionChoice}
+
+	choices, ok := m.currentChoices()
+	if !ok {
+		t.Fatalf("expected action choice options")
+	}
+	if len(choices) != 5 {
+		t.Fatalf("expected five action choices, got %d", len(choices))
+	}
+	if choices[3].value != "settings" || choices[3].label != "Modify preferences" {
+		t.Fatalf("unexpected preferences choice: %+v", choices[3])
+	}
+}
+
 func TestSelectProfileUsesCurrentSelection(t *testing.T) {
 	m := model{
 		step: stepSelectProfile,

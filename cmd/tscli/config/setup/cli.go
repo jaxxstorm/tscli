@@ -64,7 +64,7 @@ func Command() *cobra.Command {
 		Short: "Interactive config setup",
 		Long:  "Launch an interactive Bubble Tea setup flow for optional AGE encryption and tailnet profile management.",
 		Example: "tscli config setup\n" +
-			"tscli config setup  # rerun later to add or delete profiles",
+			"tscli config setup  # rerun later to manage profiles or preferences",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			m, err := newModel()
 			if err != nil {
@@ -238,12 +238,15 @@ func (m model) submit() (tea.Model, tea.Cmd) {
 			}
 			m.step = stepDeleteProfile
 			m.choiceIndex = 0
+		case "settings":
+			m.step = stepOutputChoice
+			m.choiceIndex = outputChoiceIndex(m.outputPreference)
 		case "quit":
 			m.step = stepDone
 			m.message = "Setup complete."
 			return m, tea.Quit
 		default:
-			m.err = fmt.Errorf("choose add, modify, delete, or quit")
+			m.err = fmt.Errorf("choose add, modify, delete, settings, or quit")
 		}
 	case stepEncryptionChoice:
 		switch normalizeYesNo(value) {
@@ -626,7 +629,7 @@ func (m model) View() string {
 
 	switch m.step {
 	case stepActionChoice:
-		m.renderChoiceStep(&b, "Add, modify, or delete profiles?", "[add|modify|delete|quit]", m.input)
+		m.renderChoiceStep(&b, "Manage profiles or preferences?", "[add|modify|delete|settings|quit]", m.input)
 	case stepEncryptionChoice:
 		m.renderChoiceStep(&b, "Encrypt your credentials?", "[yes|no]", m.input)
 	case stepKeyPath:
@@ -711,7 +714,7 @@ type choiceOption struct {
 func (m model) currentChoices() ([]choiceOption, bool) {
 	switch m.step {
 	case stepActionChoice:
-		return []choiceOption{{value: "add", label: "Add profile"}, {value: "modify", label: "Modify profile"}, {value: "delete", label: "Delete profile"}, {value: "quit", label: "Quit"}}, true
+		return []choiceOption{{value: "add", label: "Add profile"}, {value: "modify", label: "Modify profile"}, {value: "delete", label: "Delete profile"}, {value: "settings", label: "Modify preferences"}, {value: "quit", label: "Quit"}}, true
 	case stepEncryptionChoice:
 		return []choiceOption{{value: "yes", label: "Yes, encrypt persisted credentials"}, {value: "no", label: "No, keep credentials in plaintext"}}, true
 	case stepReuseExistingKey:
@@ -781,7 +784,9 @@ func normalizeChoice(value string) string {
 		return "modify"
 	case "d", "delete", "3":
 		return "delete"
-	case "q", "quit", "exit", "4":
+	case "s", "settings", "prefs", "preferences", "4":
+		return "settings"
+	case "q", "quit", "exit", "5":
 		return "quit"
 	default:
 		return ""
