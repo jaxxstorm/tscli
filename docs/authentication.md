@@ -2,6 +2,8 @@
 
 `tscli` supports two authentication models:
 
+This page covers how `tscli` authenticates its own requests. For creating Tailscale auth keys, OAuth clients, or federated credentials, see [Creating Credentials](creating-credentials.md).
+
 - API keys for the existing tailnet-scoped API commands
 - OAuth client credentials for the API-driven tailnet lifecycle commands (`create tailnet`, `list tailnets`, `delete tailnet`)
 

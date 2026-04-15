@@ -28,6 +28,8 @@ make docs-generate
 
 CI runs `make docs-check` to ensure generated files match what `make docs-generate` produces. Run the same check locally after generating docs (or if `make docs-check` fails the CD log shows the `diff -ru` output automatically). The target exits non-zero if any file differs, so rerun `make docs-generate` and commit the generated files before pushing.
 
+If you add new key types, CLI verbs, or request/response fields, keep the OpenAPI coverage data in sync by updating `pkg/contract/openapi/command-operation-map.yaml`, `coverage/property-coverage.yaml`, and `coverage/property-exclusions.yaml`, then rerun `make coverage-gaps-check`. CI uses the generated `coverage/coverage-gaps.*` artifacts to detect endpoint-level and property-level regressions.
+
 ## Editing guidance
 
 - Edit authored content in `docs/*.md` (except the `docs/commands/` tree).
