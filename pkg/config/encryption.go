@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"filippo.io/age"
@@ -19,6 +20,12 @@ type AgeEncryptionConfig struct {
 	PrivateKeyCommand string `mapstructure:"private-key-command" json:"private-key-command,omitempty" yaml:"private-key-command,omitempty"`
 }
 
+type AgeIdentityFile struct {
+	Path      string
+	PublicKey string
+	Identity  age.Identity
+}
+
 func loadAgeEncryptionConfig(v *viper.Viper) AgeEncryptionConfig {
 	return AgeEncryptionConfig{
 		PublicKey:         strings.TrimSpace(v.GetString("encryption.age.public-key")),
@@ -29,6 +36,12 @@ func loadAgeEncryptionConfig(v *viper.Viper) AgeEncryptionConfig {
 }
 
 func validateAgeEncryptionConfig(cfg AgeEncryptionConfig) error {
+	var err error
+	cfg.PrivateKeyPath, err = expandHomePath(cfg.PrivateKeyPath)
+	if err != nil {
+		return fmt.Errorf("invalid encryption.age.private-key-path: %w", err)
+	}
+
 	hasPublicKey := cfg.PublicKey != ""
 	hasPath := cfg.PrivateKeyPath != ""
 	hasConfigPrivateKey := cfg.PrivateKey != ""
@@ -159,19 +172,11 @@ func resolveAgeIdentity(v *viper.Viper) (age.Identity, error) {
 		return nil, err
 	}
 	if cfg.PrivateKeyPath != "" {
-		data, err := os.ReadFile(cfg.PrivateKeyPath)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read encryption.age.private-key-path: %w", err)
-		}
-		value := strings.TrimSpace(string(data))
-		if value == "" {
-			return nil, fmt.Errorf("encryption.age.private-key-path points to an empty key file")
-		}
-		identity, err := parseAgeIdentity(value)
+		identityFile, err := InspectAgeIdentityFile(cfg.PrivateKeyPath)
 		if err != nil {
 			return nil, fmt.Errorf("invalid key in encryption.age.private-key-path: %w", err)
 		}
-		return identity, nil
+		return identityFile.Identity, nil
 	}
 	if cfg.PrivateKeyCommand != "" {
 		out, err := exec.Command("sh", "-c", cfg.PrivateKeyCommand).Output()
@@ -199,6 +204,41 @@ func resolveAgeIdentity(v *viper.Viper) (age.Identity, error) {
 	return nil, fmt.Errorf("encrypted config requires TSCLI_AGE_PRIVATE_KEY, encryption.age.private-key-path, encryption.age.private-key-command, or encryption.age.private-key")
 }
 
+func InspectAgeIdentityFile(path string) (AgeIdentityFile, error) {
+	resolvedPath, err := expandHomePath(strings.TrimSpace(path))
+	if err != nil {
+		return AgeIdentityFile{}, err
+	}
+	if resolvedPath == "" {
+		return AgeIdentityFile{}, fmt.Errorf("age key path is required")
+	}
+
+	data, err := os.ReadFile(resolvedPath)
+	if err != nil {
+		return AgeIdentityFile{}, err
+	}
+	value := strings.TrimSpace(string(data))
+	if value == "" {
+		return AgeIdentityFile{}, fmt.Errorf("key file is empty")
+	}
+
+	identity, err := parseAgeIdentity(value)
+	if err != nil {
+		return AgeIdentityFile{}, err
+	}
+
+	x25519Identity, ok := identity.(*age.X25519Identity)
+	if !ok {
+		return AgeIdentityFile{}, fmt.Errorf("age key file does not contain a reusable X25519 identity")
+	}
+
+	return AgeIdentityFile{
+		Path:      resolvedPath,
+		PublicKey: x25519Identity.Recipient().String(),
+		Identity:  x25519Identity,
+	}, nil
+}
+
 func parseAgeIdentity(value string) (age.Identity, error) {
 	identities, err := age.ParseIdentities(strings.NewReader(strings.TrimSpace(value)))
 	if err == nil && len(identities) > 0 {
@@ -221,6 +261,13 @@ func SetAgeEncryptionConfig(cfg AgeEncryptionConfig) error {
 	cfg.PrivateKeyPath = strings.TrimSpace(cfg.PrivateKeyPath)
 	cfg.PrivateKey = strings.TrimSpace(cfg.PrivateKey)
 	cfg.PrivateKeyCommand = strings.TrimSpace(cfg.PrivateKeyCommand)
+	if cfg.PrivateKeyPath != "" {
+		expandedPath, err := expandHomePath(cfg.PrivateKeyPath)
+		if err != nil {
+			return fmt.Errorf("invalid encryption.age.private-key-path: %w", err)
+		}
+		cfg.PrivateKeyPath = expandedPath
+	}
 	if err := validateAgeEncryptionConfig(cfg); err != nil {
 		return err
 	}
@@ -246,4 +293,22 @@ func SetAgeEncryptionConfig(cfg AgeEncryptionConfig) error {
 	v.Set("encryption.age.private-key", cfg.PrivateKey)
 	v.Set("encryption.age.private-key-command", cfg.PrivateKeyCommand)
 	return writePersistedSettings(v, settings)
+}
+
+func expandHomePath(path string) (string, error) {
+	path = strings.TrimSpace(path)
+	if path == "" || !strings.HasPrefix(path, "~") {
+		return path, nil
+	}
+	if path != "~" && !strings.HasPrefix(path, "~/") {
+		return "", fmt.Errorf("home expansion only supports ~/ paths")
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	if path == "~" {
+		return home, nil
+	}
+	return filepath.Join(home, strings.TrimPrefix(path, "~/")), nil
 }

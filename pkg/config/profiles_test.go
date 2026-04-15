@@ -405,12 +405,53 @@ func TestTailnetProfilePersistenceHelpers(t *testing.T) {
 		t.Fatalf("did not expect duplicated top-level api-key in profile-backed config, got:\n%s", body)
 	}
 
-	if err := RemoveTailnetProfile("prod"); err == nil {
-		t.Fatalf("expected deleting active profile to fail")
+	if err := RemoveTailnetProfile("sandbox"); err != nil {
+		t.Fatalf("remove non-active profile: %v", err)
+	}
+
+	if err := RemoveTailnetProfile("prod"); err != nil {
+		t.Fatalf("remove active profile: %v", err)
+	}
+
+	state, err = ListTailnetProfiles()
+	if err != nil {
+		t.Fatalf("list profiles after delete: %v", err)
+	}
+	if state.ActiveTailnet != "" {
+		t.Fatalf("expected active profile to be cleared, got %q", state.ActiveTailnet)
+	}
+	if len(state.Tailnets) != 0 {
+		t.Fatalf("expected all profiles to be removed, got %+v", state.Tailnets)
+	}
+}
+
+func TestRemoveActiveTailnetProfilePromotesRemainingProfile(t *testing.T) {
+	viper.Reset()
+	t.Cleanup(viper.Reset)
+
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	if _, err := UpsertTailnetProfile(TailnetProfile{Name: "sandbox", APIKey: "tskey-sandbox"}); err != nil {
+		t.Fatalf("upsert sandbox: %v", err)
+	}
+	if _, err := UpsertTailnetProfile(TailnetProfile{Name: "prod", APIKey: "tskey-prod"}); err != nil {
+		t.Fatalf("upsert prod: %v", err)
 	}
 
 	if err := RemoveTailnetProfile("sandbox"); err != nil {
-		t.Fatalf("remove non-active profile: %v", err)
+		t.Fatalf("remove active profile: %v", err)
+	}
+
+	state, err := ListTailnetProfiles()
+	if err != nil {
+		t.Fatalf("list profiles: %v", err)
+	}
+	if state.ActiveTailnet != "prod" {
+		t.Fatalf("expected prod to become active, got %q", state.ActiveTailnet)
+	}
+	if len(state.Tailnets) != 1 || state.Tailnets[0].Name != "prod" {
+		t.Fatalf("expected only prod to remain, got %+v", state.Tailnets)
 	}
 }
 

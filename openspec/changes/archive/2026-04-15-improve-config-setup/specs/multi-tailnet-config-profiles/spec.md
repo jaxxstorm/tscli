@@ -1,4 +1,4 @@
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Multi-tailnet profile schema is supported
 The CLI configuration SHALL support an `active-tailnet` key and a `tailnets` collection of profile objects. Each profile SHALL include a `name` field and MAY include `tailnet`, `api-key`, `api-key-encrypted`, `oauth-client-id`, `oauth-client-secret`, and `oauth-client-secret-encrypted`. A valid profile SHALL contain either `api-key` or `api-key-encrypted`, or both `oauth-client-id` and either `oauth-client-secret` or `oauth-client-secret-encrypted`. A profile SHALL NOT persist both plaintext and encrypted variants of the same secret field at the same time. When profile-backed configuration is persisted, that profile schema SHALL be the canonical stored representation and SHALL NOT require duplicate top-level `tailnet` or `api-key` keys.
@@ -41,55 +41,8 @@ The CLI configuration SHALL support an `active-tailnet` key and a `tailnets` col
 - **AND** the persisted config SHALL preserve the relevant auth fields for each profile
 - **AND** the persisted config SHALL NOT depend on duplicated top-level `tailnet` or `api-key` keys to represent the active profile
 
-### Requirement: Runtime credential resolution follows deterministic precedence
-For operational commands, effective values SHALL be resolved in this order: flags, environment variables, active profile, legacy flat config keys where supported by the command. API-key-authenticated commands SHALL continue to resolve `api-key` and `tailnet` using that precedence. Commands that support OAuth-backed authentication SHALL resolve `oauth-client-id` and `oauth-client-secret` using the same precedence model, exchange those credentials for a runtime access token, and SHALL NOT persist the exchanged token to config.
-
-#### Scenario: Flags override OAuth profile values
-- **WHEN** `--oauth-client-id` or `--oauth-client-secret` is provided and OAuth profile data exists
-- **THEN** the CLI SHALL use the flag values as the effective OAuth credential input
-
-#### Scenario: Environment overrides OAuth profile values
-- **WHEN** OAuth flags are absent and `TSCLI_OAUTH_CLIENT_ID` or `TSCLI_OAUTH_CLIENT_SECRET` is set while OAuth profile data exists
-- **THEN** the CLI SHALL use the environment values as the effective OAuth credential input
-
-#### Scenario: Active OAuth profile is used by default for supported API commands
-- **WHEN** API-key inputs are absent and `active-tailnet` maps to a profile with `oauth-client-id` and an OAuth client secret value
-- **THEN** commands that support OAuth-backed authentication SHALL use that profile for runtime token exchange
-
-#### Scenario: API-key command keeps current precedence
-- **WHEN** an existing API-key-authenticated command runs and flags, environment variables, profile data, and legacy keys are present
-- **THEN** the CLI SHALL continue to resolve `api-key` and `tailnet` using flags over environment over active profile over legacy config
-
-#### Scenario: OAuth-backed general API command succeeds without a stored API key
-- **WHEN** a user runs a supported API command with no resolved API key and a complete OAuth client credential pair is resolved from flags, environment variables, or the active profile
-- **THEN** the CLI SHALL exchange the OAuth client credentials at runtime and complete the API request without writing a new API key or access token to the config file
-
-#### Scenario: OAuth credential exchange fails
-- **WHEN** a supported API command resolves OAuth client credentials but the token exchange request fails
-- **THEN** the command SHALL fail with an actionable authentication error and SHALL NOT attempt to persist the failed exchange result
-
-#### Scenario: OAuth credentials are missing from all sources
-- **WHEN** an OAuth-authenticated command runs and flags, environment variables, and the active profile do not provide a complete OAuth client id and secret pair
-- **THEN** command execution SHALL fail with an actionable required OAuth credentials error
-
-### Requirement: Legacy single-tailnet configuration remains valid
-Existing config files that only define `tailnet` and `api-key` SHALL continue to work without modification. Once profile data exists, those legacy flat keys SHALL be treated as backward-compatibility input only rather than canonical persisted profile state.
-
-#### Scenario: Legacy-only config executes commands
-- **WHEN** `tailnets` and `active-tailnet` are not set and legacy keys are present
-- **THEN** the CLI SHALL resolve runtime credentials from legacy keys exactly as before
-
-#### Scenario: Active profile and legacy values coexist
-- **WHEN** profile keys and legacy keys are both present
-- **THEN** the CLI SHALL prefer profile-derived values over legacy keys when flags and environment variables are not set
-
-#### Scenario: Profile rewrite removes duplicated legacy mirrors
-- **WHEN** a profile command rewrites a mixed config file that contains both profile data and flat legacy keys copied from the active profile
-- **THEN** the rewritten config SHALL preserve the profile data and active selection
-- **AND** the rewritten config SHALL NOT re-persist the duplicated flat `tailnet` and `api-key` values as part of the canonical profile representation
-
 ### Requirement: Config commands manage tailnet profiles
-The `config` command group SHALL provide operations to list profiles, set active profile, upsert profile credentials, remove profiles, and run an interactive `config setup` flow for both API-key-backed and OAuth-backed profile entries. When secret encryption is enabled, profile mutation commands SHALL persist encrypted secret fields instead of plaintext secret fields.
+The `config` command group SHALL provide operations to list profiles, set active profile, upsert profile credentials, remove profiles, and run an interactive `config setup` flow for both API-key-backed and OAuth-backed profile entries.
 
 #### Scenario: List profiles displays active selection and auth shape
 - **WHEN** multiple profiles exist and one is active
@@ -118,11 +71,6 @@ The `config` command group SHALL provide operations to list profiles, set active
 #### Scenario: Interactive setup writes encrypted OAuth profile when encryption is configured
 - **WHEN** a user runs `config setup`, enables encryption, and saves an OAuth-backed profile
 - **THEN** the saved config SHALL persist `oauth-client-secret-encrypted` for that profile instead of plaintext `oauth-client-secret`
-
-#### Scenario: Upsert command writes encrypted secret fields when encryption is enabled
-- **WHEN** a user runs `config profiles set` for an API-key-backed or OAuth-backed profile while secret encryption is enabled
-- **THEN** the saved config SHALL persist ciphertext in the matching `*-encrypted` secret field
-- **AND** the saved config SHALL omit the plaintext secret field for that profile
 
 #### Scenario: Profile mutations keep canonical file shape
 - **WHEN** a user runs `config profiles set`, `config profiles set-active`, or `config setup`

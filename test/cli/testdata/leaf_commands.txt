@@ -2,6 +2,7 @@ agent init
 agent update
 config get
 config encryption setup
+config setup
 config profiles delete
 config profiles list
 config profiles set-active

@@ -122,9 +122,6 @@ func RemoveTailnetProfile(name string) error {
 	if name == "" {
 		return fmt.Errorf("tailnet profile name is required")
 	}
-	if state.ActiveTailnet == name {
-		return fmt.Errorf("cannot remove active tailnet profile %q; set a different active profile first", name)
-	}
 
 	index := -1
 	for i, profile := range state.Tailnets {
@@ -138,6 +135,13 @@ func RemoveTailnetProfile(name string) error {
 	}
 
 	state.Tailnets = append(state.Tailnets[:index], state.Tailnets[index+1:]...)
+	if state.ActiveTailnet == name {
+		state.ActiveTailnet = ""
+		if len(state.Tailnets) > 0 {
+			state.ActiveTailnet = normalizeProfiles(state.Tailnets)[0].Name
+		}
+	}
+
 	return persistTailnetProfilesState(v, state)
 }
 
