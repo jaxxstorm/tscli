@@ -35,6 +35,7 @@
 - [tscli delete tailnet](tscli_delete_tailnet.md)
 - [tscli delete user](tscli_delete_user.md)
 - [tscli delete user invite](tscli_delete_user_invite.md)
+- [tscli delete users](tscli_delete_users.md)
 - [tscli delete webhook](tscli_delete_webhook.md)
 - [tscli get](tscli_get.md)
 - [tscli get contacts](tscli_get_contacts.md)

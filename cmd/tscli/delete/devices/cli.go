@@ -52,6 +52,7 @@ func Command() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "devices",
+		Args:  cobra.NoArgs,
 		Short: "Delete multiple disconnected devices",
 		Long: `Delete multiple disconnected Tailscale devices based on last-seen duration.
 

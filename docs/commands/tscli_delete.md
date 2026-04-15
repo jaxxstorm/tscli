@@ -34,5 +34,6 @@ Commands that delete from the Tailscale API
 * [tscli delete service](tscli_delete_service.md)	 - Delete a service
 * [tscli delete tailnet](tscli_delete_tailnet.md)	 - Delete an API-driven tailnet
 * [tscli delete user](tscli_delete_user.md)	 - Delete a tailnet user
+* [tscli delete users](tscli_delete_users.md)	 - Delete multiple tailnet users
 * [tscli delete webhook](tscli_delete_webhook.md)	 - Delete a webhook
 

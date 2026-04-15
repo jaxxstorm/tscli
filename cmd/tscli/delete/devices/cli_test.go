@@ -73,6 +73,7 @@ func TestDeleteDevicesFlagValidation(t *testing.T) {
 		{"ephemeral flag ok", []string{"--ephemeral"}, true, false},
 		{"last-seen flag ok", []string{"--last-seen", "1h"}, true, false},
 		{"confirm flag ok", []string{"--confirm"}, true, false},
+		{"extra positional arg rejected", []string{"users"}, false, true},
 	}
 
 	for _, tc := range cases {
