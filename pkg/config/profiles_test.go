@@ -339,6 +339,49 @@ func TestResolveOAuthRuntimeConfigPrecedence(t *testing.T) {
 	})
 }
 
+func TestResolveCommandAuthConfigPrefersActiveProfileShapeOverLegacyAPIKey(t *testing.T) {
+	t.Run("active oauth profile beats legacy api-key", func(t *testing.T) {
+		v := viper.New()
+		v.Set("active-tailnet", "org-admin")
+		v.Set("tailnets", []map[string]any{{
+			"name":                "org-admin",
+			"oauth-client-id":     "profile-id",
+			"oauth-client-secret": "profile-secret",
+		}})
+		v.Set("api-key", "legacy-key")
+
+		resolved, err := resolveCommandAuthConfig(v, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !resolved.UsesOAuth || resolved.Source != "oauth" {
+			t.Fatalf("expected oauth auth source, got %+v", resolved)
+		}
+		if resolved.OAuth.ClientID != "profile-id" || resolved.OAuth.ClientSecret != "profile-secret" {
+			t.Fatalf("expected active profile oauth creds, got %+v", resolved)
+		}
+	})
+
+	t.Run("env api-key still overrides active oauth profile", func(t *testing.T) {
+		v := viper.New()
+		v.Set("active-tailnet", "org-admin")
+		v.Set("tailnets", []map[string]any{{
+			"name":                "org-admin",
+			"oauth-client-id":     "profile-id",
+			"oauth-client-secret": "profile-secret",
+		}})
+		t.Setenv("TAILSCALE_API_KEY", "env-key")
+
+		resolved, err := resolveCommandAuthConfig(v, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if resolved.UsesOAuth || resolved.Source != "api-key" || resolved.APIKey != "env-key" {
+			t.Fatalf("expected env api-key auth, got %+v", resolved)
+		}
+	})
+}
+
 func TestTailnetProfilePersistenceHelpers(t *testing.T) {
 	viper.Reset()
 	t.Cleanup(viper.Reset)
@@ -405,12 +448,53 @@ func TestTailnetProfilePersistenceHelpers(t *testing.T) {
 		t.Fatalf("did not expect duplicated top-level api-key in profile-backed config, got:\n%s", body)
 	}
 
-	if err := RemoveTailnetProfile("prod"); err == nil {
-		t.Fatalf("expected deleting active profile to fail")
-	}
-
 	if err := RemoveTailnetProfile("sandbox"); err != nil {
 		t.Fatalf("remove non-active profile: %v", err)
+	}
+
+	if err := RemoveTailnetProfile("prod"); err == nil || !strings.Contains(err.Error(), "is active") {
+		t.Fatalf("expected active profile delete to fail, got %v", err)
+	}
+
+	state, err = ListTailnetProfiles()
+	if err != nil {
+		t.Fatalf("list profiles after delete: %v", err)
+	}
+	if state.ActiveTailnet != "prod" {
+		t.Fatalf("expected active profile to remain prod, got %q", state.ActiveTailnet)
+	}
+	if len(state.Tailnets) != 1 || state.Tailnets[0].Name != "prod" {
+		t.Fatalf("expected prod to remain after failed delete, got %+v", state.Tailnets)
+	}
+}
+
+func TestRemoveActiveTailnetProfileFails(t *testing.T) {
+	viper.Reset()
+	t.Cleanup(viper.Reset)
+
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	if _, err := UpsertTailnetProfile(TailnetProfile{Name: "sandbox", APIKey: "tskey-sandbox"}); err != nil {
+		t.Fatalf("upsert sandbox: %v", err)
+	}
+	if _, err := UpsertTailnetProfile(TailnetProfile{Name: "prod", APIKey: "tskey-prod"}); err != nil {
+		t.Fatalf("upsert prod: %v", err)
+	}
+
+	if err := RemoveTailnetProfile("sandbox"); err == nil || !strings.Contains(err.Error(), "is active") {
+		t.Fatalf("expected active profile delete to fail, got %v", err)
+	}
+
+	state, err := ListTailnetProfiles()
+	if err != nil {
+		t.Fatalf("list profiles: %v", err)
+	}
+	if state.ActiveTailnet != "sandbox" {
+		t.Fatalf("expected sandbox to remain active, got %q", state.ActiveTailnet)
+	}
+	if len(state.Tailnets) != 2 {
+		t.Fatalf("expected both profiles to remain, got %+v", state.Tailnets)
 	}
 }
 

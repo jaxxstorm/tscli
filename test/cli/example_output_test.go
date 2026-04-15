@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"filippo.io/age"
 	"github.com/jaxxstorm/tscli/internal/testutil/apimock"
 )
 
@@ -16,6 +17,7 @@ type exampleOutputCase struct {
 	command       string
 	args          []string
 	argsFunc      func(*testing.T, map[string]string) []string
+	input         string
 	shape         jsonShapeExpectation
 	textContains  []string
 	supportsModes bool
@@ -305,7 +307,12 @@ func runExampleOutputCase(t *testing.T, tc exampleOutputCase, mode string) execR
 		tc.setup(t, mock, env)
 	}
 
-	res := executeCLI(t, args, env)
+	var res execResult
+	if tc.input != "" {
+		res = executeCLIWithInput(t, args, env, tc.input)
+	} else {
+		res = executeCLI(t, args, env)
+	}
 	if res.err != nil {
 		t.Fatalf("unexpected error for %q: %v\nstderr:\n%s", tc.command, res.err, res.stderr)
 	}
@@ -329,14 +336,22 @@ func exampleOutputCases() []exampleOutputCase {
 			}
 		}, "tscli agent integrations updated"),
 		localTextCase("config get", []string{"config", "get", "output"}, nil, "json"),
+		localTextCaseWithArgs("config encryption setup", func(t *testing.T, _ map[string]string) []string {
+			identity, err := age.GenerateX25519Identity()
+			if err != nil {
+				t.Fatalf("generate identity: %v", err)
+			}
+			return []string{"config", "encryption", "setup", "--public-key", identity.Recipient().String(), "--private-key-source", "env"}
+		}, nil, "config encryption saved"),
+		localTextCaseWithInput("config setup", []string{"config", "setup"}, "no\napi-key\nsandbox\n\ntskey-sandbox\nno\n", nil, "Setup complete"),
 		localTextCase("config profiles delete", []string{"config", "profiles", "delete", "sandbox"}, setupProfileHome, "tailnet profile sandbox removed"),
 		localObjectCase("config profiles list", []string{"config", "profiles", "list"}, setupProfileHome, jsonShapeExpectation{
 			TopLevel:   jsonTopLevelObject,
 			ObjectKeys: []string{"active-tailnet", "tailnets"},
 		}),
 		localTextCase("config profiles set-active", []string{"config", "profiles", "set-active", "sandbox"}, setupProfileHome, "active tailnet set to sandbox"),
-		localTextCase("config profiles upsert", []string{"config", "profiles", "upsert", "sandbox", "--api-key", "tskey-sandbox"}, nil, "tailnet profile sandbox created"),
-		localTextCase("config profiles upsert", []string{"config", "profiles", "upsert", "org-admin", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, nil, "tailnet profile org-admin created"),
+		localTextCase("config profiles set", []string{"config", "profiles", "set", "sandbox", "--api-key", "tskey-sandbox"}, nil, "tailnet profile sandbox created"),
+		localTextCase("config profiles set", []string{"config", "profiles", "set", "org-admin", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, nil, "tailnet profile org-admin created"),
 		localTextCase("config set", []string{"config", "set", "output", "yaml"}, nil, "output saved"),
 		localObjectCase("config show", []string{"config", "show"}, nil, jsonShapeExpectation{
 			TopLevel:   jsonTopLevelObject,
@@ -538,6 +553,18 @@ func localObjectCase(command string, args []string, setup func(*testing.T, *apim
 
 func localTextCase(command string, args []string, setup func(*testing.T, *apimock.Server, map[string]string), contains ...string) exampleOutputCase {
 	return customCase(command, args, jsonShapeExpectation{}, false, setup, contains...)
+}
+
+func localTextCaseWithInput(command string, args []string, input string, setup func(*testing.T, *apimock.Server, map[string]string), contains ...string) exampleOutputCase {
+	return exampleOutputCase{
+		command:       command,
+		args:          args,
+		input:         input,
+		shape:         jsonShapeExpectation{},
+		textContains:  contains,
+		supportsModes: false,
+		setup:         setup,
+	}
 }
 
 func localTextCaseWithArgs(command string, argsFunc func(*testing.T, map[string]string) []string, setup func(*testing.T, *apimock.Server, map[string]string), contains ...string) exampleOutputCase {

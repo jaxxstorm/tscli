@@ -128,6 +128,22 @@ func canonicalizePersistedSettings(settings map[string]any) map[string]any {
 		delete(canonical, "oauth-client-secret")
 	}
 
+	if encryptionRaw, ok := canonical["encryption"].(map[string]any); ok {
+		if ageRaw, ok := encryptionRaw["age"].(map[string]any); ok {
+			for _, key := range []string{"public-key", "private-key-path", "private-key", "private-key-command"} {
+				if isEmptyPersistedValue(ageRaw[key]) {
+					delete(ageRaw, key)
+				}
+			}
+			if len(ageRaw) == 0 {
+				delete(encryptionRaw, "age")
+			}
+		}
+		if len(encryptionRaw) == 0 {
+			delete(canonical, "encryption")
+		}
+	}
+
 	return canonical
 }
 

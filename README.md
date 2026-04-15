@@ -28,7 +28,7 @@ tscli create key \
 Set up a named profile for multi-tailnet use:
 
 ```bash
-tscli config profiles upsert _lbr_sandbox --api-key tskey-abc123
+tscli config profiles set _lbr_sandbox --api-key tskey-abc123
 tscli config profiles set-active _lbr_sandbox
 tscli config profiles list
 ```
@@ -172,7 +172,7 @@ Profile management commands:
 
 ```bash
 tscli config profiles list
-tscli config profiles upsert _lbr_sandbox --api-key tskey-abc123
+tscli config profiles set _lbr_sandbox --api-key tskey-abc123
 tscli config profiles set-active _lbr_sandbox
 tscli config profiles delete example.com
 ```

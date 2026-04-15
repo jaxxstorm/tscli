@@ -11,7 +11,7 @@ func Command() *cobra.Command {
 	return &cobra.Command{
 		Use:     "delete <name>",
 		Short:   "Delete a tailnet profile",
-		Long:    "Delete a non-active tailnet profile from configuration.",
+		Long:    "Delete a tailnet profile from configuration.",
 		Example: "tscli config profiles delete _lbr_sandbox",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

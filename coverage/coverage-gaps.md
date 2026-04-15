@@ -3,12 +3,12 @@
 - OpenAPI operations: `85`
 - Excluded operations: `0`
 - In-scope operations: `85`
-- Manifest commands: `94`
-- Excluded commands: `11`
+- Manifest commands: `97`
+- Excluded commands: `16`
 - Covered operations: `85`
 - Uncovered operations: `0`
-- Covered commands: `80`
-- Unmapped commands: `3`
+- Covered commands: `81`
+- Unmapped commands: `0`
 - Unknown mapped commands: `0`
 - Covered properties: `163`
 - Excluded properties: `637`
@@ -19,9 +19,7 @@
 - None
 ## Unmapped Commands
 
-- `create tailnet`
-- `delete tailnet`
-- `list tailnets`
+- None
 
 ## Unknown Mapped Operations
 

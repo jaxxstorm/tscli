@@ -6,7 +6,7 @@ Delete a tailnet profile
 
 ### Synopsis
 
-Delete a non-active tailnet profile from configuration.
+Delete a tailnet profile from configuration.
 
 ```
 tscli config profiles delete <name> [flags]

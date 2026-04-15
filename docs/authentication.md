@@ -4,8 +4,8 @@
 
 This page covers how `tscli` authenticates its own requests. For creating Tailscale auth keys, OAuth clients, or federated credentials, see [Creating Credentials](creating-credentials.md).
 
-- API keys for the existing tailnet-scoped API commands
-- OAuth client credentials for the API-driven tailnet lifecycle commands (`create tailnet`, `list tailnets`, `delete tailnet`)
+- API keys for tailnet-scoped API commands
+- OAuth client credentials for API-driven tailnet lifecycle commands and for profile-backed API access when you want `tscli` to exchange credentials at runtime instead of storing a reusable API key locally
 
 ## API key methods
 
@@ -41,7 +41,7 @@ Profile-backed configs use `active-tailnet` plus the `tailnets` array as the can
 
 ## OAuth client credential methods
 
-Use OAuth client credentials for the tailnet lifecycle commands:
+Use OAuth client credentials when you want `tscli` to exchange them for a short-lived bearer token at runtime. This is supported for the tailnet lifecycle commands and for profile-backed API access.
 
 1. CLI flags
 
@@ -74,7 +74,61 @@ tailnets:
     oauth-client-secret: secret
 ```
 
-Lifecycle commands use the same precedence layers as other auth inputs: flags override environment variables, which override active profile values, which override matching top-level config values.
+Supported OAuth-backed commands use the same precedence layers as other auth inputs: flags override environment variables, which override active profile values, which override matching top-level config values.
+
+When `tscli` uses OAuth-backed auth, it exchanges the client id and secret for a short-lived bearer token during command execution. It does not persist the exchanged token or write a reusable API key back into your config file.
+
+## Optional config encryption with age
+
+OAuth client secrets and API keys can be encrypted in the config file with `age`. Encryption is optional, and OAuth-backed profiles are optional.
+
+1. Generate or obtain an AGE keypair.
+2. Run the guided setup command:
+
+```bash
+tscli config encryption setup
+```
+
+The setup flow asks for:
+
+- an AGE public key, stored as `encryption.age.public-key`
+- how the AGE private key will be supplied at runtime:
+	- `path`: store a filesystem path as `encryption.age.private-key-path`
+	- `env`: provide it with `TSCLI_AGE_PRIVATE_KEY`
+	- `command`: configure `encryption.age.private-key-command`
+
+Example encrypted config:
+
+```yaml
+encryption:
+  age:
+    public-key: age1...
+    private-key-command: op read op://vault/tscli/age-private-key
+active-tailnet: org-admin
+tailnets:
+  - name: org-admin
+    oauth-client-id: cid
+    oauth-client-secret-encrypted: |
+      -----BEGIN AGE ENCRYPTED FILE-----
+      ...
+      -----END AGE ENCRYPTED FILE-----
+```
+
+Command-based private-key lookup is useful with secret managers such as 1Password, but it can add command startup latency because the command runs each time `tscli` needs to decrypt a stored secret.
+
+To save OAuth credentials into config without editing YAML directly, use profile set either non-interactively:
+
+```bash
+tscli config profiles set org-admin --oauth-client-id cid --oauth-client-secret secret
+```
+
+or interactively:
+
+```bash
+tscli config profiles set org-admin
+```
+
+The interactive flow prompts for `api-key` vs `oauth`, then asks for the required values and writes them into the profile.
 
 ## Tailnet lifecycle notes
 
@@ -86,6 +140,7 @@ Lifecycle commands use the same precedence layers as other auth inputs: flags ov
 
 - Never commit API keys to git.
 - Never commit OAuth client secrets to git.
+- Prefer `TSCLI_AGE_PRIVATE_KEY`, `encryption.age.private-key-path`, or an external command over storing the AGE private key directly in config when possible.
 - Prefer environment variables in CI via a secret manager.
 - Rotate leaked or shared credentials immediately.
 - Use least-privileged keys where possible.

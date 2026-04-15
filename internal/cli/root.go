@@ -44,7 +44,7 @@ func Configure() *cobra.Command {
 
 			_ = v.BindPFlags(cmd.Flags())
 
-			if _, err := config.ResolveRuntimeConfig(config.ChangedMap(cmd)); err != nil {
+			if _, err := config.ResolveCommandAuthConfig(config.ChangedMap(cmd)); err != nil {
 				return err
 			}
 			return nil

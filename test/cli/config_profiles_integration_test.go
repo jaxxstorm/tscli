@@ -8,13 +8,14 @@ import (
 	"strings"
 	"testing"
 
+	"filippo.io/age"
 	"github.com/jaxxstorm/tscli/internal/testutil/apimock"
 )
 
 func TestConfigProfilesCommandFlow(t *testing.T) {
 	home := t.TempDir()
 
-	res := executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "sandbox", "--api-key", "tskey-sandbox"}, map[string]string{
+	res := executeCLINoDefaults(t, []string{"config", "profiles", "set", "sandbox", "--api-key", "tskey-sandbox"}, map[string]string{
 		"HOME": home,
 	})
 	if res.err != nil {
@@ -24,7 +25,7 @@ func TestConfigProfilesCommandFlow(t *testing.T) {
 		t.Fatalf("expected created message, got %q", res.stdout)
 	}
 
-	res = executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "prod", "--api-key", "tskey-prod"}, map[string]string{
+	res = executeCLINoDefaults(t, []string{"config", "profiles", "set", "prod", "--api-key", "tskey-prod"}, map[string]string{
 		"HOME": home,
 	})
 	if res.err != nil {
@@ -77,9 +78,6 @@ func TestConfigProfilesCommandFlow(t *testing.T) {
 	if res.err == nil {
 		t.Fatalf("expected deleting active profile to fail")
 	}
-	if !strings.Contains(strings.ToLower(res.err.Error()), "active") {
-		t.Fatalf("expected active-profile guidance error, got %v", res.err)
-	}
 
 	configFile := filepath.Join(home, ".tscli.yaml")
 	cfg, err := os.ReadFile(configFile)
@@ -87,7 +85,10 @@ func TestConfigProfilesCommandFlow(t *testing.T) {
 		t.Fatalf("read config file: %v", err)
 	}
 	if !strings.Contains(string(cfg), "active-tailnet: prod") {
-		t.Fatalf("expected persisted active-tailnet in config file, got:\n%s", string(cfg))
+		t.Fatalf("expected active-tailnet to remain prod after failed delete, got:\n%s", string(cfg))
+	}
+	if !strings.Contains(string(cfg), "tailnets:") || !strings.Contains(string(cfg), "name: prod") {
+		t.Fatalf("expected remaining prod profile to stay persisted, got:\n%s", string(cfg))
 	}
 	if strings.Contains(string(cfg), "\ntailnet:") {
 		t.Fatalf("did not expect duplicated top-level tailnet in config file, got:\n%s", string(cfg))
@@ -100,7 +101,7 @@ func TestConfigProfilesCommandFlow(t *testing.T) {
 func TestConfigProfilesSupportOAuthCredentials(t *testing.T) {
 	home := t.TempDir()
 
-	res := executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "org-admin", "--oauth-client-id", "cid-org", "--oauth-client-secret", "secret-org"}, map[string]string{
+	res := executeCLINoDefaults(t, []string{"config", "profiles", "set", "org-admin", "--oauth-client-id", "cid-org", "--oauth-client-secret", "secret-org"}, map[string]string{
 		"HOME": home,
 	})
 	if res.err != nil {
@@ -158,10 +159,429 @@ func TestConfigProfilesSupportOAuthCredentials(t *testing.T) {
 	}
 }
 
+func TestConfigEncryptionSetupPersistsAgeConfig(t *testing.T) {
+	identity, err := age.GenerateX25519Identity()
+	if err != nil {
+		t.Fatalf("generate identity: %v", err)
+	}
+
+	home := t.TempDir()
+	privateKeyPath := filepath.Join(home, "age.txt")
+	if err := os.WriteFile(privateKeyPath, []byte(identity.String()+"\n"), 0o600); err != nil {
+		t.Fatalf("write private key file: %v", err)
+	}
+
+	res := executeCLINoDefaults(t, []string{"config", "encryption", "setup", "--public-key", identity.Recipient().String(), "--private-key-source", "path", "--private-key-path", privateKeyPath}, map[string]string{
+		"HOME": home,
+	})
+	if res.err != nil {
+		t.Fatalf("config encryption setup: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg, err := os.ReadFile(configFile)
+	if err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+	if !strings.Contains(string(cfg), "public-key: "+identity.Recipient().String()) {
+		t.Fatalf("expected persisted age public key, got:\n%s", string(cfg))
+	}
+	if !strings.Contains(string(cfg), "private-key-path: "+privateKeyPath) {
+		t.Fatalf("expected persisted age private key path, got:\n%s", string(cfg))
+	}
+}
+
+func TestConfigEncryptionSetupPromptsForSupportedSources(t *testing.T) {
+	home := t.TempDir()
+
+	res := executeCLINoDefaultsWithInput(t, []string{"config", "encryption", "setup"}, map[string]string{
+		"HOME": home,
+	}, "age1invalid\n\n")
+	if res.err == nil {
+		t.Fatalf("expected setup to fail for missing private key source")
+	}
+	if !strings.Contains(res.stdout, "Private key source [path|env|command]:") {
+		t.Fatalf("expected updated private key source prompt, got:\n%s", res.stdout)
+	}
+}
+
+func TestConfigEncryptionSetupReusesExistingPathIdentity(t *testing.T) {
+	identity, err := age.GenerateX25519Identity()
+	if err != nil {
+		t.Fatalf("generate identity: %v", err)
+	}
+
+	home := t.TempDir()
+	privateKeyPath := filepath.Join(home, "age.txt")
+	if err := os.WriteFile(privateKeyPath, []byte(identity.String()+"\n"), 0o600); err != nil {
+		t.Fatalf("write private key file: %v", err)
+	}
+
+	res := executeCLINoDefaults(t, []string{"config", "encryption", "setup", "--private-key-source", "path", "--private-key-path", privateKeyPath}, map[string]string{
+		"HOME": home,
+	})
+	if res.err != nil {
+		t.Fatalf("config encryption setup reuse existing path: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+	if !strings.Contains(res.stdout, "Reusing existing AGE identity") {
+		t.Fatalf("expected reuse message, got:\n%s", res.stdout)
+	}
+
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg, err := os.ReadFile(configFile)
+	if err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+	body := string(cfg)
+	if !strings.Contains(body, "public-key: "+identity.Recipient().String()) {
+		t.Fatalf("expected derived public key, got:\n%s", body)
+	}
+	if !strings.Contains(body, "private-key-path: "+privateKeyPath) {
+		t.Fatalf("expected persisted private key path, got:\n%s", body)
+	}
+}
+
+func TestConfigProfilesUpsertPromptsForOAuthCredentials(t *testing.T) {
+	home := t.TempDir()
+
+	res := executeCLINoDefaultsWithInput(t, []string{"config", "profiles", "set", "org-admin"}, map[string]string{
+		"HOME": home,
+	}, "oauth\ncid\nsecret\n")
+	if res.err != nil {
+		t.Fatalf("interactive oauth upsert: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+	if !strings.Contains(res.stdout, "Auth type [api-key|oauth]:") || !strings.Contains(res.stdout, "OAuth client ID:") || !strings.Contains(res.stdout, "OAuth client secret:") {
+		t.Fatalf("expected interactive oauth prompts, got:\n%s", res.stdout)
+	}
+
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg, err := os.ReadFile(configFile)
+	if err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+	body := string(cfg)
+	if !strings.Contains(body, "oauth-client-id: cid") || !strings.Contains(body, "oauth-client-secret: secret") {
+		t.Fatalf("expected oauth credentials in config file, got:\n%s", body)
+	}
+}
+
+func TestConfigSetupCreatesPlaintextProfile(t *testing.T) {
+	home := t.TempDir()
+
+	res := executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
+		"HOME": home,
+	}, "no\napi-key\nsandbox\n\ntskey-sandbox\nno\n")
+	if res.err != nil {
+		t.Fatalf("config setup plaintext: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+	if !strings.Contains(res.stdout, "Encrypt your credentials?") || !strings.Contains(res.stdout, "Use an API key (it will expire) or OAuth credentials?") {
+		t.Fatalf("expected setup prompts, got:\n%s", res.stdout)
+	}
+
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg, err := os.ReadFile(configFile)
+	if err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+	body := string(cfg)
+	if !strings.Contains(body, "active-tailnet: sandbox") || !strings.Contains(body, "api-key: tskey-sandbox") {
+		t.Fatalf("expected plaintext profile in config file, got:\n%s", body)
+	}
+	if strings.Contains(body, "api-key-encrypted:") {
+		t.Fatalf("did not expect encrypted api key in plaintext setup, got:\n%s", body)
+	}
+}
+
+func TestConfigSetupCreatesEncryptedProfileAndKeyFile(t *testing.T) {
+	home := t.TempDir()
+
+	res := executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
+		"HOME": home,
+	}, "yes\n\napi-key\nsandbox\n\ntskey-sandbox\nno\n")
+	if res.err != nil {
+		t.Fatalf("config setup encrypted: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	keyFile := filepath.Join(home, ".tscli", "age.txt")
+	data, err := os.ReadFile(keyFile)
+	if err != nil {
+		t.Fatalf("read generated key file: %v", err)
+	}
+	if !strings.Contains(string(data), "AGE-SECRET-KEY-") {
+		t.Fatalf("expected generated private key file, got:\n%s", string(data))
+	}
+
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg, err := os.ReadFile(configFile)
+	if err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+	body := string(cfg)
+	if !strings.Contains(body, "public-key:") || !strings.Contains(body, "private-key-path: "+keyFile) {
+		t.Fatalf("expected persisted encryption config, got:\n%s", body)
+	}
+	if !strings.Contains(body, "api-key-encrypted:") {
+		t.Fatalf("expected encrypted api key in config file, got:\n%s", body)
+	}
+	if strings.Contains(body, "api-key: tskey-sandbox") {
+		t.Fatalf("did not expect plaintext api key in config file, got:\n%s", body)
+	}
+}
+
+func TestConfigSetupReusesExistingAgeIdentityFile(t *testing.T) {
+	identity, err := age.GenerateX25519Identity()
+	if err != nil {
+		t.Fatalf("generate identity: %v", err)
+	}
+
+	home := t.TempDir()
+	keyFile := filepath.Join(home, ".tscli", "age.txt")
+	if err := os.MkdirAll(filepath.Dir(keyFile), 0o755); err != nil {
+		t.Fatalf("create key dir: %v", err)
+	}
+	originalBody := "# existing key\n# public-key: " + identity.Recipient().String() + "\n" + identity.String() + "\n"
+	if err := os.WriteFile(keyFile, []byte(originalBody), 0o600); err != nil {
+		t.Fatalf("write age key file: %v", err)
+	}
+
+	res := executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
+		"HOME": home,
+	}, "yes\n\nyes\napi-key\nsandbox\n\ntskey-sandbox\nno\n")
+	if res.err != nil {
+		t.Fatalf("config setup reuse existing key: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+	if !strings.Contains(res.stdout, "Reuse the existing age identity?") {
+		t.Fatalf("expected reuse prompt, got:\n%s", res.stdout)
+	}
+	if !strings.Contains(res.stdout, "Use arrow keys to choose") {
+		t.Fatalf("expected structured choice output, got:\n%s", res.stdout)
+	}
+
+	data, err := os.ReadFile(keyFile)
+	if err != nil {
+		t.Fatalf("read key file: %v", err)
+	}
+	if string(data) != originalBody {
+		t.Fatalf("expected existing key file to remain unchanged, got:\n%s", string(data))
+	}
+
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg, err := os.ReadFile(configFile)
+	if err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+	body := string(cfg)
+	if !strings.Contains(body, "public-key: "+identity.Recipient().String()) {
+		t.Fatalf("expected reused public key in config, got:\n%s", body)
+	}
+	if !strings.Contains(body, "private-key-path: "+keyFile) {
+		t.Fatalf("expected reused private key path in config, got:\n%s", body)
+	}
+	if !strings.Contains(body, "api-key-encrypted:") {
+		t.Fatalf("expected encrypted api key in config, got:\n%s", body)
+	}
+}
+
+func TestConfigSetupCanReplaceExistingAgeIdentityFile(t *testing.T) {
+	identity, err := age.GenerateX25519Identity()
+	if err != nil {
+		t.Fatalf("generate identity: %v", err)
+	}
+
+	home := t.TempDir()
+	keyFile := filepath.Join(home, ".tscli", "age.txt")
+	if err := os.MkdirAll(filepath.Dir(keyFile), 0o755); err != nil {
+		t.Fatalf("create key dir: %v", err)
+	}
+	originalBody := identity.String() + "\n"
+	if err := os.WriteFile(keyFile, []byte(originalBody), 0o600); err != nil {
+		t.Fatalf("write age key file: %v", err)
+	}
+
+	res := executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
+		"HOME": home,
+	}, "yes\n\nno\napi-key\nsandbox\n\ntskey-sandbox\nno\n")
+	if res.err != nil {
+		t.Fatalf("config setup replace existing key: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	data, err := os.ReadFile(keyFile)
+	if err != nil {
+		t.Fatalf("read replaced key file: %v", err)
+	}
+	if string(data) == originalBody {
+		t.Fatalf("expected key file to be replaced")
+	}
+	if !strings.Contains(string(data), "AGE-SECRET-KEY-") {
+		t.Fatalf("expected generated key file contents, got:\n%s", string(data))
+	}
+}
+
+func TestConfigSetupInvalidExistingAgeIdentityFallsBackToGeneration(t *testing.T) {
+	home := t.TempDir()
+	keyFile := filepath.Join(home, ".tscli", "age.txt")
+	if err := os.MkdirAll(filepath.Dir(keyFile), 0o755); err != nil {
+		t.Fatalf("create key dir: %v", err)
+	}
+	if err := os.WriteFile(keyFile, []byte("not-an-age-key\n"), 0o600); err != nil {
+		t.Fatalf("write invalid key file: %v", err)
+	}
+
+	res := executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
+		"HOME": home,
+	}, "yes\n\napi-key\nsandbox\n\ntskey-sandbox\nno\n")
+	if res.err != nil {
+		t.Fatalf("config setup invalid existing key fallback: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+	if !strings.Contains(res.stdout, "could not be reused") {
+		t.Fatalf("expected invalid key fallback message, got:\n%s", res.stdout)
+	}
+
+	data, err := os.ReadFile(keyFile)
+	if err != nil {
+		t.Fatalf("read generated key file: %v", err)
+	}
+	if !strings.Contains(string(data), "AGE-SECRET-KEY-") {
+		t.Fatalf("expected generated key file after fallback, got:\n%s", string(data))
+	}
+}
+
+func TestConfigSetupRerunCanAddAndDeleteProfiles(t *testing.T) {
+	home := t.TempDir()
+
+	res := executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
+		"HOME": home,
+	}, "yes\n\napi-key\nsandbox\n\ntskey-sandbox\nyes\noauth\norg-admin\n\ncid\nsecret\nno\n")
+	if res.err != nil {
+		t.Fatalf("config setup initial run: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	res = executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
+		"HOME": home,
+	}, "delete\norg-admin\nquit\n")
+	if res.err != nil {
+		t.Fatalf("config setup rerun delete: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+	if !strings.Contains(res.stdout, "Add, modify, or delete profiles?") {
+		t.Fatalf("expected rerun management prompt, got:\n%s", res.stdout)
+	}
+
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg, err := os.ReadFile(configFile)
+	if err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+	body := string(cfg)
+	if !strings.Contains(body, "api-key-encrypted:") {
+		t.Fatalf("expected encrypted api key to remain, got:\n%s", body)
+	}
+	if !strings.Contains(body, "active-tailnet: sandbox") {
+		t.Fatalf("expected sandbox to remain active, got:\n%s", body)
+	}
+	if strings.Contains(body, "name: org-admin") || strings.Contains(body, "oauth-client-id: cid") || strings.Contains(body, "oauth-client-secret-encrypted:") {
+		t.Fatalf("expected deleted oauth profile to be removed, got:\n%s", body)
+	}
+}
+
+func TestConfigSetupRerunCanModifySelectedProfile(t *testing.T) {
+	home := t.TempDir()
+
+	res := executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
+		"HOME": home,
+	}, "no\noauth\norg-admin\nexample.ts.net\ncid\nsecret\nno\n")
+	if res.err != nil {
+		t.Fatalf("config setup initial run: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	res = executeCLINoDefaultsWithInput(t, []string{"config", "setup"}, map[string]string{
+		"HOME": home,
+	}, "modify\norg-admin\n\n\n\nupdated-secret\nquit\n")
+	if res.err != nil {
+		t.Fatalf("config setup rerun modify: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+	if !strings.Contains(res.stdout, "Select a profile to modify") {
+		t.Fatalf("expected modify selection prompt, got:\n%s", res.stdout)
+	}
+
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg, err := os.ReadFile(configFile)
+	if err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+	body := string(cfg)
+	if !strings.Contains(body, "name: org-admin") {
+		t.Fatalf("expected updated profile to remain present, got:\n%s", body)
+	}
+	if !strings.Contains(body, "tailnet: example.ts.net") {
+		t.Fatalf("expected existing tailnet override to be preserved, got:\n%s", body)
+	}
+	if !strings.Contains(body, "oauth-client-id: cid") {
+		t.Fatalf("expected existing oauth client id to be preserved, got:\n%s", body)
+	}
+	if !strings.Contains(body, "oauth-client-secret: updated-secret") {
+		t.Fatalf("expected oauth client secret to be updated, got:\n%s", body)
+	}
+	if strings.Contains(body, "oauth-client-secret: secret") {
+		t.Fatalf("expected old oauth client secret to be replaced, got:\n%s", body)
+	}
+}
+
+func TestConfigProfilesEncryptSecretsWhenEnabled(t *testing.T) {
+	identity, err := age.GenerateX25519Identity()
+	if err != nil {
+		t.Fatalf("generate identity: %v", err)
+	}
+
+	home := t.TempDir()
+	res := executeCLINoDefaults(t, []string{"config", "encryption", "setup", "--public-key", identity.Recipient().String(), "--private-key-source", "env"}, map[string]string{
+		"HOME": home,
+	})
+	if res.err != nil {
+		t.Fatalf("config encryption setup: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	res = executeCLINoDefaults(t, []string{"config", "profiles", "set", "sandbox", "--api-key", "tskey-sandbox"}, map[string]string{
+		"HOME": home,
+	})
+	if res.err != nil {
+		t.Fatalf("upsert encrypted api-key profile: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	res = executeCLINoDefaults(t, []string{"config", "profiles", "set", "org-admin", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, map[string]string{
+		"HOME": home,
+	})
+	if res.err != nil {
+		t.Fatalf("upsert encrypted oauth profile: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg, err := os.ReadFile(configFile)
+	if err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+	body := string(cfg)
+	if strings.Contains(body, "api-key: tskey-sandbox") {
+		t.Fatalf("did not expect plaintext api-key in encrypted config:\n%s", body)
+	}
+	if strings.Contains(body, "oauth-client-secret: secret") {
+		t.Fatalf("did not expect plaintext oauth-client-secret in encrypted config:\n%s", body)
+	}
+	if !strings.Contains(body, "api-key-encrypted:") || !strings.Contains(body, "oauth-client-secret-encrypted:") {
+		t.Fatalf("expected encrypted sibling fields, got:\n%s", body)
+	}
+
+	res = executeCLINoDefaults(t, []string{"config", "profiles", "list"}, map[string]string{
+		"HOME": home,
+	})
+	if res.err != nil {
+		t.Fatalf("list encrypted profiles: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+}
+
 func TestConfigProfilesUpsertUsesProfileTailnetFlag(t *testing.T) {
 	home := t.TempDir()
 
-	res := executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "sandbox", "--api-key", "tskey-sandbox", "--profile-tailnet", "example.ts.net"}, map[string]string{
+	res := executeCLINoDefaults(t, []string{"config", "profiles", "set", "sandbox", "--api-key", "tskey-sandbox", "--profile-tailnet", "example.ts.net"}, map[string]string{
 		"HOME": home,
 	})
 	if res.err != nil {
@@ -184,7 +604,7 @@ func TestConfigProfilesUpsertUsesProfileTailnetFlag(t *testing.T) {
 func TestConfigProfilesUpsertAcceptsDeprecatedTailnetAlias(t *testing.T) {
 	home := t.TempDir()
 
-	res := executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "sandbox", "--api-key", "tskey-sandbox", "--tailnet", "example.ts.net"}, map[string]string{
+	res := executeCLINoDefaults(t, []string{"config", "profiles", "set", "sandbox", "--api-key", "tskey-sandbox", "--tailnet", "example.ts.net"}, map[string]string{
 		"HOME": home,
 	})
 	if res.err != nil {
@@ -202,7 +622,7 @@ func TestConfigProfilesUpsertAcceptsDeprecatedTailnetAlias(t *testing.T) {
 }
 
 func TestConfigProfilesUpsertRejectsMixedAuthShapes(t *testing.T) {
-	res := executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "mixed", "--api-key", "tskey-mixed", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, nil)
+	res := executeCLINoDefaults(t, []string{"config", "profiles", "set", "mixed", "--api-key", "tskey-mixed", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, nil)
 	if res.err == nil {
 		t.Fatalf("expected mixed auth shape to fail")
 	}
@@ -249,8 +669,8 @@ func TestSwitchingActiveProfileChangesRuntimeTailnet(t *testing.T) {
 	home := t.TempDir()
 
 	for _, args := range [][]string{
-		{"config", "profiles", "upsert", "sandbox", "--api-key", "tskey-sandbox"},
-		{"config", "profiles", "upsert", "prod", "--api-key", "tskey-prod"},
+		{"config", "profiles", "set", "sandbox", "--api-key", "tskey-sandbox"},
+		{"config", "profiles", "set", "prod", "--api-key", "tskey-prod"},
 	} {
 		res := executeCLINoDefaults(t, args, map[string]string{"HOME": home})
 		if res.err != nil {
