@@ -2,7 +2,7 @@
 
 - New uncovered operations: `0`
 - New uncovered properties: `0`
-- New unmapped commands: `3`
+- New unmapped commands: `0`
 
 ## New Uncovered Operations
 
@@ -14,6 +14,4 @@
 
 ## New Unmapped Commands
 
-- `create tailnet`
-- `delete tailnet`
-- `list tailnets`
+- None

@@ -2,18 +2,23 @@
   "openapi_operations": 85,
   "excluded_operations": [],
   "in_scope_operations": 85,
-  "manifest_commands": 94,
+  "manifest_commands": 97,
   "excluded_commands": [
     "agent init",
     "agent update",
+    "config encryption setup",
     "config get",
     "config profiles delete",
     "config profiles list",
+    "config profiles set",
     "config profiles set-active",
-    "config profiles upsert",
     "config set",
+    "config setup",
     "config show",
+    "create tailnet",
     "create token",
+    "delete tailnet",
+    "list tailnets",
     "version"
   ],
   "covered_operations": [
@@ -122,6 +127,7 @@
     "delete service",
     "delete user",
     "delete user invite",
+    "delete users",
     "delete webhook",
     "get contacts",
     "get device",
@@ -188,11 +194,7 @@
     "set webhook",
     "set webhook test"
   ],
-  "unmapped_commands": [
-    "create tailnet",
-    "delete tailnet",
-    "list tailnets"
-  ],
+  "unmapped_commands": [],
   "unknown_mapped_commands": [],
   "command_mappings": {
     "create invite device": "post /device/{deviceId}/device-invites",
@@ -210,6 +212,7 @@
     "delete service": "delete /tailnet/{tailnet}/services/{serviceName}",
     "delete user": "post /users/{userId}/delete",
     "delete user invite": "delete /user-invites/{userInviteId}",
+    "delete users": "get /tailnet/{tailnet}/users, post /users/{userId}/delete",
     "delete webhook": "delete /webhooks/{endpointId}",
     "get contacts": "get /tailnet/{tailnet}/contacts",
     "get device": "get /device/{deviceId}",
