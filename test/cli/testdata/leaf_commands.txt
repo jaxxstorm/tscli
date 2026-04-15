@@ -24,6 +24,7 @@ delete posture-integration
 delete service
 delete tailnet
 delete user
+delete users
 delete user invite
 delete webhook
 get contacts

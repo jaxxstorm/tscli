@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 	"testing"
@@ -14,6 +15,53 @@ type parityCase struct {
 	method      string
 	pathHint    string
 	successBody any
+}
+
+func TestDeleteUsersCommandWithMockedAPI(t *testing.T) {
+	t.Run("dry run lists candidates without deleting", func(t *testing.T) {
+		mock := apimock.New(t)
+		mock.AddJSON(http.MethodGet, "/users", http.StatusOK, apimock.UserListEnvelope())
+
+		res := executeCLI(t, []string{"delete", "users", "--status", "suspended"}, map[string]string{"TSCLI_BASE_URL": mock.URL()})
+		if res.err != nil {
+			t.Fatalf("unexpected error: %v\nstderr:\n%s", res.err, res.stderr)
+		}
+
+		reqs := mock.Requests()
+		if len(reqs) != 1 {
+			t.Fatalf("expected one request, got %d (%v)", len(reqs), reqs)
+		}
+		if reqs[0].Method != http.MethodGet || !strings.Contains(reqs[0].Path, "/users") {
+			t.Fatalf("unexpected request sequence: %v", reqs)
+		}
+
+		var summary map[string]any
+		if err := json.Unmarshal([]byte(res.stdout), &summary); err != nil {
+			t.Fatalf("unmarshal stdout: %v\nstdout:\n%s", err, res.stdout)
+		}
+		if summary["total"] != float64(1) {
+			t.Fatalf("expected total=1, got %v", summary["total"])
+		}
+	})
+
+	t.Run("confirm deletes matching users", func(t *testing.T) {
+		mock := apimock.New(t)
+		mock.AddJSON(http.MethodGet, "/users", http.StatusOK, apimock.UserListEnvelope())
+		mock.AddJSON(http.MethodPost, "/users/user-2/delete", http.StatusOK, map[string]any{})
+
+		res := executeCLI(t, []string{"delete", "users", "--status", "suspended", "--confirm"}, map[string]string{"TSCLI_BASE_URL": mock.URL()})
+		if res.err != nil {
+			t.Fatalf("unexpected error: %v\nstderr:\n%s", res.err, res.stderr)
+		}
+
+		reqs := mock.Requests()
+		if len(reqs) != 2 {
+			t.Fatalf("expected two requests, got %d (%v)", len(reqs), reqs)
+		}
+		if reqs[1].Method != http.MethodPost || !strings.Contains(reqs[1].Path, "/users/user-2/delete") {
+			t.Fatalf("unexpected delete request: %v", reqs[1])
+		}
+	})
 }
 
 func TestParityCommandsWithMockedAPI(t *testing.T) {
@@ -78,6 +126,9 @@ func TestParityCommandValidation(t *testing.T) {
 		errContains string
 	}{
 		{name: "set dns configuration requires payload", args: []string{"set", "dns", "configuration"}, errContains: "required"},
+		{name: "delete users requires filters", args: []string{"delete", "users"}, errContains: "at least one of --status, --last-seen, or --devices is required"},
+		{name: "delete users rejects active status", args: []string{"delete", "users", "--status", "active"}, errContains: "inactive|suspended"},
+		{name: "delete users rejects mixed activity filters", args: []string{"delete", "users", "--status", "suspended", "--last-seen", "24h"}, errContains: "mutually exclusive"},
 		{name: "set key requires payload", args: []string{"set", "key", "--key", "k123"}, errContains: "required"},
 		{name: "set service approval requires approved", args: []string{"set", "service", "approval", "--service", "svc", "--device", "node-1"}, errContains: "approved"},
 		{name: "set webhook requires action", args: []string{"set", "webhook", "--id", "wh-1"}, errContains: "subscription"},

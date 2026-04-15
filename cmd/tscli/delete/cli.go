@@ -9,6 +9,7 @@ import (
 	"github.com/jaxxstorm/tscli/cmd/tscli/delete/service"
 	"github.com/jaxxstorm/tscli/cmd/tscli/delete/tailnet"
 	"github.com/jaxxstorm/tscli/cmd/tscli/delete/user"
+	"github.com/jaxxstorm/tscli/cmd/tscli/delete/users"
 	"github.com/jaxxstorm/tscli/cmd/tscli/delete/webhook"
 	"github.com/spf13/cobra"
 )
@@ -23,6 +24,7 @@ func Command() *cobra.Command {
 	command.AddCommand(device.Command())
 	command.AddCommand(devices.Command())
 	command.AddCommand(user.Command())
+	command.AddCommand(users.Command())
 	command.AddCommand(key.Command())
 	command.AddCommand(service.Command())
 	command.AddCommand(webhook.Command())

@@ -253,14 +253,39 @@ func ServiceApproval() map[string]any {
 
 func User() map[string]any {
 	return map[string]any{
-		"id":        "user-1",
-		"loginName": "user@example.com",
-		"role":      "member",
+		"id":                 "user-1",
+		"created":            "2025-02-24T19:05:37.458138867Z",
+		"currentlyConnected": false,
+		"deviceCount":        1,
+		"displayName":        "User Example",
+		"lastSeen":           "2026-04-14T21:28:51Z",
+		"loginName":          "user@example.com",
+		"profilePicUrl":      "",
+		"role":               "member",
+		"status":             "active",
+		"tailnetId":          "8193236004369213",
+		"type":               "member",
 	}
 }
 
 func UserList() []map[string]any {
-	return []map[string]any{User()}
+	return []map[string]any{
+		User(),
+		{
+			"id":                 "user-2",
+			"created":            "2025-02-24T19:05:37.458138867Z",
+			"currentlyConnected": false,
+			"deviceCount":        0,
+			"displayName":        "Suspended User",
+			"lastSeen":           "2026-04-10T21:28:51Z",
+			"loginName":          "suspended@example.com",
+			"profilePicUrl":      "",
+			"role":               "member",
+			"status":             "suspended",
+			"tailnetId":          "8193236004369213",
+			"type":               "member",
+		},
+	}
 }
 
 func UserListEnvelope() map[string]any {

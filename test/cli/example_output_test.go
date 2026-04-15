@@ -365,6 +365,13 @@ func exampleOutputCases() []exampleOutputCase {
 		summaryLifecycleCase("delete tailnet", []string{"delete", "tailnet", "--id", "T123", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, "result"),
 		summaryObjectCase("delete service", []string{"delete", "service", "--service", "svc"}, "result"),
 		summaryObjectCase("delete user", []string{"delete", "user", "--user", "user@example.com"}, "result"),
+		customCase("delete users", []string{"delete", "users", "--status", "suspended"}, jsonShapeExpectation{
+			TopLevel:   jsonTopLevelObject,
+			ObjectKeys: []string{"total", "results", "skipped"},
+		}, true, func(t *testing.T, mock *apimock.Server, env map[string]string) {
+			env["TSCLI_BASE_URL"] = mock.URL()
+			mock.AddJSON(http.MethodGet, "/users", http.StatusOK, apimock.UserListEnvelope())
+		}),
 		summaryObjectCase("delete user invite", []string{"delete", "user", "invite", "--id", "invite-1"}, "result"),
 		summaryObjectCase("delete webhook", []string{"delete", "webhook", "--id", "wh-1"}, "result"),
 		apiObjectCase("get contacts", []string{"get", "contacts"}, apimock.Contacts(), "account", "security"),
