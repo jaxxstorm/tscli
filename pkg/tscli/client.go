@@ -17,7 +17,9 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 
+	"github.com/jaxxstorm/tscli/pkg/oauth"
 	"github.com/jaxxstorm/tscli/pkg/version"
 	"github.com/spf13/viper"
 	tsapi "tailscale.com/client/tailscale/v2"
@@ -36,11 +38,13 @@ func getUserAgent() string {
 func New() (*tsapi.Client, error) {
 	tailnet := viper.GetString("tailnet")
 	apiKey := viper.GetString("api-key")
+	oauthClientID := viper.GetString("oauth-client-id")
+	oauthClientSecret := viper.GetString("oauth-client-secret")
 	baseURL := viper.GetString("base-url")
 	if tailnet == "" {
 		return nil, fmt.Errorf("tailnet is required")
 	}
-	if apiKey == "" {
+	if apiKey == "" && (oauthClientID == "" || oauthClientSecret == "") {
 		return nil, fmt.Errorf("api-key is required")
 	}
 
@@ -63,9 +67,27 @@ func New() (*tsapi.Client, error) {
 
 	client := &tsapi.Client{
 		Tailnet:   tailnet,
-		APIKey:    apiKey,
 		UserAgent: userAgent,
 		HTTP:      httpClient,
+	}
+
+	if apiKey != "" {
+		client.APIKey = apiKey
+	} else {
+		tokenURL := os.Getenv("TSCLI_OAUTH_TOKEN_URL")
+		if tokenURL == "" {
+			resolvedBaseURL := baseURL
+			if resolvedBaseURL == "" {
+				resolvedBaseURL = defaultBaseURL
+			}
+			tokenURL = strings.TrimRight(resolvedBaseURL, "/") + "/api/v2/oauth/token"
+		}
+		httpClient.Transport = &oauthBearerTransport{
+			rt:           httpClient.Transport,
+			clientID:     oauthClientID,
+			clientSecret: oauthClientSecret,
+			tokenURL:     tokenURL,
+		}
 	}
 
 	if baseURL != "" {
@@ -77,6 +99,41 @@ func New() (*tsapi.Client, error) {
 	}
 
 	return client, nil
+}
+
+type oauthBearerTransport struct {
+	rt           http.RoundTripper
+	clientID     string
+	clientSecret string
+	tokenURL     string
+
+	mu          sync.Mutex
+	accessToken string
+}
+
+func (t *oauthBearerTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	accessToken, err := t.token(req.Context())
+	if err != nil {
+		return nil, err
+	}
+	clone := req.Clone(req.Context())
+	clone.Header = req.Header.Clone()
+	clone.Header.Set("Authorization", "Bearer "+accessToken)
+	return t.rt.RoundTrip(clone)
+}
+
+func (t *oauthBearerTransport) token(ctx context.Context) (string, error) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	if t.accessToken != "" {
+		return t.accessToken, nil
+	}
+	resp, err := oauth.ExchangeClientCredentialsAtURL(ctx, t.clientID, t.clientSecret, t.tokenURL)
+	if err != nil {
+		return "", fmt.Errorf("exchange oauth credentials: %w", err)
+	}
+	t.accessToken = resp.AccessToken
+	return t.accessToken, nil
 }
 
 // Do performs an HTTP call on top of an existing *tsapi.Client.  Useful for

@@ -73,6 +73,32 @@ func TestGeneratedCommandDocsArtifactsExist(t *testing.T) {
 	}
 }
 
+func TestAuthAndConfigDocsCoverEncryptionAndOAuthProfiles(t *testing.T) {
+	authDoc := readRepoFile(t, "docs/authentication.md")
+	for _, part := range []string{
+		"tscli config encryption setup",
+		"TSCLI_AGE_PRIVATE_KEY",
+		"oauth-client-secret-encrypted",
+		"private-key-command",
+	} {
+		if !strings.Contains(authDoc, part) {
+			t.Fatalf("expected authentication docs to include %q", part)
+		}
+	}
+
+	configDoc := readRepoFile(t, "docs/configuration.md")
+	for _, part := range []string{
+		"api-key-encrypted",
+		"oauth-client-secret-encrypted",
+		"encryption.age.public-key",
+		"config encryption setup",
+	} {
+		if !strings.Contains(configDoc, part) {
+			t.Fatalf("expected configuration docs to include %q", part)
+		}
+	}
+}
+
 func assertFileExists(t *testing.T, rel string) {
 	t.Helper()
 	if _, err := os.Stat(repoPath(rel)); err != nil {

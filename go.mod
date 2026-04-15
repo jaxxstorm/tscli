@@ -3,6 +3,7 @@ module github.com/jaxxstorm/tscli
 go 1.26.0
 
 require (
+	filippo.io/age v1.3.1
 	github.com/charmbracelet/fang v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/jaxxstorm/vers v0.0.3
@@ -19,6 +20,7 @@ require (
 require (
 	charm.land/lipgloss/v2 v2.0.2 // indirect
 	dario.cat/mergo v1.0.2 // indirect
+	filippo.io/hpke v0.4.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.4.1 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect

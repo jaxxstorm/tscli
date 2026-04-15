@@ -23,6 +23,10 @@ func ExchangeClientCredentials(ctx context.Context, clientID, clientSecret strin
 	if tokenURL == "" {
 		tokenURL = "https://api.tailscale.com/api/v2/oauth/token"
 	}
+	return ExchangeClientCredentialsAtURL(ctx, clientID, clientSecret, tokenURL)
+}
+
+func ExchangeClientCredentialsAtURL(ctx context.Context, clientID, clientSecret, tokenURL string) (*TokenResponse, error) {
 
 	config := &clientcredentials.Config{
 		ClientID:     clientID,

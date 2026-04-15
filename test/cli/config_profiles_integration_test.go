@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"filippo.io/age"
 	"github.com/jaxxstorm/tscli/internal/testutil/apimock"
 )
 
@@ -155,6 +156,82 @@ func TestConfigProfilesSupportOAuthCredentials(t *testing.T) {
 	res = executeCLINoDefaults(t, []string{"config", "profiles", "delete", "org-admin"}, map[string]string{"HOME": home})
 	if res.err == nil {
 		t.Fatalf("expected deleting active oauth profile to fail")
+	}
+}
+
+func TestConfigEncryptionSetupPersistsAgeConfig(t *testing.T) {
+	identity, err := age.GenerateX25519Identity()
+	if err != nil {
+		t.Fatalf("generate identity: %v", err)
+	}
+
+	home := t.TempDir()
+	res := executeCLINoDefaults(t, []string{"config", "encryption", "setup", "--public-key", identity.Recipient().String(), "--private-key-source", "env"}, map[string]string{
+		"HOME": home,
+	})
+	if res.err != nil {
+		t.Fatalf("config encryption setup: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg, err := os.ReadFile(configFile)
+	if err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+	if !strings.Contains(string(cfg), "public-key: "+identity.Recipient().String()) {
+		t.Fatalf("expected persisted age public key, got:\n%s", string(cfg))
+	}
+}
+
+func TestConfigProfilesEncryptSecretsWhenEnabled(t *testing.T) {
+	identity, err := age.GenerateX25519Identity()
+	if err != nil {
+		t.Fatalf("generate identity: %v", err)
+	}
+
+	home := t.TempDir()
+	res := executeCLINoDefaults(t, []string{"config", "encryption", "setup", "--public-key", identity.Recipient().String(), "--private-key-source", "env"}, map[string]string{
+		"HOME": home,
+	})
+	if res.err != nil {
+		t.Fatalf("config encryption setup: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	res = executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "sandbox", "--api-key", "tskey-sandbox"}, map[string]string{
+		"HOME": home,
+	})
+	if res.err != nil {
+		t.Fatalf("upsert encrypted api-key profile: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	res = executeCLINoDefaults(t, []string{"config", "profiles", "upsert", "org-admin", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, map[string]string{
+		"HOME": home,
+	})
+	if res.err != nil {
+		t.Fatalf("upsert encrypted oauth profile: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg, err := os.ReadFile(configFile)
+	if err != nil {
+		t.Fatalf("read config file: %v", err)
+	}
+	body := string(cfg)
+	if strings.Contains(body, "api-key: tskey-sandbox") {
+		t.Fatalf("did not expect plaintext api-key in encrypted config:\n%s", body)
+	}
+	if strings.Contains(body, "oauth-client-secret: secret") {
+		t.Fatalf("did not expect plaintext oauth-client-secret in encrypted config:\n%s", body)
+	}
+	if !strings.Contains(body, "api-key-encrypted:") || !strings.Contains(body, "oauth-client-secret-encrypted:") {
+		t.Fatalf("expected encrypted sibling fields, got:\n%s", body)
+	}
+
+	res = executeCLINoDefaults(t, []string{"config", "profiles", "list"}, map[string]string{
+		"HOME": home,
+	})
+	if res.err != nil {
+		t.Fatalf("list encrypted profiles: %v\nstderr:\n%s", res.err, res.stderr)
 	}
 }
 

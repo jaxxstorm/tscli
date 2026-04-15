@@ -26,6 +26,7 @@ Commands that show tscli's configuration
 ### SEE ALSO
 
 * [tscli](tscli.md)	 - 
+* [tscli config encryption](tscli_config_encryption.md)	 - Manage config secret encryption
 * [tscli config get](tscli_config_get.md)	 - Print a single config value
 * [tscli config profiles](tscli_config_profiles.md)	 - Manage tailnet profiles
 * [tscli config set](tscli_config_set.md)	 - Persist a config value (~/.tscli.yaml)

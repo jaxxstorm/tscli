@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"filippo.io/age"
 	"github.com/jaxxstorm/tscli/internal/testutil/apimock"
 )
 
@@ -329,6 +330,13 @@ func exampleOutputCases() []exampleOutputCase {
 			}
 		}, "tscli agent integrations updated"),
 		localTextCase("config get", []string{"config", "get", "output"}, nil, "json"),
+		localTextCaseWithArgs("config encryption setup", func(t *testing.T, _ map[string]string) []string {
+			identity, err := age.GenerateX25519Identity()
+			if err != nil {
+				t.Fatalf("generate identity: %v", err)
+			}
+			return []string{"config", "encryption", "setup", "--public-key", identity.Recipient().String(), "--private-key-source", "env"}
+		}, nil, "config encryption saved"),
 		localTextCase("config profiles delete", []string{"config", "profiles", "delete", "sandbox"}, setupProfileHome, "tailnet profile sandbox removed"),
 		localObjectCase("config profiles list", []string{"config", "profiles", "list"}, setupProfileHome, jsonShapeExpectation{
 			TopLevel:   jsonTopLevelObject,

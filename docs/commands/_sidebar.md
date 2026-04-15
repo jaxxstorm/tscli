@@ -5,6 +5,8 @@
 - [tscli agent init](tscli_agent_init.md)
 - [tscli agent update](tscli_agent_update.md)
 - [tscli config](tscli_config.md)
+- [tscli config encryption](tscli_config_encryption.md)
+- [tscli config encryption setup](tscli_config_encryption_setup.md)
 - [tscli config get](tscli_config_get.md)
 - [tscli config profiles](tscli_config_profiles.md)
 - [tscli config profiles delete](tscli_config_profiles_delete.md)
