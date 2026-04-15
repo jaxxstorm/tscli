@@ -300,9 +300,7 @@ func (m model) submit() (tea.Model, tea.Cmd) {
 		switch normalizeAuthType(value) {
 		case "api-key":
 			if currentProfileAuthType(m.profile) != "api-key" {
-				m.profile.APIKey = ""
-				m.profile.OAuthClientID = ""
-				m.profile.OAuthClientSecret = ""
+				m.profile = clearProfileAuth(m.profile)
 			}
 			m.authType = "api-key"
 			if m.editing {
@@ -313,9 +311,7 @@ func (m model) submit() (tea.Model, tea.Cmd) {
 			m.choiceIndex = 0
 		case "oauth":
 			if currentProfileAuthType(m.profile) != "oauth" {
-				m.profile.APIKey = ""
-				m.profile.OAuthClientID = ""
-				m.profile.OAuthClientSecret = ""
+				m.profile = clearProfileAuth(m.profile)
 			}
 			m.authType = "oauth"
 			if m.editing {
@@ -336,7 +332,7 @@ func (m model) submit() (tea.Model, tea.Cmd) {
 		m.profile = selected
 		m.editing = true
 		m.choiceIndex = 0
-		if selected.OAuthClientID != "" || selected.OAuthClientSecret != "" {
+		if currentProfileAuthType(selected) == "oauth" {
 			m.authType = "oauth"
 			m.choiceIndex = 1
 		} else {
@@ -360,7 +356,7 @@ func (m model) submit() (tea.Model, tea.Cmd) {
 			m.step = stepAPIKey
 		}
 	case stepAPIKey:
-		if value == "" && m.editing && m.profile.APIKey != "" {
+		if value == "" && m.editing && hasStoredAPIKey(m.profile) {
 			created, err := config.UpsertTailnetProfile(m.profile)
 			if err != nil {
 				m.err = err
@@ -384,6 +380,7 @@ func (m model) submit() (tea.Model, tea.Cmd) {
 			break
 		}
 		m.profile.APIKey = value
+		m.profile.APIKeyEncrypted = ""
 		created, err := config.UpsertTailnetProfile(m.profile)
 		if err != nil {
 			m.err = err
@@ -416,7 +413,7 @@ func (m model) submit() (tea.Model, tea.Cmd) {
 		m.profile.OAuthClientID = value
 		m.step = stepOAuthClientSecret
 	case stepOAuthClientSecret:
-		if value == "" && m.editing && m.profile.OAuthClientSecret != "" {
+		if value == "" && m.editing && hasStoredOAuthClientSecret(m.profile) {
 			created, err := config.UpsertTailnetProfile(m.profile)
 			if err != nil {
 				m.err = err
@@ -440,6 +437,7 @@ func (m model) submit() (tea.Model, tea.Cmd) {
 			break
 		}
 		m.profile.OAuthClientSecret = value
+		m.profile.OAuthClientSecretEncrypted = ""
 		created, err := config.UpsertTailnetProfile(m.profile)
 		if err != nil {
 			m.err = err
@@ -625,7 +623,7 @@ func (m model) View() string {
 		b.WriteString(m.input)
 	case stepAPIKey:
 		b.WriteString("API key")
-		if m.editing && m.profile.APIKey != "" {
+		if m.editing && hasStoredAPIKey(m.profile) {
 			b.WriteString(" [press Enter to keep current]")
 		}
 		b.WriteString(": ")
@@ -641,7 +639,7 @@ func (m model) View() string {
 		b.WriteString(m.input)
 	case stepOAuthClientSecret:
 		b.WriteString("OAuth client secret")
-		if m.editing && m.profile.OAuthClientSecret != "" {
+		if m.editing && hasStoredOAuthClientSecret(m.profile) {
 			b.WriteString(" [press Enter to keep current]")
 		}
 		b.WriteString(": ")
@@ -843,13 +841,30 @@ func (m model) profileByName(name string) (config.TailnetProfile, bool) {
 }
 
 func currentProfileAuthType(profile config.TailnetProfile) string {
-	if profile.OAuthClientID != "" || profile.OAuthClientSecret != "" {
+	if profile.OAuthClientID != "" || profile.OAuthClientSecret != "" || profile.OAuthClientSecretEncrypted != "" {
 		return "oauth"
 	}
-	if profile.APIKey != "" {
+	if profile.APIKey != "" || profile.APIKeyEncrypted != "" {
 		return "api-key"
 	}
 	return ""
+}
+
+func clearProfileAuth(profile config.TailnetProfile) config.TailnetProfile {
+	profile.APIKey = ""
+	profile.APIKeyEncrypted = ""
+	profile.OAuthClientID = ""
+	profile.OAuthClientSecret = ""
+	profile.OAuthClientSecretEncrypted = ""
+	return profile
+}
+
+func hasStoredAPIKey(profile config.TailnetProfile) bool {
+	return profile.APIKey != "" || profile.APIKeyEncrypted != ""
+}
+
+func hasStoredOAuthClientSecret(profile config.TailnetProfile) bool {
+	return profile.OAuthClientSecret != "" || profile.OAuthClientSecretEncrypted != ""
 }
 
 func isTerminalReader(r io.Reader) bool {

@@ -3,10 +3,12 @@ package upsert
 import (
 	"bufio"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/jaxxstorm/tscli/pkg/config"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 )
 
 func Command() *cobra.Command {
@@ -82,7 +84,7 @@ func promptForProfileAuth(cmd *cobra.Command, reader *bufio.Reader, apiKey, oaut
 			if err := promptForValue(cmd, reader, "OAuth client ID: ", oauthClientID); err != nil {
 				return err
 			}
-			if err := promptForValue(cmd, reader, "OAuth client secret: ", oauthClientSecret); err != nil {
+			if err := promptForSecretValue(cmd, reader, "OAuth client secret: ", oauthClientSecret); err != nil {
 				return err
 			}
 			return nil
@@ -92,7 +94,7 @@ func promptForProfileAuth(cmd *cobra.Command, reader *bufio.Reader, apiKey, oaut
 	}
 
 	if strings.TrimSpace(*apiKey) == "" && strings.TrimSpace(*oauthClientID) == "" && strings.TrimSpace(*oauthClientSecret) == "" {
-		return promptForValue(cmd, reader, "API key: ", apiKey)
+		return promptForSecretValue(cmd, reader, "API key: ", apiKey)
 	}
 	if strings.TrimSpace(*apiKey) == "" && (strings.TrimSpace(*oauthClientID) == "" || strings.TrimSpace(*oauthClientSecret) == "") {
 		if strings.TrimSpace(*oauthClientID) == "" {
@@ -101,7 +103,7 @@ func promptForProfileAuth(cmd *cobra.Command, reader *bufio.Reader, apiKey, oaut
 			}
 		}
 		if strings.TrimSpace(*oauthClientSecret) == "" {
-			if err := promptForValue(cmd, reader, "OAuth client secret: ", oauthClientSecret); err != nil {
+			if err := promptForSecretValue(cmd, reader, "OAuth client secret: ", oauthClientSecret); err != nil {
 				return err
 			}
 		}
@@ -121,4 +123,25 @@ func promptForValue(cmd *cobra.Command, reader *bufio.Reader, prompt string, tar
 	}
 	*target = strings.TrimSpace(value)
 	return nil
+}
+
+func promptForSecretValue(cmd *cobra.Command, reader *bufio.Reader, prompt string, target *string) error {
+	if strings.TrimSpace(*target) != "" {
+		return nil
+	}
+
+	inFile, inOK := cmd.InOrStdin().(*os.File)
+	outFile, outOK := cmd.OutOrStdout().(*os.File)
+	if inOK && outOK && term.IsTerminal(int(inFile.Fd())) && term.IsTerminal(int(outFile.Fd())) {
+		fmt.Fprint(outFile, prompt)
+		value, err := term.ReadPassword(int(inFile.Fd()))
+		fmt.Fprintln(outFile)
+		if err != nil {
+			return err
+		}
+		*target = strings.TrimSpace(string(value))
+		return nil
+	}
+
+	return promptForValue(cmd, reader, prompt, target)
 }

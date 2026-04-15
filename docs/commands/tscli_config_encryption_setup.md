@@ -16,9 +16,9 @@ tscli config encryption setup [flags]
 
 ```
   -h, --help                         help for setup
-      --private-key string           AGE private key stored in config when --private-key-source=config
       --private-key-command string   Command that returns the AGE private key when --private-key-source=command
-      --private-key-source string    How to provide the AGE private key: config, env, or command
+      --private-key-path string      Path to an AGE private key file when --private-key-source=path
+      --private-key-source string    How to provide the AGE private key: path, env, or command
       --public-key string            AGE public key used to encrypt persisted secrets
 ```
 

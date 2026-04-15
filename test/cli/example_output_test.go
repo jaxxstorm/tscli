@@ -307,9 +307,11 @@ func runExampleOutputCase(t *testing.T, tc exampleOutputCase, mode string) execR
 		tc.setup(t, mock, env)
 	}
 
-	res := executeCLI(t, args, env)
+	var res execResult
 	if tc.input != "" {
 		res = executeCLIWithInput(t, args, env, tc.input)
+	} else {
+		res = executeCLI(t, args, env)
 	}
 	if res.err != nil {
 		t.Fatalf("unexpected error for %q: %v\nstderr:\n%s", tc.command, res.err, res.stderr)

@@ -118,6 +118,44 @@ func TestCommandsWithPreRunUseActiveOAuthProfileRuntimeConfig(t *testing.T) {
 	}
 }
 
+func TestCommandsWithPreRunPreferActiveOAuthProfileOverLegacyAPIKey(t *testing.T) {
+	home := t.TempDir()
+	configFile := filepath.Join(home, ".tscli.yaml")
+	cfg := strings.Join([]string{
+		"output: json",
+		"api-key: stale-legacy-key",
+		"active-tailnet: org-admin",
+		"tailnets:",
+		"  - name: org-admin",
+		"    oauth-client-id: cid-profile",
+		"    oauth-client-secret: secret-profile",
+		"",
+	}, "\n")
+	if err := os.WriteFile(configFile, []byte(cfg), 0o600); err != nil {
+		t.Fatalf("write config file: %v", err)
+	}
+
+	mock := apimock.New(t)
+	mock.AddRaw(http.MethodPost, "/api/v2/oauth/token", http.StatusOK, `{"access_token":"tok-profile","token_type":"Bearer","expires_in":3600}`)
+	mock.AddJSON(http.MethodGet, "/tailnet/org-admin/devices", http.StatusOK, apimock.DeviceList())
+
+	res := executeCLINoDefaults(t, []string{"list", "devices"}, map[string]string{
+		"HOME":           home,
+		"TSCLI_BASE_URL": mock.URL(),
+	})
+	if res.err != nil {
+		t.Fatalf("unexpected error: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	reqs := mock.Requests()
+	if len(reqs) < 2 {
+		t.Fatalf("expected token exchange and api request, got %+v", reqs)
+	}
+	if got := reqs[1].Header.Get("Authorization"); got != "Bearer tok-profile" {
+		t.Fatalf("expected bearer auth on general API request, got %q", got)
+	}
+}
+
 func TestCommandsWithPreRunDecryptEncryptedActiveProfile(t *testing.T) {
 	identity, err := age.GenerateX25519Identity()
 	if err != nil {

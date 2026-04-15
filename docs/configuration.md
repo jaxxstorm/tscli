@@ -8,11 +8,11 @@
 ## Supported keys
 
 - `api-key`: legacy single-profile API key
-- `api-key-encrypted`: encrypted single-profile or profile API key ciphertext
+- `api-key-encrypted`: encrypted profile API key ciphertext within `tailnets`
 - `tailnet`: legacy single-profile tailnet
 - `oauth-client-id`: optional top-level OAuth client id
 - `oauth-client-secret`: optional top-level OAuth client secret
-- `oauth-client-secret-encrypted`: encrypted OAuth client secret ciphertext
+- `oauth-client-secret-encrypted`: encrypted profile OAuth client secret ciphertext within `tailnets`
 - `tailnets`: profile list with per-tailnet credentials
 - `active-tailnet`: selected profile from `tailnets`
 - `encryption.age.public-key`: AGE public key used to encrypt persisted secrets

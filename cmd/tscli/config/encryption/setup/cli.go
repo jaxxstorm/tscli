@@ -29,7 +29,7 @@ func Command() *cobra.Command {
 			interactive := isTerminalReader(cmd.InOrStdin()) && isTerminalWriter(cmd.OutOrStdout())
 
 			if strings.TrimSpace(privateKeySource) == "" {
-				fmt.Fprintln(cmd.OutOrStdout(), "Private key source [path|env|command]: ")
+				fmt.Fprint(cmd.OutOrStdout(), "Private key source [path|env|command]: ")
 				value, err := reader.ReadString('\n')
 				if err != nil {
 					return err

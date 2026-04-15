@@ -150,6 +150,118 @@ func TestSelectProfileUsesCurrentSelection(t *testing.T) {
 	}
 }
 
+func TestSelectProfileUsesEncryptedAuthShape(t *testing.T) {
+	m := model{
+		step: stepSelectProfile,
+		profiles: config.TailnetProfilesState{Tailnets: []config.TailnetProfile{{
+			Name:                       "org-admin",
+			OAuthClientID:              "cid",
+			OAuthClientSecretEncrypted: "ciphertext",
+		}}},
+	}
+
+	updatedModel, _ := m.submit()
+	updated := updatedModel.(model)
+	if updated.authType != "oauth" {
+		t.Fatalf("expected oauth auth type, got %q", updated.authType)
+	}
+	if updated.choiceIndex != 1 {
+		t.Fatalf("expected oauth selection index, got %d", updated.choiceIndex)
+	}
+}
+
+func TestModifyEncryptedProfileKeepsExistingSecrets(t *testing.T) {
+	viper.Reset()
+	t.Cleanup(viper.Reset)
+	t.Setenv("HOME", t.TempDir())
+
+	m := model{
+		step:     stepAPIKey,
+		editing:  true,
+		authType: "api-key",
+		profile: config.TailnetProfile{
+			Name:            "sandbox",
+			APIKeyEncrypted: "ciphertext",
+		},
+	}
+
+	updatedModel, cmd := m.submit()
+	updated := updatedModel.(model)
+	if cmd != nil {
+		t.Fatalf("expected no quit command")
+	}
+	if updated.err != nil {
+		t.Fatalf("expected encrypted api-key to be treated as present, got %v", updated.err)
+	}
+	if updated.step != stepActionChoice {
+		t.Fatalf("expected successful modify to return to action choice, got %q", updated.step)
+	}
+
+	m = model{
+		step:     stepAPIKey,
+		editing:  true,
+		authType: "api-key",
+		input:    "new-key",
+		profile: config.TailnetProfile{
+			Name:            "sandbox",
+			APIKeyEncrypted: "ciphertext",
+		},
+	}
+
+	updatedModel, cmd = m.submit()
+	updated = updatedModel.(model)
+	if cmd != nil {
+		t.Fatalf("expected no quit command")
+	}
+	if updated.err != nil {
+		t.Fatalf("expected encrypted api-key replacement to succeed, got %v", updated.err)
+	}
+
+	m = model{
+		step:     stepOAuthClientSecret,
+		editing:  true,
+		authType: "oauth",
+		profile: config.TailnetProfile{
+			Name:                       "org-admin",
+			OAuthClientID:              "cid",
+			OAuthClientSecretEncrypted: "ciphertext",
+		},
+	}
+
+	updatedModel, cmd = m.submit()
+	updated = updatedModel.(model)
+	if cmd != nil {
+		t.Fatalf("expected no quit command")
+	}
+	if updated.err != nil {
+		t.Fatalf("expected encrypted oauth secret to be treated as present, got %v", updated.err)
+	}
+	if updated.step != stepActionChoice {
+		t.Fatalf("expected successful modify to return to action choice, got %q", updated.step)
+	}
+
+	m = model{
+		step:     stepOAuthClientSecret,
+		editing:  true,
+		authType: "oauth",
+		input:    "updated-secret",
+		profile: config.TailnetProfile{
+			Name:                       "org-admin",
+			OAuthClientID:              "cid",
+			OAuthClientSecretEncrypted: "ciphertext",
+		},
+	}
+
+	updatedModel, cmd = m.submit()
+	updated = updatedModel.(model)
+	if cmd != nil {
+		t.Fatalf("expected no quit command")
+	}
+	if updated.err != nil {
+		t.Fatalf("expected encrypted oauth secret replacement to succeed, got %v", updated.err)
+	}
+}
+
 func TestDeleteProfileChoicesIncludeExistingProfiles(t *testing.T) {
 	m := model{step: stepDeleteProfile, profiles: config.TailnetProfilesState{
 		ActiveTailnet: "sandbox",

@@ -339,6 +339,49 @@ func TestResolveOAuthRuntimeConfigPrecedence(t *testing.T) {
 	})
 }
 
+func TestResolveCommandAuthConfigPrefersActiveProfileShapeOverLegacyAPIKey(t *testing.T) {
+	t.Run("active oauth profile beats legacy api-key", func(t *testing.T) {
+		v := viper.New()
+		v.Set("active-tailnet", "org-admin")
+		v.Set("tailnets", []map[string]any{{
+			"name":                "org-admin",
+			"oauth-client-id":     "profile-id",
+			"oauth-client-secret": "profile-secret",
+		}})
+		v.Set("api-key", "legacy-key")
+
+		resolved, err := resolveCommandAuthConfig(v, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !resolved.UsesOAuth || resolved.Source != "oauth" {
+			t.Fatalf("expected oauth auth source, got %+v", resolved)
+		}
+		if resolved.OAuth.ClientID != "profile-id" || resolved.OAuth.ClientSecret != "profile-secret" {
+			t.Fatalf("expected active profile oauth creds, got %+v", resolved)
+		}
+	})
+
+	t.Run("env api-key still overrides active oauth profile", func(t *testing.T) {
+		v := viper.New()
+		v.Set("active-tailnet", "org-admin")
+		v.Set("tailnets", []map[string]any{{
+			"name":                "org-admin",
+			"oauth-client-id":     "profile-id",
+			"oauth-client-secret": "profile-secret",
+		}})
+		t.Setenv("TAILSCALE_API_KEY", "env-key")
+
+		resolved, err := resolveCommandAuthConfig(v, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if resolved.UsesOAuth || resolved.Source != "api-key" || resolved.APIKey != "env-key" {
+			t.Fatalf("expected env api-key auth, got %+v", resolved)
+		}
+	})
+}
+
 func TestTailnetProfilePersistenceHelpers(t *testing.T) {
 	viper.Reset()
 	t.Cleanup(viper.Reset)

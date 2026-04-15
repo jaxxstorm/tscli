@@ -280,17 +280,23 @@ func resolveCommandAuthConfig(v *viper.Viper, flagOverrides map[string]struct{})
 		tailnet = "-"
 	}
 
+	if auth, ok, err := resolveProfileCommandAuth(v, state, flagOverrides); err != nil {
+		return ResolvedCommandAuth{}, err
+	} else if ok {
+		auth.Tailnet = strings.TrimSpace(tailnet)
+		setResolvedCommandAuth(v, auth)
+		return auth, nil
+	}
+
 	legacyAPIKey := strings.TrimSpace(v.GetString("api-key"))
 	apiKey, apiKeySet, err := resolveWithPrecedence(
 		v,
 		"api-key",
 		"TAILSCALE_API_KEY",
 		legacyAPIKey,
-		state,
+		TailnetProfilesState{},
 		flagOverrides,
-		func(profile TailnetProfile) (string, error) {
-			return profile.ResolveAPIKey(v)
-		},
+		nil,
 	)
 	if err != nil {
 		return ResolvedCommandAuth{}, err
@@ -299,31 +305,97 @@ func resolveCommandAuthConfig(v *viper.Viper, flagOverrides map[string]struct{})
 		if strings.TrimSpace(apiKey) == "" {
 			return ResolvedCommandAuth{}, fmt.Errorf("a Tailscale API key is required")
 		}
-		v.Set("tailnet", strings.TrimSpace(tailnet))
-		v.Set("api-key", strings.TrimSpace(apiKey))
-		v.Set("oauth-client-id", "")
-		v.Set("oauth-client-secret", "")
-		return ResolvedCommandAuth{
+		auth := ResolvedCommandAuth{
 			Tailnet: strings.TrimSpace(tailnet),
 			APIKey:  strings.TrimSpace(apiKey),
 			Source:  "api-key",
-		}, nil
+		}
+		setResolvedCommandAuth(v, auth)
+		return auth, nil
 	}
 
 	creds, err := resolveOAuthRuntimeConfig(v, flagOverrides)
 	if err != nil {
 		return ResolvedCommandAuth{}, err
 	}
-	v.Set("tailnet", strings.TrimSpace(tailnet))
-	v.Set("api-key", "")
-	v.Set("oauth-client-id", creds.ClientID)
-	v.Set("oauth-client-secret", creds.ClientSecret)
-	return ResolvedCommandAuth{
+	auth := ResolvedCommandAuth{
 		Tailnet:   strings.TrimSpace(tailnet),
 		OAuth:     creds,
 		UsesOAuth: true,
 		Source:    "oauth",
-	}, nil
+	}
+	setResolvedCommandAuth(v, auth)
+	return auth, nil
+}
+
+func resolveProfileCommandAuth(v *viper.Viper, state TailnetProfilesState, flagOverrides map[string]struct{}) (ResolvedCommandAuth, bool, error) {
+	if _, ok := flagOverrides["api-key"]; ok {
+		return ResolvedCommandAuth{}, false, nil
+	}
+	if _, ok := flagOverrides["oauth-client-id"]; ok {
+		return ResolvedCommandAuth{}, false, nil
+	}
+	if _, ok := flagOverrides["oauth-client-secret"]; ok {
+		return ResolvedCommandAuth{}, false, nil
+	}
+	if _, ok := os.LookupEnv("TAILSCALE_API_KEY"); ok {
+		return ResolvedCommandAuth{}, false, nil
+	}
+	if _, ok := os.LookupEnv("TSCLI_OAUTH_CLIENT_ID"); ok {
+		return ResolvedCommandAuth{}, false, nil
+	}
+	if _, ok := os.LookupEnv("TSCLI_OAUTH_CLIENT_SECRET"); ok {
+		return ResolvedCommandAuth{}, false, nil
+	}
+	if state.ActiveTailnet == "" {
+		return ResolvedCommandAuth{}, false, nil
+	}
+
+	profile, found := findTailnetProfile(state.Tailnets, state.ActiveTailnet)
+	if !found {
+		return ResolvedCommandAuth{}, false, nil
+	}
+
+	switch profile.AuthType() {
+	case "api-key":
+		apiKey, err := profile.ResolveAPIKey(v)
+		if err != nil {
+			return ResolvedCommandAuth{}, false, err
+		}
+		apiKey = strings.TrimSpace(apiKey)
+		if apiKey == "" {
+			return ResolvedCommandAuth{}, false, fmt.Errorf("a Tailscale API key is required")
+		}
+		return ResolvedCommandAuth{APIKey: apiKey, Source: "api-key"}, true, nil
+	case "oauth":
+		secret, err := profile.ResolveOAuthClientSecret(v)
+		if err != nil {
+			return ResolvedCommandAuth{}, false, err
+		}
+		creds := ResolvedOAuthConfig{
+			ClientID:     strings.TrimSpace(profile.OAuthClientID),
+			ClientSecret: strings.TrimSpace(secret),
+		}
+		if creds.ClientID == "" || creds.ClientSecret == "" {
+			return ResolvedCommandAuth{}, false, fmt.Errorf("OAuth client credentials are required; provide --oauth-client-id and --oauth-client-secret, set TSCLI_OAUTH_CLIENT_ID and TSCLI_OAUTH_CLIENT_SECRET, or configure them on the active profile")
+		}
+		return ResolvedCommandAuth{OAuth: creds, UsesOAuth: true, Source: "oauth"}, true, nil
+	default:
+		return ResolvedCommandAuth{}, false, nil
+	}
+}
+
+func setResolvedCommandAuth(v *viper.Viper, auth ResolvedCommandAuth) {
+	v.Set("tailnet", strings.TrimSpace(auth.Tailnet))
+	v.Set("api-key", strings.TrimSpace(auth.APIKey))
+	if auth.UsesOAuth {
+		v.Set("oauth-client-id", auth.OAuth.ClientID)
+		v.Set("oauth-client-secret", auth.OAuth.ClientSecret)
+		v.Set("api-key", "")
+		return
+	}
+	v.Set("oauth-client-id", "")
+	v.Set("oauth-client-secret", "")
 }
 
 func resolveWithPrecedence(

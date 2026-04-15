@@ -41,3 +41,4 @@ tscli config profiles set sandbox --api-key tskey-xxx --profile-tailnet example.
 ### SEE ALSO
 
 * [tscli config profiles](tscli_config_profiles.md)	 - Manage tailnet profiles
+
