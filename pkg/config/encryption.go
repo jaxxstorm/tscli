@@ -155,18 +155,6 @@ func decryptSecret(v *viper.Viper, ciphertext string) (string, error) {
 }
 
 func resolveAgeIdentity(v *viper.Viper) (age.Identity, error) {
-	if value, ok := os.LookupEnv("TSCLI_AGE_PRIVATE_KEY"); ok {
-		value = strings.TrimSpace(value)
-		if value == "" {
-			return nil, fmt.Errorf("TSCLI_AGE_PRIVATE_KEY is set but empty")
-		}
-		identity, err := parseAgeIdentity(value)
-		if err != nil {
-			return nil, fmt.Errorf("invalid TSCLI_AGE_PRIVATE_KEY: %w", err)
-		}
-		return identity, nil
-	}
-
 	cfg := loadAgeEncryptionConfig(v)
 	if err := validateAgeEncryptionConfig(cfg); err != nil {
 		return nil, err
@@ -197,6 +185,18 @@ func resolveAgeIdentity(v *viper.Viper) (age.Identity, error) {
 		identity, err := age.ParseX25519Identity(cfg.PrivateKey)
 		if err != nil {
 			return nil, fmt.Errorf("invalid encryption.age.private-key: %w", err)
+		}
+		return identity, nil
+	}
+
+	if value, ok := os.LookupEnv("TSCLI_AGE_PRIVATE_KEY"); ok {
+		value = strings.TrimSpace(value)
+		if value == "" {
+			return nil, fmt.Errorf("TSCLI_AGE_PRIVATE_KEY is set but empty")
+		}
+		identity, err := parseAgeIdentity(value)
+		if err != nil {
+			return nil, fmt.Errorf("invalid TSCLI_AGE_PRIVATE_KEY: %w", err)
 		}
 		return identity, nil
 	}
