@@ -79,6 +79,10 @@ func TestResolveRuntimeConfigDecryptsEncryptedProfileSecrets(t *testing.T) {
 	if err != nil {
 		t.Fatalf("generate identity: %v", err)
 	}
+	wrongIdentity, err := age.GenerateX25519Identity()
+	if err != nil {
+		t.Fatalf("generate wrong identity: %v", err)
+	}
 
 	v := viper.New()
 	v.Set("encryption.age.public-key", identity.Recipient().String())
@@ -87,6 +91,7 @@ func TestResolveRuntimeConfigDecryptsEncryptedProfileSecrets(t *testing.T) {
 		t.Fatalf("write private key file: %v", err)
 	}
 	v.Set("encryption.age.private-key-path", privateKeyPath)
+	t.Setenv("TSCLI_AGE_PRIVATE_KEY", wrongIdentity.String())
 
 	ciphertext, err := encryptSecret(v, "tskey-encrypted")
 	if err != nil {

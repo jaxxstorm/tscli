@@ -33,6 +33,8 @@ const (
 	stepSelectProfile     setupStep = "select-profile"
 	stepDeleteProfile     setupStep = "delete-profile"
 	stepAddAnother        setupStep = "add-another"
+	stepOutputChoice      setupStep = "output-choice"
+	stepDebugChoice       setupStep = "debug-choice"
 	stepDone              setupStep = "done"
 )
 
@@ -49,6 +51,9 @@ type model struct {
 	existingIdentity      *config.AgeIdentityFile
 	authType              string
 	profile               config.TailnetProfile
+	outputPreference      string
+	debugPreference       bool
+	initialSetup          bool
 	editing               bool
 	quitting              bool
 }
@@ -59,7 +64,7 @@ func Command() *cobra.Command {
 		Short: "Interactive config setup",
 		Long:  "Launch an interactive Bubble Tea setup flow for optional AGE encryption and tailnet profile management.",
 		Example: "tscli config setup\n" +
-			"tscli config setup  # rerun later to add or delete profiles",
+			"tscli config setup  # rerun later to manage profiles or preferences",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			m, err := newModel()
 			if err != nil {
@@ -131,6 +136,9 @@ func newModel() (model, error) {
 		profiles:              profiles,
 		hasExistingEncryption: hasExistingEncryption,
 		useEncryption:         hasExistingEncryption,
+		outputPreference:      normalizeSetupOutput(viper.GetString("output")),
+		debugPreference:       viper.GetBool("debug"),
+		initialSetup:          len(profiles.Tailnets) == 0,
 	}
 
 	switch {
@@ -230,12 +238,15 @@ func (m model) submit() (tea.Model, tea.Cmd) {
 			}
 			m.step = stepDeleteProfile
 			m.choiceIndex = 0
+		case "settings":
+			m.step = stepOutputChoice
+			m.choiceIndex = outputChoiceIndex(m.outputPreference)
 		case "quit":
 			m.step = stepDone
 			m.message = "Setup complete."
 			return m, tea.Quit
 		default:
-			m.err = fmt.Errorf("choose add, modify, delete, or quit")
+			m.err = fmt.Errorf("choose add, modify, delete, settings, or quit")
 		}
 	case stepEncryptionChoice:
 		switch normalizeYesNo(value) {
@@ -479,12 +490,46 @@ func (m model) submit() (tea.Model, tea.Cmd) {
 			m.step = stepAuthType
 			m.choiceIndex = 0
 		case "no":
+			if m.initialSetup {
+				m.step = stepOutputChoice
+				m.choiceIndex = outputChoiceIndex(m.outputPreference)
+				break
+			}
 			m.step = stepDone
 			m.message = strings.TrimSpace(m.message + " Setup complete.")
 			return m, tea.Quit
 		default:
 			m.err = fmt.Errorf("enter yes or no")
 		}
+	case stepOutputChoice:
+		outputPreference := parseSetupOutputChoice(value)
+		if outputPreference == "" {
+			m.err = fmt.Errorf("choose json, pretty, or human")
+			break
+		}
+		m.outputPreference = outputPreference
+		m.step = stepDebugChoice
+		m.choiceIndex = boolChoiceIndex(m.debugPreference)
+	case stepDebugChoice:
+		switch normalizeYesNo(value) {
+		case "yes":
+			m.debugPreference = true
+		case "no":
+			m.debugPreference = false
+		default:
+			m.err = fmt.Errorf("enter yes or no")
+			break
+		}
+		if err := config.SetPersistentValues(map[string]any{
+			"output": m.outputPreference,
+			"debug":  m.debugPreference,
+		}); err != nil {
+			m.err = err
+			break
+		}
+		m.step = stepDone
+		m.message = strings.TrimSpace(m.message + " Setup complete.")
+		return m, tea.Quit
 	case stepDone:
 		return m, tea.Quit
 	}
@@ -584,7 +629,7 @@ func (m model) View() string {
 
 	switch m.step {
 	case stepActionChoice:
-		m.renderChoiceStep(&b, "Add, modify, or delete profiles?", "[add|modify|delete|quit]", m.input)
+		m.renderChoiceStep(&b, "Manage profiles or preferences?", "[add|modify|delete|settings|quit]", m.input)
 	case stepEncryptionChoice:
 		m.renderChoiceStep(&b, "Encrypt your credentials?", "[yes|no]", m.input)
 	case stepKeyPath:
@@ -648,6 +693,10 @@ func (m model) View() string {
 		m.renderChoiceStep(&b, "Select a profile to delete", "[choose a profile]", m.input)
 	case stepAddAnother:
 		m.renderChoiceStep(&b, "Add another profile?", "[yes|no]", m.input)
+	case stepOutputChoice:
+		m.renderChoiceStep(&b, "Choose your default output format", "[json|pretty|human]", m.input)
+	case stepDebugChoice:
+		m.renderChoiceStep(&b, "Enable debug HTTP request/response logging by default?", "[yes|no]", m.input)
 	case stepDone:
 		if m.message == "" {
 			b.WriteString("Setup complete.")
@@ -665,7 +714,7 @@ type choiceOption struct {
 func (m model) currentChoices() ([]choiceOption, bool) {
 	switch m.step {
 	case stepActionChoice:
-		return []choiceOption{{value: "add", label: "Add profile"}, {value: "modify", label: "Modify profile"}, {value: "delete", label: "Delete profile"}, {value: "quit", label: "Quit"}}, true
+		return []choiceOption{{value: "add", label: "Add profile"}, {value: "modify", label: "Modify profile"}, {value: "delete", label: "Delete profile"}, {value: "settings", label: "Modify preferences"}, {value: "quit", label: "Quit"}}, true
 	case stepEncryptionChoice:
 		return []choiceOption{{value: "yes", label: "Yes, encrypt persisted credentials"}, {value: "no", label: "No, keep credentials in plaintext"}}, true
 	case stepReuseExistingKey:
@@ -684,6 +733,10 @@ func (m model) currentChoices() ([]choiceOption, bool) {
 		return choices, true
 	case stepAddAnother:
 		return []choiceOption{{value: "yes", label: "Add another profile"}, {value: "no", label: "Finish setup"}}, true
+	case stepOutputChoice:
+		return []choiceOption{{value: "json", label: "JSON"}, {value: "pretty", label: "Pretty"}, {value: "human", label: "Human"}}, true
+	case stepDebugChoice:
+		return []choiceOption{{value: "yes", label: "Yes, enable debug logging"}, {value: "no", label: "No, keep debug logging disabled"}}, true
 	default:
 		return nil, false
 	}
@@ -731,7 +784,9 @@ func normalizeChoice(value string) string {
 		return "modify"
 	case "d", "delete", "3":
 		return "delete"
-	case "q", "quit", "exit", "4":
+	case "s", "settings", "prefs", "preferences", "4":
+		return "settings"
+	case "q", "quit", "exit", "5":
 		return "quit"
 	default:
 		return ""
@@ -758,6 +813,44 @@ func normalizeAuthType(value string) string {
 	default:
 		return ""
 	}
+}
+
+func normalizeSetupOutput(value string) string {
+	if normalized := parseSetupOutputChoice(value); normalized != "" {
+		return normalized
+	}
+	return "json"
+}
+
+func parseSetupOutputChoice(value string) string {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "json":
+		return "json"
+	case "pretty":
+		return "pretty"
+	case "human":
+		return "human"
+	default:
+		return ""
+	}
+}
+
+func outputChoiceIndex(value string) int {
+	switch normalizeSetupOutput(value) {
+	case "pretty":
+		return 1
+	case "human":
+		return 2
+	default:
+		return 0
+	}
+}
+
+func boolChoiceIndex(value bool) int {
+	if value {
+		return 0
+	}
+	return 1
 }
 
 func resolveAgeKeyPath(value string) (string, error) {

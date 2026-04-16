@@ -16,7 +16,7 @@ tscli config setup [flags]
 
 ```
 tscli config setup
-tscli config setup  # rerun later to add or delete profiles
+tscli config setup  # rerun later to manage profiles or preferences
 ```
 
 ### Options

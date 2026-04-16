@@ -343,7 +343,7 @@ func exampleOutputCases() []exampleOutputCase {
 			}
 			return []string{"config", "encryption", "setup", "--public-key", identity.Recipient().String(), "--private-key-source", "env"}
 		}, nil, "config encryption saved"),
-		localTextCaseWithInput("config setup", []string{"config", "setup"}, "no\napi-key\nsandbox\n\ntskey-sandbox\nno\n", nil, "Setup complete"),
+		localTextCaseWithInput("config setup", []string{"config", "setup"}, "no\napi-key\nsandbox\n\ntskey-sandbox\nno\njson\nno\n", nil, "Setup complete"),
 		localTextCase("config profiles delete", []string{"config", "profiles", "delete", "sandbox"}, setupProfileHome, "tailnet profile sandbox removed"),
 		localObjectCase("config profiles list", []string{"config", "profiles", "list"}, setupProfileHome, jsonShapeExpectation{
 			TopLevel:   jsonTopLevelObject,

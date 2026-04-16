@@ -42,14 +42,24 @@ func save(v *viper.Viper) error {
 }
 
 func SetPersistentValue(key, value string) error {
+	return SetPersistentValues(map[string]any{key: value})
+}
+
+func SetPersistentBool(key string, value bool) error {
+	return SetPersistentValues(map[string]any{key: value})
+}
+
+func SetPersistentValues(values map[string]any) error {
 	v := viper.GetViper()
 
 	settings, err := loadPersistedSettings(v)
 	if err != nil {
 		return err
 	}
-	settings[key] = value
-	v.Set(key, value)
+	for key, value := range values {
+		settings[key] = value
+		v.Set(key, value)
+	}
 
 	return writePersistedSettings(v, settings)
 }
@@ -111,7 +121,7 @@ func canonicalizePersistedSettings(settings map[string]any) map[string]any {
 	canonical := make(map[string]any, len(settings))
 	for key, value := range settings {
 		switch key {
-		case "help", "debug", "base-url":
+		case "help", "base-url":
 			continue
 		default:
 			if isEmptyPersistedValue(value) {
