@@ -77,7 +77,7 @@ type DeviceRoutes struct {
 }
 
 type DeviceRoutesUpdateRequest struct {
-	Routes []string `json:"routes,omitempty"`
+	Routes []string `json:"routes"`
 }
 
 type TailnetSettings struct {

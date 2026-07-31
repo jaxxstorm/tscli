@@ -3,11 +3,11 @@
 - OpenAPI operations: `85`
 - Excluded operations: `0`
 - In-scope operations: `85`
-- Manifest commands: `97`
+- Manifest commands: `98`
 - Excluded commands: `16`
 - Covered operations: `85`
 - Uncovered operations: `0`
-- Covered commands: `81`
+- Covered commands: `82`
 - Unmapped commands: `0`
 - Unknown mapped commands: `0`
 - Covered properties: `163`

@@ -239,6 +239,32 @@ func TestSetDeviceRoutesPropertyCoverage(t *testing.T) {
 	}
 }
 
+func TestDeleteDeviceRoutes(t *testing.T) {
+	mock := apimock.New(t)
+	mock.AddJSON(http.MethodPost, "/routes", http.StatusOK, apimock.DeviceRoutes())
+
+	res := executeCLI(t, []string{"delete", "device", "routes", "--device", "node-123"}, map[string]string{
+		"TSCLI_BASE_URL": mock.URL(),
+		"TSCLI_OUTPUT":   "json",
+	})
+	if res.err != nil {
+		t.Fatalf("unexpected error: %v", res.err)
+	}
+	reqs := mock.Requests()
+	if len(reqs) != 1 {
+		t.Fatalf("expected one request to mock API, got %d", len(reqs))
+	}
+	var body struct {
+		Routes []string `json:"routes"`
+	}
+	if err := json.Unmarshal([]byte(reqs[0].Body), &body); err != nil {
+		t.Fatalf("unmarshal request body: %v", err)
+	}
+	if body.Routes == nil || len(body.Routes) != 0 {
+		t.Fatalf("expected an empty routes list, got %#v", body.Routes)
+	}
+}
+
 func TestSetSettingsPropertyCoverage(t *testing.T) {
 	mock := apimock.New(t)
 	mock.AddJSON(http.MethodPatch, "/settings", http.StatusOK, apimock.TailnetSettings())

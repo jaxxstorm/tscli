@@ -6,6 +6,7 @@ import (
 
 	"github.com/jaxxstorm/tscli/cmd/tscli/delete/device/invite"
 	"github.com/jaxxstorm/tscli/cmd/tscli/delete/device/posture"
+	"github.com/jaxxstorm/tscli/cmd/tscli/delete/device/routes"
 	"github.com/jaxxstorm/tscli/pkg/output"
 
 	"github.com/jaxxstorm/tscli/pkg/tscli"
@@ -53,6 +54,7 @@ func Command() *cobra.Command {
 	// Add subcommands
 	command.AddCommand(invite.Command())
 	command.AddCommand(posture.Command())
+	command.AddCommand(routes.Command())
 
 	return command
 }

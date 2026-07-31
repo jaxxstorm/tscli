@@ -33,4 +33,5 @@ tscli delete device [flags]
 * [tscli delete](tscli_delete.md)	 - Delete commands
 * [tscli delete device invite](tscli_delete_device_invite.md)	 - Delete a device share invite
 * [tscli delete device posture](tscli_delete_device_posture.md)	 - Delete a posture attribute
+* [tscli delete device routes](tscli_delete_device_routes.md)	 - Delete all enabled subnet routes for a device
 
