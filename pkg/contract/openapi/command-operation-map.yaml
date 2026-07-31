@@ -16,6 +16,8 @@ commands:
     - delete /device-invites/{deviceInviteId}
   delete device posture:
     - delete /device/{deviceId}/attributes/{attributeKey}
+  delete device routes:
+    - post /device/{deviceId}/routes
   delete devices:
     - delete /device/{deviceId}
   delete key:
