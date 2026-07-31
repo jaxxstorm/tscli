@@ -11,17 +11,19 @@ Delete all enabled subnet routes for a device.
 This does not stop the device from advertising routes; change the device's
 Tailscale configuration to do that instead.
 
-Example:
-  tscli delete device routes node-abc123
+Examples
+
+  tscli delete device routes --device node-abc123
 
 ```
-tscli delete device routes <device-id> [flags]
+tscli delete device routes [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for routes
+      --device string   Device ID whose enabled routes will be deleted (nodeId "node-abc123" or numeric id).
+  -h, --help            help for routes
 ```
 
 ### Options inherited from parent commands

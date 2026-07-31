@@ -455,7 +455,7 @@ func exampleOutputCases() []exampleOutputCase {
 		summaryObjectCase("set device name", []string{"set", "device", "name", "--device", "node-123", "--name", "new-name"}, "result"),
 		summaryObjectCase("set device posture", []string{"set", "device", "posture", "--device", "node-123", "--key", "custom:group", "--value", "prod"}, "result"),
 		apiObjectCase("set device routes", []string{"set", "device", "routes", "--device", "node-123", "--route", "10.0.0.0/24"}, apimock.DeviceRoutes(), "advertisedRoutes", "enabledRoutes"),
-		apiObjectCase("delete device routes", []string{"delete", "device", "routes", "node-123"}, apimock.DeviceRoutes(), "advertisedRoutes", "enabledRoutes"),
+		apiObjectCase("delete device routes", []string{"delete", "device", "routes", "--device", "node-123"}, apimock.DeviceRoutes(), "advertisedRoutes", "enabledRoutes"),
 		summaryObjectCase("set device tags", []string{"set", "device", "tags", "--device", "node-123", "--tag", "tag:prod"}, "result", "device", "tags"),
 		apiObjectCase("set dns configuration", []string{"set", "dns", "configuration", "--body", `{"magicDNS":true}`}, apimock.DNSConfiguration(), "magicDNS"),
 		apiObjectCase("set dns nameservers", []string{"set", "dns", "nameservers", "--nameserver", "1.1.1.1"}, map[string]any{"dns": []string{"1.1.1.1"}}, "dns"),

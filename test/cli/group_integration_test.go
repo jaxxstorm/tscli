@@ -243,7 +243,7 @@ func TestDeleteDeviceRoutes(t *testing.T) {
 	mock := apimock.New(t)
 	mock.AddJSON(http.MethodPost, "/routes", http.StatusOK, apimock.DeviceRoutes())
 
-	res := executeCLI(t, []string{"delete", "device", "routes", "node-123"}, map[string]string{
+	res := executeCLI(t, []string{"delete", "device", "routes", "--device", "node-123"}, map[string]string{
 		"TSCLI_BASE_URL": mock.URL(),
 		"TSCLI_OUTPUT":   "json",
 	})

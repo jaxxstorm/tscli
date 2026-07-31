@@ -10,24 +10,26 @@ import (
 )
 
 func Command() *cobra.Command {
-	return &cobra.Command{
-		Use:   "routes <device-id>",
+	var deviceID string
+
+	cmd := &cobra.Command{
+		Use:   "routes",
 		Short: "Delete all enabled subnet routes for a device",
 		Long: `Delete all enabled subnet routes for a device.
 
 This does not stop the device from advertising routes; change the device's
 Tailscale configuration to do that instead.
 
-Example:
-  tscli delete device routes node-abc123`,
-		Args: cobra.ExactArgs(1),
+Examples
+
+  tscli delete device routes --device node-abc123`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := tscli.New()
 			if err != nil {
 				return fmt.Errorf("failed to create client: %w", err)
 			}
 
-			raw, err := tscli.ClearDeviceRoutesJSON(cmd.Context(), client, args[0])
+			raw, err := tscli.ClearDeviceRoutesJSON(cmd.Context(), client, deviceID)
 			if err != nil {
 				return fmt.Errorf("failed to delete enabled subnet routes: %w", err)
 			}
@@ -35,4 +37,9 @@ Example:
 			return output.Print(viper.GetString("output"), raw)
 		},
 	}
+
+	cmd.Flags().StringVar(&deviceID, "device", "", `Device ID whose enabled routes will be deleted (nodeId "node-abc123" or numeric id).`)
+	_ = cmd.MarkFlagRequired("device")
+
+	return cmd
 }
