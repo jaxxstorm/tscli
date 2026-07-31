@@ -64,9 +64,6 @@ func TestExampleCommandOutputShapes(t *testing.T) {
 				assertJSONShape(t, res.stdout, tc.shape)
 				return
 			}
-			if len(tc.textContains) == 0 {
-				return
-			}
 			assertTextOutput(t, res.stdout, tc.textContains...)
 		})
 	}

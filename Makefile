@@ -26,7 +26,8 @@ test:
 	$(TOOLS_GO_TEST) ./...
 
 test-unit:
-	$(GO_TEST) ./coverage/coveragegaps ./pkg/...
+	$(GO_TEST) ./pkg/...
+	$(TOOLS_GO_TEST) ./internal/coveragegaps
 	$(GO_TEST) ./test/cli -run 'Test(Leaf|Version|Config|Do|Load)'
 
 test-integration:
@@ -47,7 +48,9 @@ coverage-gaps:
 		--property-coverage $(COVERAGE_PROPERTY_MANIFEST) \
 		--property-exclusions $(COVERAGE_PROPERTY_EXCLUSIONS) \
 		--json-out $(COVERAGE_JSON) \
-		--md-out $(COVERAGE_MD)
+		--md-out $(COVERAGE_MD) \
+		--diff-out $(COVERAGE_DIFF) \
+		--baseline $(COVERAGE_BASELINE)
 
 coverage-gaps-check:
 	$(TOOLS_GO_RUN) ./cmd/coveragegaps \

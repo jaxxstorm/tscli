@@ -27,10 +27,10 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          {
-            go test -json -v ./...
-            go -C tools test -json -v ./...
-          } 2>&1 | tee /tmp/gotest.log | gotestfmt
+          status=0
+          go test -json -v ./... 2>&1 | tee /tmp/gotest-root.log | gotestfmt || status=1
+          go -C tools test -json -v ./... 2>&1 | tee /tmp/gotest-tools.log | gotestfmt || status=1
+          exit "$status"
 
       - name: Verify generated docs
         run: make docs-check
