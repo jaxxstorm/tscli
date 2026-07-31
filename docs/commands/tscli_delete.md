@@ -30,6 +30,7 @@ Commands that delete from the Tailscale API
 * [tscli delete devices](tscli_delete_devices.md)	 - Delete multiple disconnected devices
 * [tscli delete key](tscli_delete_key.md)	 - Delete a tailnet auth key
 * [tscli delete logs](tscli_delete_logs.md)	 - Delete log configuration
+* [tscli delete oauth-app](tscli_delete_oauth-app.md)	 - Delete an OAuth app
 * [tscli delete posture-integration](tscli_delete_posture-integration.md)	 - Delete a posture integration
 * [tscli delete service](tscli_delete_service.md)	 - Delete a service
 * [tscli delete tailnet](tscli_delete_tailnet.md)	 - Delete an API-driven tailnet

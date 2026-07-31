@@ -12,6 +12,7 @@ config show
 create invite device
 create invite user
 create key
+create oauth-app
 create posture-integration
 create tailnet
 create token
@@ -22,6 +23,7 @@ delete device posture
 delete device routes
 delete devices
 delete key
+delete oauth-app
 delete logs stream
 delete posture-integration
 delete service
@@ -43,6 +45,7 @@ get key
 get logs aws
 get logs aws validate
 get logs stream
+get oauth-app
 get policy
 get policy preview
 get policy validate
@@ -59,6 +62,7 @@ list invites user
 list keys
 list logs config
 list logs network
+list oauth-apps
 list nameservers
 list posture-integrations
 list tailnets
@@ -85,6 +89,7 @@ set dns searchpaths
 set dns split-dns
 set key
 set logs stream
+set oauth-app
 set policy
 set posture-integration
 set service

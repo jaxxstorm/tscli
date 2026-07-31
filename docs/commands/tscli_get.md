@@ -31,6 +31,7 @@ Commands that get information from the Tailscale API
 * [tscli get dns](tscli_get_dns.md)	 - Get DNS information
 * [tscli get key](tscli_get_key.md)	 - Get a single tailnet auth key
 * [tscli get logs](tscli_get_logs.md)	 - Get logs for the tailnet
+* [tscli get oauth-app](tscli_get_oauth-app.md)	 - Get an OAuth app
 * [tscli get policy](tscli_get_policy.md)	 - Print the tailnet policy file (HUJSON or JSON)
 * [tscli get posture-integration](tscli_get_posture-integration.md)	 - Get a posture integration
 * [tscli get service](tscli_get_service.md)	 - Get a service

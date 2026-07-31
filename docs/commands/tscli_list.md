@@ -31,6 +31,7 @@ Commands that list information from the Tailscale API
 * [tscli list keys](tscli_list_keys.md)	 - List tailnet auth keys
 * [tscli list logs](tscli_list_logs.md)	 - List logs for the tailnet
 * [tscli list nameservers](tscli_list_nameservers.md)	 - List custom DNS nameservers for the tailnet
+* [tscli list oauth-apps](tscli_list_oauth-apps.md)	 - List OAuth apps
 * [tscli list posture-integrations](tscli_list_posture-integrations.md)	 - List posture integrations
 * [tscli list routes](tscli_list_routes.md)	 - List a device's subnet routes
 * [tscli list services](tscli_list_services.md)	 - List tailnet services

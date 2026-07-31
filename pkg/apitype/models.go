@@ -107,3 +107,27 @@ type UpdateTailnetSettingsRequest struct {
 	PostureIdentityCollectionOn            *bool   `json:"postureIdentityCollectionOn,omitempty"`
 	HTTPSEnabled                           *bool   `json:"httpsEnabled,omitempty"`
 }
+
+type OAuthApp struct {
+	ID                    string   `json:"id,omitempty"`
+	Name                  string   `json:"name,omitempty"`
+	Description           string   `json:"description,omitempty"`
+	RedirectURIs          []string `json:"redirectURIs,omitempty"`
+	Scopes                []string `json:"scopes,omitempty"`
+	AllowedNodeAttributes []string `json:"allowedNodeAttributes,omitempty"`
+	ClientSecret          string   `json:"clientSecret,omitempty"`
+	Created               string   `json:"created,omitempty"`
+	Updated               string   `json:"updated,omitempty"`
+}
+
+type OAuthAppRequest struct {
+	Name                  string   `json:"name"`
+	Description           string   `json:"description,omitempty"`
+	RedirectURIs          []string `json:"redirectURIs"`
+	Scopes                []string `json:"scopes"`
+	AllowedNodeAttributes []string `json:"allowedNodeAttributes,omitempty"`
+}
+
+type OAuthAppListResponse struct {
+	OAuthApps []OAuthApp `json:"oauthApps,omitempty"`
+}

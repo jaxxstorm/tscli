@@ -114,6 +114,11 @@ tags:
     description: |
       Manage Tailscale Services for a tailnet.
       Learn more about [Tailscale Services](/kb/1552/tailscale-services).
+  - name: OAuthApps
+    x-displayName: OAuth apps
+    description: |
+      Manage OAuth apps for a tailnet.
+      Learn more about [OAuth apps](/docs/features/oauth-apps).
 paths:
   /tailnet/{tailnet}/devices:
     parameters:
@@ -3720,6 +3725,183 @@ paths:
           $ref: '#/components/responses/500'
         '504':
           $ref: '#/components/responses/504'
+  /tailnet/{tailnet}/oauth-apps:
+    parameters:
+      - $ref: '#/components/parameters/tailnet'
+    get:
+      summary: List OAuth apps
+      description: |
+        List all OAuth apps for a tailnet.
+
+        OAuth Scope: `oauth_apps:read`.
+      operationId: listOAuthApps
+      tags:
+        - OAuthApps
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  oauthApps:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OAuthApp'
+        '400':
+          $ref: '#/components/responses/400'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          description: Tailnet not found.
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+    post:
+      summary: Create an OAuth app
+      description: |
+        Create an OAuth app within a tailnet.
+
+        The generated client secret is returned only in this response and cannot be retrieved later, so be sure to record it.
+
+        OAuth Scope: `oauth_apps`.  If you include `allowedNodeAttributes` in the request body, you must also have `devices:posture_attributes`.
+      operationId: createOAuthApp
+      tags:
+        - OAuthApps
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: '#/components/schemas/name'
+                description:
+                  $ref: '#/components/schemas/description'
+                redirectURIs:
+                  $ref: '#/components/schemas/redirectURIs'
+                scopes:
+                  $ref: '#/components/schemas/scopes'
+                allowedNodeAttributes:
+                  $ref: '#/components/schemas/allowedNodeAttributes'
+              required:
+                - name
+                - redirectURIs
+                - scopes
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthApp'
+        '400':
+          $ref: '#/components/responses/400'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          description: Tailnet not found.
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+  /tailnet/{tailnet}/oauth-apps/{appId}:
+    parameters:
+      - $ref: '#/components/parameters/tailnet'
+      - $ref: '#/components/parameters/appId'
+    get:
+      summary: Get OAuth app
+      description: |
+        Retrieve a specific OAuth app.
+
+        OAuth Scope: `oauth_apps:read`.
+      operationId: getOAuthApp
+      tags:
+        - OAuthApps
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthApp'
+        '400':
+          $ref: '#/components/responses/400'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          description: OAuth app not found.
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+    put:
+      summary: Update OAuth app
+      description: |
+        Update a specific OAuth app.
+
+        The client secret is not regenerated and is not returned in this response.
+
+        OAuth Scope: `oauth_apps`.
+      operationId: updateOAuthApp
+      tags:
+        - OAuthApps
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: '#/components/schemas/name'
+                description:
+                  $ref: '#/components/schemas/description'
+                redirectURIs:
+                  $ref: '#/components/schemas/redirectURIs'
+                scopes:
+                  $ref: '#/components/schemas/scopes'
+                allowedNodeAttributes:
+                  $ref: '#/components/schemas/allowedNodeAttributes'
+              required:
+                - name
+                - redirectURIs
+                - scopes
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthApp'
+        '400':
+          $ref: '#/components/responses/400'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          description: OAuth app not found.
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+    delete:
+      summary: Delete OAuth app
+      description: |
+        Delete a specific OAuth app.
+
+        OAuth Scope: `oauth_apps`.
+      operationId: deleteOAuthApp
+      tags:
+        - OAuthApps
+      responses:
+        '200':
+          description: Successful operation.
+        '400':
+          $ref: '#/components/responses/400'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          description: OAuth app not found.
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
 components:
   securitySchemes:
     bearerAuth:
@@ -4090,6 +4272,15 @@ components:
       example: svc:example
       schema:
         type: string
+    appId:
+      in: path
+      name: appId
+      description: |
+        The ID of the OAuth app.
+      required: true
+      schema:
+        type: string
+        example: a123456CNTRL
   schemas:
     Device:
       type: object
@@ -6021,6 +6212,125 @@ components:
           type: boolean
           description: |
             Indicates whether the Service was auto-approved by an auto-approver.
+    OAuthApp:
+      type: object
+      properties:
+        id:
+          type: string
+          example: a123456CNTRL
+          description: |
+            The unique identifier for the OAuth app.
+        name:
+          type: string
+          minLength: 3
+          maxLength: 50
+          pattern: ^[a-zA-Z0-9._-]+$
+          example: my-oauth-app
+          description: |
+            The name of the OAuth app.
+            Must be between 3 and 50 characters and contain only alphanumeric characters, dashes, periods, and underscores.
+        description:
+          type: string
+          maxLength: 300
+          example: An OAuth app used to provision devices.
+          description: |
+            A human-readable description of the OAuth app.
+            Must be at most 300 characters.
+        redirectURIs:
+          type: array
+          items:
+            type: string
+          example:
+            - https://example.com/oauth/callback
+          description: |
+            The list of permitted redirect URIs for the OAuth authorization code flow.
+            At least one redirect URI is required.
+
+            Each URI must use the `https` scheme, except for `localhost`, `127.0.0.1`, and `::1`,
+            which may use any scheme. Raw IP address hosts are not permitted.
+        scopes:
+          type: array
+          items:
+            type: string
+          example:
+            - auth_keys:create
+          description: |
+            The list of OAuth scopes granted to the app.
+            Must be non-empty.
+            Learn more about [OAuth clients and scopes](/kb/1215/oauth-clients).
+        allowedNodeAttributes:
+          type: array
+          items:
+            type: string
+          example:
+            - custom:myattribute
+          description: |
+            The list of custom node attributes that the OAuth app is allowed to set.
+        clientSecret:
+          type: string
+          format: password
+          example: xxxxx
+          description: |
+            The client secret for the OAuth app.
+            Only populated when the app is created and cannot be retrieved afterwards.
+        created:
+          type: string
+          format: date-time
+          example: '2022-12-01T05:23:30Z'
+          description: |
+            The time the OAuth app was created.
+        updated:
+          type: string
+          format: date-time
+          example: '2022-12-01T05:23:30Z'
+          description: |
+            The time the OAuth app was last updated.
+    name:
+      type: string
+      minLength: 3
+      maxLength: 50
+      pattern: ^[a-zA-Z0-9._-]+$
+      example: my-oauth-app
+      description: |
+        The name of the OAuth app.
+        Must be between 3 and 50 characters and contain only alphanumeric characters, dashes, periods, and underscores.
+    description:
+      type: string
+      maxLength: 300
+      example: An OAuth app used to provision devices.
+      description: |
+        A human-readable description of the OAuth app.
+        Must be at most 300 characters.
+    redirectURIs:
+      type: array
+      items:
+        type: string
+      example:
+        - https://example.com/oauth/callback
+      description: |
+        The list of permitted redirect URIs for the OAuth authorization code flow.
+        At least one redirect URI is required.
+
+        Each URI must use the `https` scheme, except for `localhost`, `127.0.0.1`, and `::1`,
+        which may use any scheme. Raw IP address hosts are not permitted.
+    scopes:
+      type: array
+      items:
+        type: string
+      example:
+        - auth_keys:create
+      description: |
+        The list of OAuth scopes granted to the app.
+        Must be non-empty.
+        Learn more about [OAuth clients and scopes](/kb/1215/oauth-clients).
+    allowedNodeAttributes:
+      type: array
+      items:
+        type: string
+      example:
+        - custom:myattribute
+      description: |
+        The list of custom node attributes that the OAuth app is allowed to set.
   responses:
     '400':
       description: Bad request.

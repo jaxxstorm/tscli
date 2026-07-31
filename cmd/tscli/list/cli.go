@@ -12,6 +12,7 @@ import (
 	"github.com/jaxxstorm/tscli/cmd/tscli/list/tailnets"
 	"github.com/jaxxstorm/tscli/cmd/tscli/list/users"
 	"github.com/jaxxstorm/tscli/cmd/tscli/list/webhooks"
+	"github.com/jaxxstorm/tscli/cmd/tscli/oauthapp"
 	"github.com/spf13/cobra"
 )
 
@@ -28,6 +29,7 @@ func Command() *cobra.Command {
 	command.AddCommand(users.Command())
 	command.AddCommand(invites.Command())
 	command.AddCommand(webhooks.Command())
+	command.AddCommand(oauthapp.ListCommand())
 	command.AddCommand(postureintegration.Command())
 	command.AddCommand(nameservers.Command())
 	command.AddCommand(logs.Command())

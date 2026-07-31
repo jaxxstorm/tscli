@@ -12,6 +12,7 @@ import (
 	"github.com/jaxxstorm/tscli/cmd/tscli/get/settings"
 	"github.com/jaxxstorm/tscli/cmd/tscli/get/user"
 	"github.com/jaxxstorm/tscli/cmd/tscli/get/webhook"
+	"github.com/jaxxstorm/tscli/cmd/tscli/oauthapp"
 
 	"github.com/spf13/cobra"
 )
@@ -29,6 +30,7 @@ func Command() *cobra.Command {
 	command.AddCommand(postureintegration.Command())
 	command.AddCommand(user.Command())
 	command.AddCommand(webhook.Command())
+	command.AddCommand(oauthapp.GetCommand())
 	command.AddCommand(settings.Command())
 	command.AddCommand(service.Command())
 	command.AddCommand(contacts.Command())

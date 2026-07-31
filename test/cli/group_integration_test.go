@@ -314,6 +314,43 @@ func TestDeleteDeviceRequiresFlag(t *testing.T) {
 	}
 }
 
+func TestOAuthAppCommands(t *testing.T) {
+	app := map[string]any{
+		"id": "app-123", "name": "example-app", "description": "Example", "redirectURIs": []string{"https://example.com/callback"},
+		"scopes": []string{"auth_keys:create"}, "allowedNodeAttributes": []string{"custom:role"}, "clientSecret": "secret",
+	}
+	cases := []groupCase{
+		{name: "create", args: []string{"create", "oauth-app", "--name", "example-app", "--redirect-uri", "https://example.com/callback", "--scope", "auth_keys:create"}, method: http.MethodPost, pathHint: "/oauth-apps", successBody: app},
+		{name: "get", args: []string{"get", "oauth-app", "--id", "app-123"}, method: http.MethodGet, pathHint: "/oauth-apps/app-123", successBody: app},
+		{name: "list", args: []string{"list", "oauth-apps"}, method: http.MethodGet, pathHint: "/oauth-apps", successBody: map[string]any{"oauthApps": []any{app}}},
+		{name: "set", args: []string{"set", "oauth-app", "--id", "app-123", "--name", "example-app", "--redirect-uri", "https://example.com/callback", "--scope", "auth_keys:create"}, method: http.MethodPut, pathHint: "/oauth-apps/app-123", successBody: app},
+		{name: "delete", args: []string{"delete", "oauth-app", "--id", "app-123"}, method: http.MethodDelete, pathHint: "/oauth-apps/app-123", successBody: app},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			mock := apimock.New(t)
+			mock.AddJSON(tc.method, tc.pathHint, http.StatusOK, tc.successBody)
+			res := executeCLI(t, tc.args, map[string]string{"TSCLI_BASE_URL": mock.URL(), "TSCLI_OUTPUT": "json"})
+			if res.err != nil {
+				t.Fatalf("unexpected error: %v\nstderr:\n%s", res.err, res.stderr)
+			}
+			if tc.name == "create" || tc.name == "set" {
+				var body map[string]any
+				reqs := mock.Requests()
+				if err := json.Unmarshal([]byte(reqs[0].Body), &body); err != nil {
+					t.Fatalf("unmarshal request body: %v", err)
+				}
+				for _, key := range []string{"name", "redirectURIs", "scopes"} {
+					if _, ok := body[key]; !ok {
+						t.Fatalf("expected %s in request body, got %#v", key, body)
+					}
+				}
+			}
+		})
+	}
+}
+
 func TestIntegrationFailsWithoutMockServer(t *testing.T) {
 	res := executeCLI(t, []string{"get", "device", "--device", "node-123"}, map[string]string{
 		"TSCLI_BASE_URL": "http://127.0.0.1:1",

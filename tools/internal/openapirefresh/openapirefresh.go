@@ -1,10 +1,9 @@
-package main
+package openapirefresh
 
 import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -56,38 +55,48 @@ type fileReplacement struct {
 	exists bool
 }
 
-func main() {
-	sourceURL := flag.String("source-url", "", "Canonical OpenAPI source URL")
-	schemaOut := flag.String("schema-out", "pkg/contract/openapi/tailscale-v2-openapi.yaml", "Path for pinned OpenAPI schema")
-	metadataOut := flag.String("metadata-out", "pkg/contract/openapi/snapshot-metadata.yaml", "Path for snapshot metadata")
-	flag.Parse()
+type Options struct {
+	SourceURL   string
+	SchemaOut   string
+	MetadataOut string
+}
 
-	if *sourceURL == "" {
-		fatalf("source-url is required")
+func DefaultOptions() Options {
+	return Options{
+		SourceURL:   "https://api.tailscale.com/api/v2?outputOpenapiSchema=true",
+		SchemaOut:   "pkg/contract/openapi/tailscale-v2-openapi.yaml",
+		MetadataOut: "pkg/contract/openapi/snapshot-metadata.yaml",
+	}
+}
+
+func Run(opts Options) error {
+	if opts.SourceURL == "" {
+		return fmt.Errorf("source-url is required")
 	}
 
-	schema, err := fetchSchema(*sourceURL)
+	schema, err := fetchSchema(opts.SourceURL)
 	if err != nil {
-		fatalf("fetch schema: %v", err)
+		return fmt.Errorf("fetch schema: %w", err)
 	}
 
 	fetchedAt := time.Now().UTC()
-	metadata, err := buildSnapshotMetadata(schema, *sourceURL, *schemaOut, fetchedAt)
+	metadata, err := buildSnapshotMetadata(schema, opts.SourceURL, opts.SchemaOut, fetchedAt)
 	if err != nil {
-		fatalf("build snapshot metadata: %v", err)
+		return fmt.Errorf("build snapshot metadata: %w", err)
 	}
 
 	metadataBytes, err := yaml.Marshal(metadata)
 	if err != nil {
-		fatalf("marshal snapshot metadata: %v", err)
+		return fmt.Errorf("marshal snapshot metadata: %w", err)
 	}
 
 	if err := replaceFilesAtomically(map[string][]byte{
-		*schemaOut:   schema,
-		*metadataOut: metadataBytes,
+		opts.SchemaOut:   schema,
+		opts.MetadataOut: metadataBytes,
 	}); err != nil {
-		fatalf("persist refreshed snapshot: %v", err)
+		return fmt.Errorf("persist refreshed snapshot: %w", err)
 	}
+	return nil
 }
 
 func fetchSchema(sourceURL string) ([]byte, error) {
@@ -247,9 +256,4 @@ func rollbackReplacements(replacements []fileReplacement, replaced int) error {
 		return errors.New(strings.Join(errs, "; "))
 	}
 	return nil
-}
-
-func fatalf(format string, args ...any) {
-	fmt.Fprintf(os.Stderr, format+"\n", args...)
-	os.Exit(1)
 }

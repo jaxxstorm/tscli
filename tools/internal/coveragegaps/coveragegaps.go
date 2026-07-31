@@ -1,8 +1,7 @@
-package main
+package coveragegaps
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -61,44 +60,60 @@ type report struct {
 	UncoveredPropsByOp   map[string][]string `json:"uncovered_properties_by_operation"`
 }
 
-func main() {
-	openapiPath := flag.String("openapi", "pkg/contract/openapi/tailscale-v2-openapi.yaml", "Path to pinned OpenAPI schema")
-	mappingPath := flag.String("mapping", "pkg/contract/openapi/command-operation-map.yaml", "Path to command->operation map")
-	manifestPath := flag.String("manifest", "test/cli/testdata/leaf_commands.txt", "Path to command manifest")
-	exclusionsPath := flag.String("exclusions", "coverage/exclusions.yaml", "Path to exclusions policy")
-	jsonOut := flag.String("json-out", "coverage/coverage-gaps.json", "Path for machine-readable report")
-	mdOut := flag.String("md-out", "coverage/coverage-gaps.md", "Path for markdown report")
-	baselinePath := flag.String("baseline", "coverage/coverage-gaps-baseline.json", "Path to baseline report for diffing")
-	diffOut := flag.String("diff-out", "coverage/coverage-gaps-diff.md", "Path for baseline diff report")
-	propertyCoveragePath := flag.String("property-coverage", "coverage/property-coverage.yaml", "Path to property coverage manifest")
-	propertyExclusionsPath := flag.String("property-exclusions", "coverage/property-exclusions.yaml", "Path to property exclusion policy")
-	failOnRegression := flag.Bool("fail-on-regression", false, "Exit non-zero if uncovered operations or unmapped commands regress vs baseline")
-	failOnGaps := flag.Bool("fail-on-gaps", false, "Exit non-zero if uncovered in-scope operations, unmapped commands, unknown mapped operations, or unknown mapped commands remain")
-	flag.Parse()
+type Options struct {
+	OpenAPIPath             string
+	MappingPath             string
+	ManifestPath            string
+	ExclusionsPath          string
+	JSONOut                 string
+	MarkdownOut             string
+	BaselinePath            string
+	DiffOut                 string
+	PropertyCoveragePath    string
+	PropertyExclusionsPath  string
+	FailOnRegression        bool
+	FailOnGaps              bool
+}
 
-	ops, err := loadOperations(*openapiPath)
-	if err != nil {
-		fatalf("load OpenAPI operations: %v", err)
+func DefaultOptions() Options {
+	return Options{
+		OpenAPIPath:            "pkg/contract/openapi/tailscale-v2-openapi.yaml",
+		MappingPath:            "pkg/contract/openapi/command-operation-map.yaml",
+		ManifestPath:           "test/cli/testdata/leaf_commands.txt",
+		ExclusionsPath:         "coverage/exclusions.yaml",
+		JSONOut:                "coverage/coverage-gaps.json",
+		MarkdownOut:            "coverage/coverage-gaps.md",
+		BaselinePath:           "coverage/coverage-gaps-baseline.json",
+		DiffOut:                "coverage/coverage-gaps-diff.md",
+		PropertyCoveragePath:   "coverage/property-coverage.yaml",
+		PropertyExclusionsPath: "coverage/property-exclusions.yaml",
 	}
-	mapping, err := loadCommandMap(*mappingPath)
+}
+
+func Run(opts Options) error {
+	ops, err := loadOperations(opts.OpenAPIPath)
 	if err != nil {
-		fatalf("load command map: %v", err)
+		return fmt.Errorf("load OpenAPI operations: %w", err)
 	}
-	manifest, err := loadManifest(*manifestPath)
+	mapping, err := loadCommandMap(opts.MappingPath)
 	if err != nil {
-		fatalf("load manifest: %v", err)
+		return fmt.Errorf("load command map: %w", err)
 	}
-	exclusions, err := loadExclusions(*exclusionsPath)
+	manifest, err := loadManifest(opts.ManifestPath)
 	if err != nil {
-		fatalf("load exclusions: %v", err)
+		return fmt.Errorf("load manifest: %w", err)
 	}
-	propertyCoverage, err := loadPropertyCoverage(*propertyCoveragePath)
+	exclusions, err := loadExclusions(opts.ExclusionsPath)
 	if err != nil {
-		fatalf("load property coverage: %v", err)
+		return fmt.Errorf("load exclusions: %w", err)
 	}
-	propertyExclusions, err := loadPropertyExclusions(*propertyExclusionsPath)
+	propertyCoverage, err := loadPropertyCoverage(opts.PropertyCoveragePath)
 	if err != nil {
-		fatalf("load property exclusions: %v", err)
+		return fmt.Errorf("load property coverage: %w", err)
+	}
+	propertyExclusions, err := loadPropertyExclusions(opts.PropertyExclusionsPath)
+	if err != nil {
+		return fmt.Errorf("load property exclusions: %w", err)
 	}
 
 	opSet := make(map[string]struct{}, len(ops))
@@ -115,7 +130,7 @@ func main() {
 	excludedOpSet := make(map[string]struct{}, len(exclusions.Operations))
 	for op := range exclusions.Operations {
 		if _, ok := opSet[op]; !ok {
-			fatalf("excluded operation not found in schema: %s", op)
+			return fmt.Errorf("excluded operation not found in schema: %s", op)
 		}
 		excludedOpSet[op] = struct{}{}
 		excludedOps = append(excludedOps, op)
@@ -131,7 +146,7 @@ func main() {
 	excludedCmdSet := make(map[string]struct{}, len(exclusions.Commands))
 	for cmd := range exclusions.Commands {
 		if _, ok := manifestSet[cmd]; !ok {
-			fatalf("excluded command not found in manifest: %s", cmd)
+			return fmt.Errorf("excluded command not found in manifest: %s", cmd)
 		}
 		excludedCmdSet[cmd] = struct{}{}
 		excludedCmds = append(excludedCmds, cmd)
@@ -218,7 +233,7 @@ func main() {
 	}
 	propertyInventory, err := derivePropertyCoverage(&opsDoc, mapping, excludedOpSet, propertyCoverage, propertyExclusions)
 	if err != nil {
-		fatalf("derive property coverage: %v", err)
+		return fmt.Errorf("derive property coverage: %w", err)
 	}
 	rep.CoveredProperties = propertyInventory.Covered
 	rep.ExcludedProperties = propertyInventory.Excluded
@@ -227,31 +242,32 @@ func main() {
 	rep.ExcludedPropsByOp = propertyInventory.ExcludedByOperation
 	rep.UncoveredPropsByOp = propertyInventory.UncoveredByOperation
 
-	if err := os.MkdirAll(filepath.Dir(*jsonOut), 0o755); err != nil {
-		fatalf("create output directory: %v", err)
+	if err := os.MkdirAll(filepath.Dir(opts.JSONOut), 0o755); err != nil {
+		return fmt.Errorf("create output directory: %w", err)
 	}
-	if err := writeJSON(*jsonOut, rep); err != nil {
-		fatalf("write json report: %v", err)
+	if err := writeJSON(opts.JSONOut, rep); err != nil {
+		return fmt.Errorf("write json report: %w", err)
 	}
-	if err := writeMarkdown(*mdOut, rep); err != nil {
-		fatalf("write markdown report: %v", err)
+	if err := writeMarkdown(opts.MarkdownOut, rep); err != nil {
+		return fmt.Errorf("write markdown report: %w", err)
 	}
 
-	diff, err := diffAgainstBaseline(*baselinePath, rep)
+	diff, err := diffAgainstBaseline(opts.BaselinePath, rep)
 	if err != nil {
-		fatalf("diff baseline: %v", err)
+		return fmt.Errorf("diff baseline: %w", err)
 	}
-	if err := os.WriteFile(*diffOut, []byte(diff.markdown), 0o644); err != nil {
-		fatalf("write diff report: %v", err)
+	if err := os.WriteFile(opts.DiffOut, []byte(diff.markdown), 0o644); err != nil {
+		return fmt.Errorf("write diff report: %w", err)
 	}
-	if *failOnRegression && (len(diff.newUncoveredOps) > 0 || len(diff.newUnmappedCommands) > 0 || len(diff.newUncoveredProperties) > 0) {
-		fatalf("coverage regression: %d new uncovered operations, %d new uncovered properties, %d new unmapped commands",
+	if opts.FailOnRegression && (len(diff.newUncoveredOps) > 0 || len(diff.newUnmappedCommands) > 0 || len(diff.newUncoveredProperties) > 0) {
+		return fmt.Errorf("coverage regression: %d new uncovered operations, %d new uncovered properties, %d new unmapped commands",
 			len(diff.newUncoveredOps), len(diff.newUncoveredProperties), len(diff.newUnmappedCommands))
 	}
-	if *failOnGaps && (len(rep.UncoveredOps) > 0 || len(rep.UncoveredProperties) > 0 || len(rep.UnmappedCommands) > 0 || len(rep.UnknownMappedOps) > 0 || len(rep.UnknownCommands) > 0) {
-		fatalf("coverage gaps remain: uncovered_operations=%d uncovered_properties=%d unmapped_commands=%d unknown_mapped_operations=%d unknown_mapped_commands=%d",
+	if opts.FailOnGaps && (len(rep.UncoveredOps) > 0 || len(rep.UncoveredProperties) > 0 || len(rep.UnmappedCommands) > 0 || len(rep.UnknownMappedOps) > 0 || len(rep.UnknownCommands) > 0) {
+		return fmt.Errorf("coverage gaps remain: uncovered_operations=%d uncovered_properties=%d unmapped_commands=%d unknown_mapped_operations=%d unknown_mapped_commands=%d",
 			len(rep.UncoveredOps), len(rep.UncoveredProperties), len(rep.UnmappedCommands), len(rep.UnknownMappedOps), len(rep.UnknownCommands))
 	}
+	return nil
 }
 
 func loadOperations(path string) ([]operation, error) {
@@ -554,9 +570,4 @@ func stringKeys(m map[string]struct{}) []string {
 	}
 	slices.Sort(out)
 	return out
-}
-
-func fatalf(format string, args ...any) {
-	_, _ = fmt.Fprintf(os.Stderr, format+"\n", args...)
-	os.Exit(1)
 }

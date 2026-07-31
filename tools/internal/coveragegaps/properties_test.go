@@ -1,4 +1,4 @@
-package main
+package coveragegaps
 
 import (
 	"os"
