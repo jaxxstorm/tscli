@@ -29,6 +29,7 @@
 - [tscli delete device](tscli_delete_device.md)
 - [tscli delete device invite](tscli_delete_device_invite.md)
 - [tscli delete device posture](tscli_delete_device_posture.md)
+- [tscli delete device routes](tscli_delete_device_routes.md)
 - [tscli delete devices](tscli_delete_devices.md)
 - [tscli delete key](tscli_delete_key.md)
 - [tscli delete logs](tscli_delete_logs.md)

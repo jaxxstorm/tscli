@@ -19,6 +19,7 @@ create webhook
 delete device
 delete device invite
 delete device posture
+delete device routes
 delete devices
 delete key
 delete logs stream
