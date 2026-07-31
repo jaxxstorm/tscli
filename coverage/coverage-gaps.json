@@ -1,7 +1,7 @@
 {
-  "openapi_operations": 85,
+  "openapi_operations": 90,
   "excluded_operations": [],
-  "in_scope_operations": 85,
+  "in_scope_operations": 90,
   "manifest_commands": 97,
   "excluded_commands": [
     "agent init",
@@ -108,8 +108,22 @@
     "put /tailnet/{tailnet}/logging/{logType}/stream",
     "put /tailnet/{tailnet}/services/{serviceName}"
   ],
-  "uncovered_operations": [],
-  "uncovered_by_domain": {},
+  "uncovered_operations": [
+    "delete /tailnet/{tailnet}/oauth-apps/{appId}",
+    "get /tailnet/{tailnet}/oauth-apps",
+    "get /tailnet/{tailnet}/oauth-apps/{appId}",
+    "post /tailnet/{tailnet}/oauth-apps",
+    "put /tailnet/{tailnet}/oauth-apps/{appId}"
+  ],
+  "uncovered_by_domain": {
+    "OAuthApps": [
+      "delete /tailnet/{tailnet}/oauth-apps/{appId}",
+      "get /tailnet/{tailnet}/oauth-apps",
+      "get /tailnet/{tailnet}/oauth-apps/{appId}",
+      "post /tailnet/{tailnet}/oauth-apps",
+      "put /tailnet/{tailnet}/oauth-apps/{appId}"
+    ]
+  },
   "unknown_mapped_operations": [],
   "covered_commands": [
     "create invite device",

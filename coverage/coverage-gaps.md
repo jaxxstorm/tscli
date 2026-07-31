@@ -1,12 +1,12 @@
 # Coverage Gaps Report
 
-- OpenAPI operations: `85`
+- OpenAPI operations: `90`
 - Excluded operations: `0`
-- In-scope operations: `85`
+- In-scope operations: `90`
 - Manifest commands: `97`
 - Excluded commands: `16`
 - Covered operations: `85`
-- Uncovered operations: `0`
+- Uncovered operations: `5`
 - Covered commands: `81`
 - Unmapped commands: `0`
 - Unknown mapped commands: `0`
@@ -16,7 +16,14 @@
 
 ## Uncovered Operations By Domain
 
-- None
+### OAuthApps (5)
+
+- `delete /tailnet/{tailnet}/oauth-apps/{appId}`
+- `get /tailnet/{tailnet}/oauth-apps`
+- `get /tailnet/{tailnet}/oauth-apps/{appId}`
+- `post /tailnet/{tailnet}/oauth-apps`
+- `put /tailnet/{tailnet}/oauth-apps/{appId}`
+
 ## Unmapped Commands
 
 - None

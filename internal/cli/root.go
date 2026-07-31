@@ -9,6 +9,7 @@ import (
 	"github.com/jaxxstorm/tscli/cmd/tscli/delete"
 	"github.com/jaxxstorm/tscli/cmd/tscli/get"
 	"github.com/jaxxstorm/tscli/cmd/tscli/list"
+	"github.com/jaxxstorm/tscli/cmd/tscli/maintenance"
 	"github.com/jaxxstorm/tscli/cmd/tscli/set"
 	"github.com/jaxxstorm/tscli/cmd/tscli/version"
 	"github.com/jaxxstorm/tscli/pkg/config"
@@ -58,6 +59,7 @@ func Configure() *cobra.Command {
 		delete.Command(),
 		set.Command(),
 		create.Command(),
+		maintenance.Command(),
 		version.Command(),
 		configuration.Command(),
 	)
@@ -86,7 +88,7 @@ func Configure() *cobra.Command {
 func isLocalCommand(cmd *cobra.Command) bool {
 	for current := cmd; current != nil; current = current.Parent() {
 		switch current.Name() {
-		case "config", "agent":
+		case "config", "agent", "maintenance":
 			return true
 		}
 	}
