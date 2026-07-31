@@ -14,12 +14,6 @@ Use this skill when work involves OpenAPI command parity, coverage-gap eliminati
    make coverage-gaps-check
    ```
 
-   Equivalent CLI command:
-
-   ```bash
-   go run ./cmd/tscli -- maintenance coverage-gaps --check
-   ```
-
 2. Inspect generated artifacts:
 
    - `coverage/coverage-gaps.json`

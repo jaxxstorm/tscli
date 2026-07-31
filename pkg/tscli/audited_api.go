@@ -33,8 +33,15 @@ func ListDeviceRoutesJSON(ctx context.Context, client *tsapi.Client, deviceID st
 }
 
 func SetDeviceRoutesJSON(ctx context.Context, client *tsapi.Client, deviceID string, request apitype.DeviceRoutesUpdateRequest) (json.RawMessage, error) {
+	if request.Routes == nil {
+		request.Routes = []string{}
+	}
 	path := fmt.Sprintf("/device/%s/routes", url.PathEscape(deviceID))
 	return rawJSON(ctx, client, http.MethodPost, path, request)
+}
+
+func ClearDeviceRoutesJSON(ctx context.Context, client *tsapi.Client, deviceID string) (json.RawMessage, error) {
+	return SetDeviceRoutesJSON(ctx, client, deviceID, apitype.DeviceRoutesUpdateRequest{Routes: []string{}})
 }
 
 func GetTailnetSettingsJSON(ctx context.Context, client *tsapi.Client) (json.RawMessage, error) {

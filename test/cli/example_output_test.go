@@ -64,6 +64,9 @@ func TestExampleCommandOutputShapes(t *testing.T) {
 				assertJSONShape(t, res.stdout, tc.shape)
 				return
 			}
+			if len(tc.textContains) == 0 {
+				return
+			}
 			assertTextOutput(t, res.stdout, tc.textContains...)
 		})
 	}
@@ -360,6 +363,7 @@ func exampleOutputCases() []exampleOutputCase {
 		apiArrayCase("create invite device", []string{"create", "invite", "device", "--device", "node-123", "--email", "user@example.com"}, apimock.InviteList(), []string{"id", "email"}),
 		apiArrayCase("create invite user", []string{"create", "invite", "user", "--email", "user@example.com"}, apimock.InviteList(), []string{"id", "email"}),
 		apiObjectCase("create key", []string{"create", "key"}, apimock.KeyResponse(), "id", "key"),
+		apiObjectCase("create oauth-app", []string{"create", "oauth-app", "--name", "example-app", "--redirect-uri", "https://example.com/callback", "--scope", "auth_keys:create"}, map[string]any{"id": "app-123", "name": "example-app"}, "id", "name"),
 		apiObjectCase("create posture-integration", []string{"create", "posture-integration", "--provider", "falcon", "--client-secret", "secret"}, apimock.PostureIntegration(), "id", "provider"),
 		lifecycleObjectCase("create tailnet", []string{"create", "tailnet", "--display-name", "Sandbox", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, map[string]any{"id": "T123", "displayName": "Sandbox", "oauthClient": map[string]any{"id": "k123", "secret": "tskey-client-secret"}}, "id", "displayName", "oauthClient"),
 		oauthObjectCase("create token", []string{"create", "token", "--client-id", "cid", "--client-secret", "secret"}, "access_token", "token_type"),
@@ -375,6 +379,7 @@ func exampleOutputCases() []exampleOutputCase {
 			addJSONForMethods(mock, apimock.DeviceList(), http.MethodGet)
 		}),
 		summaryObjectCase("delete key", []string{"delete", "key", "--key", "k123"}, "result"),
+		summaryObjectCase("delete oauth-app", []string{"delete", "oauth-app", "--id", "app-123"}, "result"),
 		summaryObjectCase("delete logs stream", []string{"delete", "logs", "stream", "--type", "network"}, "result"),
 		apiObjectCase("delete posture-integration", []string{"delete", "posture-integration", "--id", "pi-1"}, map[string]any{"id": "pi-1", "deleted": true}, "id", "deleted"),
 		summaryLifecycleCase("delete tailnet", []string{"delete", "tailnet", "--id", "T123", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, "result"),
@@ -402,6 +407,7 @@ func exampleOutputCases() []exampleOutputCase {
 		apiObjectCase("get logs aws", []string{"get", "logs", "aws"}, apimock.AWSExternalID(), "externalId"),
 		apiObjectCase("get logs aws validate", []string{"get", "logs", "aws", "validate", "--external-id", "ext-123", "--role-arn", "arn:aws:iam::123456789012:role/demo"}, apimock.AWSValidation(), "valid"),
 		apiObjectCase("get logs stream", []string{"get", "logs", "stream", "--type", "network"}, apimock.LogsStream(), "enabled", "endpoint"),
+		apiObjectCase("get oauth-app", []string{"get", "oauth-app", "--id", "app-123"}, map[string]any{"id": "app-123", "name": "example-app"}, "id", "name"),
 		customCase("get policy", []string{"get", "policy", "--json"}, jsonShapeExpectation{
 			TopLevel:   jsonTopLevelObject,
 			ObjectKeys: []string{"acls"},
@@ -431,6 +437,7 @@ func exampleOutputCases() []exampleOutputCase {
 		apiArrayCase("list keys", []string{"list", "keys", "--all"}, apimock.KeyListEnvelope(), []string{"id", "key"}),
 		apiArrayCase("list logs config", []string{"list", "logs", "config"}, apimock.LogsConfiguration(), []string{"id", "action"}),
 		apiArrayCase("list logs network", []string{"list", "logs", "network"}, apimock.LogsNetwork(), []string{"id", "srcIP"}),
+		apiObjectCase("list oauth-apps", []string{"list", "oauth-apps"}, map[string]any{"oauthApps": []map[string]any{{"id": "app-123", "name": "example-app"}}}, "oauthApps"),
 		apiArrayCase("list nameservers", []string{"list", "nameservers"}, apimock.DNSNameservers(), nil),
 		apiObjectCase("list posture-integrations", []string{"list", "posture-integrations"}, apimock.PostureIntegrationList(), "integrations"),
 		lifecycleObjectCase("list tailnets", []string{"list", "tailnets", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, map[string]any{"tailnets": []map[string]any{{"id": "T123", "displayName": "Sandbox", "orgId": "o123", "createdAt": "2025-01-01T12:00:00Z"}}}, "tailnets"),
@@ -455,6 +462,7 @@ func exampleOutputCases() []exampleOutputCase {
 		summaryObjectCase("set device name", []string{"set", "device", "name", "--device", "node-123", "--name", "new-name"}, "result"),
 		summaryObjectCase("set device posture", []string{"set", "device", "posture", "--device", "node-123", "--key", "custom:group", "--value", "prod"}, "result"),
 		apiObjectCase("set device routes", []string{"set", "device", "routes", "--device", "node-123", "--route", "10.0.0.0/24"}, apimock.DeviceRoutes(), "advertisedRoutes", "enabledRoutes"),
+		apiObjectCase("delete device routes", []string{"delete", "device", "routes", "--device", "node-123"}, apimock.DeviceRoutes(), "advertisedRoutes", "enabledRoutes"),
 		summaryObjectCase("set device tags", []string{"set", "device", "tags", "--device", "node-123", "--tag", "tag:prod"}, "result", "device", "tags"),
 		apiObjectCase("set dns configuration", []string{"set", "dns", "configuration", "--body", `{"magicDNS":true}`}, apimock.DNSConfiguration(), "magicDNS"),
 		apiObjectCase("set dns nameservers", []string{"set", "dns", "nameservers", "--nameserver", "1.1.1.1"}, map[string]any{"dns": []string{"1.1.1.1"}}, "dns"),
@@ -463,6 +471,7 @@ func exampleOutputCases() []exampleOutputCase {
 		apiObjectCase("set dns split-dns", []string{"set", "dns", "split-dns", "--entry", "corp.example.com=1.1.1.1"}, apimock.DNSSplitConfig(), "corp.example.com"),
 		apiObjectCase("set key", []string{"set", "key", "--key", "k123", "--body", `{"description":"updated"}`}, apimock.KeyResponse(), "id", "key"),
 		apiObjectCase("set logs stream", []string{"set", "logs", "stream", "--type", "network", "--body", `{"endpoint":"https://example.com"}`}, apimock.LogsStream(), "enabled", "endpoint"),
+		apiObjectCase("set oauth-app", []string{"set", "oauth-app", "--id", "app-123", "--name", "example-app", "--redirect-uri", "https://example.com/callback", "--scope", "auth_keys:create"}, map[string]any{"id": "app-123", "name": "example-app"}, "id", "name"),
 		customCase("set policy", []string{"set", "policy", "--body", `{"acls":[]}`}, jsonShapeExpectation{}, false, func(t *testing.T, mock *apimock.Server, env map[string]string) {
 			env["TSCLI_BASE_URL"] = mock.URL()
 			mock.AddRaw(http.MethodPost, "", http.StatusOK, "")

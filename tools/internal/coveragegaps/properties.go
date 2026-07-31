@@ -1,4 +1,4 @@
-package main
+package coveragegaps
 
 import (
 	"fmt"
@@ -90,6 +90,9 @@ var propertyTypeRegistry = map[string]reflect.Type{
 	"apitype.DeviceRoutesUpdateRequest":       reflect.TypeOf(apitype.DeviceRoutesUpdateRequest{}),
 	"apitype.TailnetSettings":                 reflect.TypeOf(apitype.TailnetSettings{}),
 	"apitype.UpdateTailnetSettingsRequest":    reflect.TypeOf(apitype.UpdateTailnetSettingsRequest{}),
+	"apitype.OAuthApp":                        reflect.TypeOf(apitype.OAuthApp{}),
+	"apitype.OAuthAppRequest":                 reflect.TypeOf(apitype.OAuthAppRequest{}),
+	"apitype.OAuthAppListResponse":            reflect.TypeOf(apitype.OAuthAppListResponse{}),
 	"tsapi.CreateKeyRequest":                  reflect.TypeOf(tsapi.CreateKeyRequest{}),
 	"tsapi.Device":                            reflect.TypeOf(tsapi.Device{}),
 	"tsapi.Key":                               reflect.TypeOf(tsapi.Key{}),

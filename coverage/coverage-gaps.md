@@ -3,27 +3,20 @@
 - OpenAPI operations: `90`
 - Excluded operations: `0`
 - In-scope operations: `90`
-- Manifest commands: `97`
+- Manifest commands: `103`
 - Excluded commands: `16`
-- Covered operations: `85`
-- Uncovered operations: `5`
-- Covered commands: `81`
+- Covered operations: `90`
+- Uncovered operations: `0`
+- Covered commands: `87`
 - Unmapped commands: `0`
 - Unknown mapped commands: `0`
-- Covered properties: `163`
+- Covered properties: `229`
 - Excluded properties: `637`
 - Uncovered properties: `0`
 
 ## Uncovered Operations By Domain
 
-### OAuthApps (5)
-
-- `delete /tailnet/{tailnet}/oauth-apps/{appId}`
-- `get /tailnet/{tailnet}/oauth-apps`
-- `get /tailnet/{tailnet}/oauth-apps/{appId}`
-- `post /tailnet/{tailnet}/oauth-apps`
-- `put /tailnet/{tailnet}/oauth-apps/{appId}`
-
+- None
 ## Unmapped Commands
 
 - None
@@ -155,6 +148,38 @@
 - `devices[].updateAvailable`
 - `devices[].user`
 
+### get /tailnet/{tailnet}/oauth-apps response
+
+- `oauthApps`
+- `oauthApps[]`
+- `oauthApps[].allowedNodeAttributes`
+- `oauthApps[].allowedNodeAttributes[]`
+- `oauthApps[].clientSecret`
+- `oauthApps[].created`
+- `oauthApps[].description`
+- `oauthApps[].id`
+- `oauthApps[].name`
+- `oauthApps[].redirectURIs`
+- `oauthApps[].redirectURIs[]`
+- `oauthApps[].scopes`
+- `oauthApps[].scopes[]`
+- `oauthApps[].updated`
+
+### get /tailnet/{tailnet}/oauth-apps/{appId} response
+
+- `allowedNodeAttributes`
+- `allowedNodeAttributes[]`
+- `clientSecret`
+- `created`
+- `description`
+- `id`
+- `name`
+- `redirectURIs`
+- `redirectURIs[]`
+- `scopes`
+- `scopes[]`
+- `updated`
+
 ### get /tailnet/{tailnet}/settings response
 
 - `aclsExternalLink`
@@ -227,6 +252,58 @@
 - `subject`
 - `tags`
 - `tags[]`
+
+### post /tailnet/{tailnet}/oauth-apps request
+
+- `allowedNodeAttributes`
+- `allowedNodeAttributes[]`
+- `description`
+- `name`
+- `redirectURIs`
+- `redirectURIs[]`
+- `scopes`
+- `scopes[]`
+
+### post /tailnet/{tailnet}/oauth-apps response
+
+- `allowedNodeAttributes`
+- `allowedNodeAttributes[]`
+- `clientSecret`
+- `created`
+- `description`
+- `id`
+- `name`
+- `redirectURIs`
+- `redirectURIs[]`
+- `scopes`
+- `scopes[]`
+- `updated`
+
+### put /tailnet/{tailnet}/oauth-apps/{appId} request
+
+- `allowedNodeAttributes`
+- `allowedNodeAttributes[]`
+- `description`
+- `name`
+- `redirectURIs`
+- `redirectURIs[]`
+- `scopes`
+- `scopes[]`
+
+### put /tailnet/{tailnet}/oauth-apps/{appId} response
+
+- `allowedNodeAttributes`
+- `allowedNodeAttributes[]`
+- `clientSecret`
+- `created`
+- `description`
+- `id`
+- `name`
+- `redirectURIs`
+- `redirectURIs[]`
+- `scopes`
+- `scopes[]`
+- `updated`
 
 
 ## Excluded Properties By Operation

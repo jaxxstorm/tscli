@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jaxxstorm/tscli/internal/maintenance/coveragegaps"
+	"github.com/jaxxstorm/tscli/tools/internal/coveragegaps"
 )
 
 func main() {

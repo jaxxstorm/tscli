@@ -31,6 +31,7 @@ Commands that set information on the Tailscale API
 * [tscli set dns](tscli_set_dns.md)	 - Set DNS information
 * [tscli set key](tscli_set_key.md)	 - Update a tailnet key
 * [tscli set logs](tscli_set_logs.md)	 - Set log configuration
+* [tscli set oauth-app](tscli_set_oauth-app.md)	 - Update an OAuth app
 * [tscli set policy](tscli_set_policy.md)	 - Replace the tailnet ACL / policy file
 * [tscli set posture-integration](tscli_set_posture-integration.md)	 - Create or update a posture integration
 * [tscli set service](tscli_set_service.md)	 - Update a service

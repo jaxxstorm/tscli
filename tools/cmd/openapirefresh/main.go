@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jaxxstorm/tscli/internal/maintenance/openapirefresh"
+	"github.com/jaxxstorm/tscli/tools/internal/openapirefresh"
 )
 
 func main() {

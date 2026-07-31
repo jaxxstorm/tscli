@@ -61,4 +61,44 @@ operations:
         evidence:
           model: tscli create-key operation request union
           tests:
-            - TestCreateKeyAuthkeyTagsPayload
+           - TestCreateKeyAuthkeyTagsPayload
+  "post /tailnet/{tailnet}/oauth-apps":
+    request:
+      - type: apitype.OAuthAppRequest
+        evidence:
+          command: create oauth-app
+          tests:
+            - TestOAuthAppCommands
+    response:
+      - type: apitype.OAuthApp
+        evidence:
+          command: create oauth-app
+          tests:
+            - TestOAuthAppCommands
+  "put /tailnet/{tailnet}/oauth-apps/{appId}":
+    request:
+      - type: apitype.OAuthAppRequest
+        evidence:
+          command: set oauth-app
+          tests:
+            - TestOAuthAppCommands
+    response:
+      - type: apitype.OAuthApp
+        evidence:
+          command: set oauth-app
+          tests:
+            - TestOAuthAppCommands
+  "get /tailnet/{tailnet}/oauth-apps/{appId}":
+    response:
+      - type: apitype.OAuthApp
+        evidence:
+          command: get oauth-app
+          tests:
+            - TestOAuthAppCommands
+  "get /tailnet/{tailnet}/oauth-apps":
+    response:
+      - type: apitype.OAuthAppListResponse
+        evidence:
+          command: list oauth-apps
+          tests:
+            - TestOAuthAppCommands

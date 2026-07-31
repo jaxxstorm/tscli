@@ -1,6 +1,7 @@
 package set
 
 import (
+	"github.com/jaxxstorm/tscli/cmd/tscli/oauthapp"
 	"github.com/jaxxstorm/tscli/cmd/tscli/set/contact"
 	"github.com/jaxxstorm/tscli/cmd/tscli/set/device"
 	"github.com/jaxxstorm/tscli/cmd/tscli/set/dns"
@@ -34,5 +35,6 @@ func Command() *cobra.Command {
 	command.AddCommand(policy.Command())
 	command.AddCommand(service.Command())
 	command.AddCommand(webhook.Command())
+	command.AddCommand(oauthapp.SetCommand())
 	return command
 }

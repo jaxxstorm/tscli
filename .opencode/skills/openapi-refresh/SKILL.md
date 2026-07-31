@@ -14,12 +14,6 @@ Use this skill when work depends on the latest upstream Tailscale OpenAPI schema
    make openapi-refresh
    ```
 
-   Equivalent CLI command:
-
-   ```bash
-   go run ./cmd/tscli -- maintenance openapi-refresh
-   ```
-
 2. Inspect refreshed artifacts:
 
    - `pkg/contract/openapi/tailscale-v2-openapi.yaml`
