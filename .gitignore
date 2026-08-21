@@ -4,3 +4,5 @@ dist/
 .env
 
 .gocache
+
+PR_MESSAGE.md

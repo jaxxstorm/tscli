@@ -10,8 +10,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/jaxxstorm/tscli/pkg/oauth"
 	"github.com/jaxxstorm/tscli/pkg/output"
+	"github.com/jaxxstorm/tscli/pkg/tscli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -37,8 +37,7 @@ func Command() *cobra.Command {
 		},
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Use the OAuth library for token exchange
-			tokenResp, err := oauth.ExchangeClientCredentials(cmd.Context(), clientID, clientSecret)
+			tokenResp, err := tscli.ExchangeOAuthClientCredentials(cmd.Context(), clientID, clientSecret)
 			if err != nil {
 				return fmt.Errorf("failed to exchange OAuth credentials: %w", err)
 			}

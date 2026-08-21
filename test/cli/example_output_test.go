@@ -203,9 +203,8 @@ func TestTailnetListRenderedOutput(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mock := apimock.New(t)
 			env := map[string]string{
-				"TSCLI_OUTPUT":          tc.mode,
-				"TSCLI_BASE_URL":        mock.URL(),
-				"TSCLI_OAUTH_TOKEN_URL": mock.URL() + "/api/v2/oauth/token",
+				"TSCLI_OUTPUT":   tc.mode,
+				"TSCLI_BASE_URL": mock.URL(),
 			}
 
 			mock.AddRaw(http.MethodPost, "/api/v2/oauth/token", http.StatusOK, `{"access_token":"tok-123","token_type":"Bearer","expires_in":3600}`)
@@ -523,7 +522,7 @@ func oauthObjectCase(command string, args []string, keys ...string) exampleOutpu
 		TopLevel:   jsonTopLevelObject,
 		ObjectKeys: keys,
 	}, true, func(t *testing.T, mock *apimock.Server, env map[string]string) {
-		env["TSCLI_OAUTH_TOKEN_URL"] = mock.URL() + "/api/v2/oauth/token"
+		env["TSCLI_BASE_URL"] = mock.URL()
 		mock.AddRaw(http.MethodPost, "/api/v2/oauth/token", http.StatusOK, `{"access_token":"tok-123","token_type":"Bearer","expires_in":3600}`)
 	})
 }
@@ -534,7 +533,6 @@ func lifecycleObjectCase(command string, args []string, body any, keys ...string
 		ObjectKeys: keys,
 	}, true, func(t *testing.T, mock *apimock.Server, env map[string]string) {
 		env["TSCLI_BASE_URL"] = mock.URL()
-		env["TSCLI_OAUTH_TOKEN_URL"] = mock.URL() + "/api/v2/oauth/token"
 		mock.AddRaw(http.MethodPost, "/api/v2/oauth/token", http.StatusOK, `{"access_token":"tok-123","token_type":"Bearer","expires_in":3600}`)
 		mock.AddJSON(http.MethodGet, "/api/v2/organizations/-/tailnets", http.StatusOK, body)
 		mock.AddJSON(http.MethodPost, "/api/v2/organizations/-/tailnets", http.StatusOK, body)
@@ -547,7 +545,6 @@ func summaryLifecycleCase(command string, args []string, keys ...string) example
 		ObjectKeys: keys,
 	}, true, func(t *testing.T, mock *apimock.Server, env map[string]string) {
 		env["TSCLI_BASE_URL"] = mock.URL()
-		env["TSCLI_OAUTH_TOKEN_URL"] = mock.URL() + "/api/v2/oauth/token"
 		mock.AddRaw(http.MethodPost, "/api/v2/oauth/token", http.StatusOK, `{"access_token":"tok-123","token_type":"Bearer","expires_in":3600}`)
 		mock.AddRaw(http.MethodDelete, "/api/v2/tailnet/T123", http.StatusOK, `{}`)
 	})

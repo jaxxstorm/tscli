@@ -1,17 +1,17 @@
 # Coverage Gaps Report
 
-- OpenAPI operations: `90`
+- OpenAPI operations: `93`
 - Excluded operations: `0`
-- In-scope operations: `90`
+- In-scope operations: `93`
 - Manifest commands: `103`
 - Excluded commands: `16`
-- Covered operations: `90`
+- Covered operations: `93`
 - Uncovered operations: `0`
 - Covered commands: `87`
 - Unmapped commands: `0`
 - Unknown mapped commands: `0`
 - Covered properties: `229`
-- Excluded properties: `637`
+- Excluded properties: `657`
 - Uncovered properties: `0`
 
 ## Uncovered Operations By Domain
@@ -349,6 +349,15 @@
 - `[].sharerId`
 - `[].tailnetId`
 
+### get /organizations/{organization}/tailnets response
+
+- `tailnets`
+- `tailnets[]`
+- `tailnets[].createdAt`
+- `tailnets[].displayName`
+- `tailnets[].id`
+- `tailnets[].orgId`
+
 ### get /posture/integrations/{id} response
 
 - `clientId`
@@ -609,6 +618,7 @@
 - `vipServices[].addrs`
 - `vipServices[].addrs[]`
 - `vipServices[].comment`
+- `vipServices[].displayName`
 - `vipServices[].name`
 - `vipServices[].ports`
 - `vipServices[].ports[]`
@@ -620,6 +630,7 @@
 - `addrs`
 - `addrs[]`
 - `comment`
+- `displayName`
 - `name`
 - `ports`
 - `ports[]`
@@ -861,6 +872,22 @@
 
 - `tags`
 - `tags[]`
+
+### post /organizations/{organization}/tailnets request
+
+- `displayName`
+
+### post /organizations/{organization}/tailnets response
+
+- `alreadyExists`
+- `createdAt`
+- `displayName`
+- `dnsName`
+- `id`
+- `oauthClient`
+- `oauthClient.id`
+- `oauthClient.secret`
+- `orgId`
 
 ### post /tailnet/{tailnet}/acl/preview response
 
@@ -1150,6 +1177,7 @@
 - `addrs`
 - `addrs[]`
 - `comment`
+- `displayName`
 - `name`
 - `ports`
 - `ports[]`
@@ -1161,6 +1189,7 @@
 - `addrs`
 - `addrs[]`
 - `comment`
+- `displayName`
 - `name`
 - `ports`
 - `ports[]`

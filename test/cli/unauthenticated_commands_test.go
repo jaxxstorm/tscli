@@ -7,7 +7,7 @@ import (
 
 func TestCreateTokenDoesNotRequireAPIKeyConfig(t *testing.T) {
 	res := executeCLINoDefaults(t, []string{"create", "token", "--client-id", "cid", "--client-secret", "secret"}, map[string]string{
-		"TSCLI_OAUTH_TOKEN_URL": "http://127.0.0.1:1/api/v2/oauth/token",
+		"TSCLI_BASE_URL": "http://127.0.0.1:1",
 	})
 
 	if res.err == nil {

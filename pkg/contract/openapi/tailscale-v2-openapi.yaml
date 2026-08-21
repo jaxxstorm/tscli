@@ -4,7 +4,7 @@ info:
   description: |-
     ### Overview
 
-    **The API endpoints documented here are stable. However, the OpenAPI spec used to generate this documentation is unstable. It may change or break without notice.**
+    **The API endpoints documented here are stable unless otherwise noted. However, the OpenAPI spec used to generate this documentation is unstable. It may change or break without notice.**
 
     The Tailscale API is a (mostly) RESTful API. Typically, both POST bodies and responses are JSON-encoded.
 
@@ -20,11 +20,11 @@ info:
     Access tokens can be supplied as the username portion of HTTP Basic authentication
     (leave the password blank) or as an OAuth Bearer token:
 
-    ```
-    // passing token with basic auth
+    ```sh
+    # passing token with basic auth
     curl -u "tskey-api-xxxxx:" https://api.tailscale.com/api/v2/...
 
-    // passing token as bearer token
+    # passing token as bearer token
     curl -H "Authorization: Bearer tskey-api-xxxxx" https://api.tailscale.com/api/v2/...
     ```
 
@@ -38,7 +38,7 @@ info:
 
     The Tailscale API returns status codes consistent with standard HTTP conventions. In addition to the status code, errors may include additional information in the response body:
 
-    ```
+    ```json
     {
       "message": "additional error information"
     }
@@ -86,7 +86,7 @@ tags:
     x-displayName: User invites
     description: |
       Manage user invites.
-      Learn more about about [inviting users](/kb/1371/invite-users).
+      Learn more about [inviting users](/kb/1371/invite-users).
   - name: DeviceInvites
     x-displayName: Device invites
     description: |
@@ -119,6 +119,9 @@ tags:
     description: |
       Manage OAuth apps for a tailnet.
       Learn more about [OAuth apps](/docs/features/oauth-apps).
+  - name: Organizations
+    description: |
+      Manage organization-level resources.
 paths:
   /tailnet/{tailnet}/devices:
     parameters:
@@ -169,6 +172,40 @@ paths:
         '504':
           description: Request took too long to process, please try again later.
           $ref: '#/components/responses/504'
+  /tailnet/{tailnet}:
+    parameters:
+      - $ref: '#/components/parameters/tailnet'
+    delete:
+      summary: Delete a tailnet
+      x-badges:
+        - name: Alpha
+          position: before
+      description: |
+        Delete the specified tailnet and all of its users, devices, and configuration.
+
+        [API-only tailnets](https://tailscale.com/docs/features/tailnet-creation-api) can be deleted using an access
+        token for the tailnet being deleted. You can get a tailnet-specific access token by exchanging either the OAuth
+        client credentials returned when the tailnet was created or an OAuth client from the creating tailnet that has
+        the `all` scope.
+
+        OAuth Scope: `all`.
+      operationId: deleteTailnet
+      tags:
+        - Organizations
+      responses:
+        '200':
+          description: Successful operation.
+        '400':
+          description: Tailnet deletion could not be completed.
+          $ref: '#/components/responses/400'
+        '403':
+          description: Tailnet deletion is not permitted.
+          $ref: '#/components/responses/403'
+        '404':
+          description: Tailnet not found.
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
   /tailnet/{tailnet}/device-attributes:
     parameters:
       - $ref: '#/components/parameters/tailnet'
@@ -3902,6 +3939,82 @@ paths:
           $ref: '#/components/responses/404'
         '500':
           $ref: '#/components/responses/500'
+  /organizations/{organization}/tailnets:
+    parameters:
+      - $ref: '#/components/parameters/organization'
+    get:
+      summary: List tailnets
+      x-badges:
+        - name: Alpha
+          position: before
+      description: |
+        List all tailnets in the organization, including the original tailnet and any
+        [API-only tailnets](https://tailscale.com/docs/features/tailnet-creation-api) created with the tailnet creation
+        API.
+
+        OAuth Scope: `tailnets:read`.
+      operationId: listOrganizationTailnets
+      tags:
+        - Organizations
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOrganizationTailnetsResponse'
+        '403':
+          description: User does not have sufficient access to list tailnets for this organization.
+          $ref: '#/components/responses/403'
+        '404':
+          description: Organization not found.
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+    post:
+      summary: Create a tailnet
+      x-badges:
+        - name: Alpha
+          position: before
+      description: |
+        Create an [API-only tailnet](https://tailscale.com/docs/features/tailnet-creation-api) in the organization.
+        API-only tailnets have no human users and do not appear in the admin console. Use them for applications and
+        infrastructure that manage tailnets entirely through the API.
+
+        All plans can create a maximum of 10 tailnets, including their original tailnet. If your use case requires
+        more than 10 tailnets, [contact sales](https://tailscale.com/contact/sales).
+
+        The response includes an OAuth client for the new tailnet. The client secret is returned only in this response
+        and cannot be retrieved later, so be sure to record it.
+
+        OAuth Scope: `tailnets`.
+      operationId: createOrganizationTailnet
+      tags:
+        - Organizations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrganizationTailnetRequest'
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrganizationTailnetResponse'
+        '400':
+          description: Display name is missing, invalid, or already in use.
+          $ref: '#/components/responses/400'
+        '403':
+          description: User does not have sufficient access to create a tailnet for this organization.
+          $ref: '#/components/responses/403'
+        '404':
+          description: Organization not found.
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
 components:
   securitySchemes:
     bearerAuth:
@@ -4191,6 +4304,28 @@ components:
             - WEBHOOK_ENDPOINT.UPDATE.SUBSCRIBED_EVENTS
             - WEB_INTERFACE.LOGIN
             - WEB_INTERFACE.LOGOUT
+            - PAM_CONNECTOR.CREATE
+            - PAM_CONNECTOR.CREATE.ACCESS_TOKEN
+            - PAM_CONNECTOR.DELETE
+            - PAM_CONNECTOR.DISABLE.ACCESS_TOKEN
+            - PAM_CONNECTOR.UPDATE
+            - PAM_SERVICE.CREATE
+            - PAM_SERVICE.DELETE
+            - PAM_SERVICE.UPDATE
+            - PAM_SERVICE_ACCOUNT.CREATE
+            - PAM_SERVICE_ACCOUNT.CREATE.ACCESS_TOKEN
+            - PAM_SERVICE_ACCOUNT.DELETE
+            - PAM_SERVICE_ACCOUNT.UPDATE
+            - PAM_SETTINGS.CREATE.CUSTOM_DOMAIN
+            - PAM_SETTINGS.CREATE.NOTIFICATION
+            - PAM_SETTINGS.CREATE.RECORDING_STORAGE
+            - PAM_SETTINGS.DELETE.CUSTOM_DOMAIN
+            - PAM_SETTINGS.DELETE.NOTIFICATION
+            - PAM_SETTINGS.DELETE.RECORDING_STORAGE
+            - PAM_SETTINGS.UPDATE
+            - PAM_SETTINGS.UPDATE.CUSTOM_DOMAIN
+            - PAM_SETTINGS.UPDATE.NOTIFICATION
+            - PAM_SETTINGS.UPDATE.SETUP_WIZARD
         example:
           - USER.CREATE
           - NODE.CREATE
@@ -4281,6 +4416,17 @@ components:
       schema:
         type: string
         example: a123456CNTRL
+    organization:
+      in: path
+      name: organization
+      description: |
+        The organization identifier.
+
+        Use a dash (`-`) to reference the organization of the access token being used to make the API call.
+      required: true
+      schema:
+        type: string
+        example: '-'
   schemas:
     Device:
       type: object
@@ -4899,6 +5045,7 @@ components:
             - STRIPE
             - SECURITY_NOTIFICATION
             - LEGAL_NOTIFICATION
+            - BORDER0_API
           description: The initiator of the action that generated the event, typically an API or user interface, like the Tailscale admin panel.
           example: ADMIN_CONSOLE
         actor:
@@ -4920,6 +5067,8 @@ components:
                 - MULLVAD
                 - LOGSTREAM
                 - SECRET_SCANNER
+                - PAM_CONNECTOR
+                - PAM_SERVICE_ACCOUNT
               description: The entity type of the actor.
               example: USER
             loginName:
@@ -6129,6 +6278,14 @@ components:
           type: string
           description: The unique name of the Service.
           example: svc:example
+        displayName:
+          type: string
+          description: |
+            An optional human-readable label for the Service, shown in the Tailscale admin console
+            and to clients with access to the Service.
+            Must be 64 characters or fewer.
+          maxLength: 64
+          example: Example Service
         addrs:
           type: array
           description: |
@@ -6331,6 +6488,88 @@ components:
         - custom:myattribute
       description: |
         The list of custom node attributes that the OAuth app is allowed to set.
+    OrganizationTailnet:
+      type: object
+      properties:
+        id:
+          type: string
+          description: A stable, globally unique identifier for the tailnet.
+          example: T123456CNTRL
+        displayName:
+          type: string
+          description: The tailnet's display name.
+          example: Production staging
+        orgId:
+          type: string
+          description: A stable, globally unique identifier for the organization.
+          example: o123456CNTRL
+        createdAt:
+          type: string
+          format: date-time
+          description: RFC3339 timestamp of when the tailnet was created.
+          example: '2025-01-01T12:00:00Z'
+    ListOrganizationTailnetsResponse:
+      type: object
+      properties:
+        tailnets:
+          type: array
+          description: Tailnets in the organization.
+          items:
+            $ref: '#/components/schemas/OrganizationTailnet'
+    CreateOrganizationTailnetRequest:
+      type: object
+      required:
+        - displayName
+      properties:
+        displayName:
+          type: string
+          description: |
+            A custom name for the tailnet. It can contain letters, numbers, spaces, apostrophes, and hyphens, and must
+            be unique within the organization.
+          example: Production staging
+    TailnetOAuthClient:
+      type: object
+      description: |
+        OAuth client credentials with the `all` scope for the newly created tailnet. The secret is returned only once.
+      properties:
+        id:
+          type: string
+          description: A stable, globally unique identifier for the OAuth client.
+          example: k123456CNTRL
+        secret:
+          type: string
+          description: The OAuth client secret.
+          example: tskey-client-xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    CreateOrganizationTailnetResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: A stable, globally unique identifier for the tailnet.
+          example: T123456CNTRL
+        displayName:
+          type: string
+          description: The tailnet name provided in the request.
+          example: Production staging
+        orgId:
+          type: string
+          description: A stable, globally unique identifier for the organization.
+          example: o123456CNTRL
+        dnsName:
+          type: string
+          description: The DNS suffix used to construct fully qualified domain names for devices in this tailnet.
+          example: tail1234.ts.net
+        createdAt:
+          type: string
+          format: date-time
+          description: RFC3339 timestamp of when the tailnet was created.
+          example: '2025-01-01T12:00:00Z'
+        oauthClient:
+          $ref: '#/components/schemas/TailnetOAuthClient'
+        alreadyExists:
+          type: boolean
+          description: True if the requested tailnet already exists.
+          example: true
   responses:
     '400':
       description: Bad request.
