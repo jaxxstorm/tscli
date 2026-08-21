@@ -31,9 +31,21 @@ const (
 	defaultContentType = "application/json"
 )
 
-// getUserAgent returns the properly formatted user agent string
+// getUserAgent returns the default user agent string, derived from the
+// build version (or, if unset, this process's local git repository state).
+// Callers that want a fixed value — e.g. a library consumer who should not
+// leak their own repo's git metadata — should set the "user-agent" viper
+// key (flag/env/config) instead of relying on this default.
 func getUserAgent() string {
 	return fmt.Sprintf("tscli/%s (Go client)", version.GetVersion())
+}
+
+func configuredUserAgent() string {
+	userAgent := viper.GetString("user-agent")
+	if userAgent == "" {
+		userAgent = getUserAgent()
+	}
+	return userAgent
 }
 
 func New() (*tsapi.Client, error) {
@@ -49,7 +61,7 @@ func New() (*tsapi.Client, error) {
 		return nil, fmt.Errorf("either api-key or both oauth-client-id and oauth-client-secret are required")
 	}
 
-	userAgent := getUserAgent()
+	userAgent := configuredUserAgent()
 
 	// Create a custom transport that ensures UserAgent is always set
 	transport := &userAgentTransport{
@@ -64,6 +76,14 @@ func New() (*tsapi.Client, error) {
 
 	httpClient := &http.Client{
 		Transport: transport,
+		// Tailscale's API never legitimately redirects. Refusing to follow
+		// redirects prevents oauthBearerTransport's Authorization header
+		// (re-attached on every RoundTrip call, including the request the
+		// stdlib http.Client builds for a followed redirect) from ever being
+		// sent to a host other than the one this client was configured for.
+		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}
 
 	client := &tsapi.Client{
@@ -71,17 +91,20 @@ func New() (*tsapi.Client, error) {
 		UserAgent: userAgent,
 		HTTP:      httpClient,
 	}
+	resolvedBaseURL, err := resolveConfiguredBaseURL(baseURL)
+	if err != nil {
+		return nil, err
+	}
+	if baseURL != "" {
+		client.BaseURL = resolvedBaseURL
+	}
 
 	if apiKey != "" {
 		client.APIKey = apiKey
 	} else {
-		tokenURL := os.Getenv("TSCLI_OAUTH_TOKEN_URL")
-		if tokenURL == "" {
-			resolvedBaseURL := baseURL
-			if resolvedBaseURL == "" {
-				resolvedBaseURL = defaultBaseURL
-			}
-			tokenURL = strings.TrimRight(resolvedBaseURL, "/") + "/api/v2/oauth/token"
+		tokenURL, err := oauthTokenURL(resolvedBaseURL)
+		if err != nil {
+			return nil, err
 		}
 		httpClient.Transport = &oauthBearerTransport{
 			rt:           httpClient.Transport,
@@ -91,15 +114,31 @@ func New() (*tsapi.Client, error) {
 		}
 	}
 
-	if baseURL != "" {
-		parsed, err := parseBaseURL(baseURL)
-		if err != nil {
-			return nil, err
-		}
-		client.BaseURL = parsed
-	}
-
 	return client, nil
+}
+
+// ExchangeOAuthClientCredentials exchanges OAuth client credentials via
+// oauth.ExchangeClientCredentials, passing the token endpoint derived from
+// the same tailnet/base-url configuration New() reads from viper (flag,
+// environment, or config file) as the default. TSCLI_OAUTH_TOKEN_URL still
+// overrides that derived default; see oauth.ExchangeClientCredentials for
+// the validation applied to both.
+func ExchangeOAuthClientCredentials(ctx context.Context, clientID, clientSecret string) (*oauth.TokenResponse, error) {
+	baseURL, err := resolveBaseURL(nil)
+	if err != nil {
+		return nil, err
+	}
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	return oauth.ExchangeClientCredentials(ctx, clientID, clientSecret, joinAPIV2Path(baseURL, "/oauth/token").String())
+}
+
+// oauthTokenURL returns the OAuth client-credentials token endpoint: the
+// TSCLI_OAUTH_TOKEN_URL environment variable if it is set and passes
+// oauth.ValidateTokenURL, otherwise baseURL's "/api/v2/oauth/token" path
+// (preserving any path prefix baseURL has, e.g. behind a reverse proxy).
+func oauthTokenURL(baseURL *url.URL) (string, error) {
+	return oauth.ResolveTokenURL(joinAPIV2Path(baseURL, "/oauth/token").String())
 }
 
 type oauthBearerTransport struct {
@@ -190,10 +229,8 @@ func Do(
 
 	u.Path = strings.ReplaceAll(u.Path, "{tailnet}", url.PathEscape(c.Tailnet))
 
-	full := base.ResolveReference(&url.URL{
-		Path:     "/api/v2" + u.Path,
-		RawQuery: u.RawQuery,
-	})
+	full := joinAPIV2Path(base, u.Path)
+	full.RawQuery = u.RawQuery
 
 	var rdr io.Reader
 	if body != nil {
@@ -244,10 +281,8 @@ func DoBearer(
 		return nil, fmt.Errorf("invalid path: %w", err)
 	}
 
-	full := base.ResolveReference(&url.URL{
-		Path:     "/api/v2" + u.Path,
-		RawQuery: u.RawQuery,
-	})
+	full := joinAPIV2Path(base, u.Path)
+	full.RawQuery = u.RawQuery
 
 	var rdr io.Reader
 	if body != nil {
@@ -269,7 +304,8 @@ func DoBearer(
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", getUserAgent())
+	userAgent := configuredUserAgent()
+	req.Header.Set("User-Agent", userAgent)
 	req.Header.Set("Accept", defaultContentType)
 	if body != nil {
 		req.Header.Set("Content-Type", defaultContentType)
@@ -278,7 +314,7 @@ func DoBearer(
 
 	transport := &userAgentTransport{
 		rt:        http.DefaultTransport,
-		userAgent: getUserAgent(),
+		userAgent: userAgent,
 	}
 
 	return doRequest(&http.Client{Transport: transport}, req, method, path, out)
@@ -292,20 +328,25 @@ func resolveBaseURL(current *url.URL) (*url.URL, error) {
 		return current, nil
 	}
 
-	baseURL := viper.GetString("base-url")
-	if baseURL != "" {
-		parsed, err := parseBaseURL(baseURL)
-		if err != nil {
-			return nil, err
-		}
-		return parsed, nil
-	}
+	return resolveConfiguredBaseURL(viper.GetString("base-url"))
+}
 
-	b, err := parseBaseURL(defaultBaseURL)
-	if err != nil {
-		return nil, err
+func resolveConfiguredBaseURL(baseURL string) (*url.URL, error) {
+	if baseURL == "" {
+		baseURL = defaultBaseURL
 	}
-	return b, nil
+	return parseBaseURL(baseURL)
+}
+
+// joinAPIV2Path appends endpointPath below the API v2 root. A configured
+// base URL may either identify a proxy prefix or the API root itself, as in
+// the server URL published by the OpenAPI document.
+func joinAPIV2Path(baseURL *url.URL, endpointPath string) *url.URL {
+	apiBaseURL := baseURL
+	if !strings.HasSuffix(strings.TrimRight(baseURL.Path, "/"), "/api/v2") {
+		apiBaseURL = baseURL.JoinPath("api/v2")
+	}
+	return apiBaseURL.JoinPath(endpointPath)
 }
 
 func parseBaseURL(raw string) (*url.URL, error) {
@@ -320,8 +361,8 @@ func parseBaseURL(raw string) (*url.URL, error) {
 }
 
 func validateBaseURL(u *url.URL) error {
-	if u == nil || !u.IsAbs() || u.Scheme == "" || u.Host == "" || u.Opaque != "" {
-		return fmt.Errorf("invalid base-url: must be an absolute URL with scheme and host")
+	if _, err := oauth.ValidateTokenURL(u.String()); err != nil {
+		return fmt.Errorf("invalid base-url: %w", err)
 	}
 	return nil
 }

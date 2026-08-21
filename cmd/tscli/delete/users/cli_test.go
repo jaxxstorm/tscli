@@ -60,7 +60,7 @@ func (s *stubRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) 
 }
 
 func newStubClientWithUsers(users []tsapi.User, deleteError map[string]int) (*tsapi.Client, *stubRoundTripper, error) {
-	base, _ := url.Parse("http://fake")
+	base, _ := url.Parse("https://fake")
 	rt := &stubRoundTripper{users: users, deleteError: deleteError}
 	return &tsapi.Client{
 		BaseURL: base,

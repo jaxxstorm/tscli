@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/jaxxstorm/tscli/pkg/config"
-	"github.com/jaxxstorm/tscli/pkg/oauth"
 	"github.com/jaxxstorm/tscli/pkg/output"
 	"github.com/jaxxstorm/tscli/pkg/tscli"
 	"github.com/spf13/cobra"
@@ -32,7 +31,7 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			tokenResp, err := oauth.ExchangeClientCredentials(cmd.Context(), creds.ClientID, creds.ClientSecret)
+			tokenResp, err := tscli.ExchangeOAuthClientCredentials(cmd.Context(), creds.ClientID, creds.ClientSecret)
 			if err != nil {
 				return fmt.Errorf("failed to exchange OAuth credentials: %w", err)
 			}

@@ -61,6 +61,7 @@ tscli agent update --dir .
 | **Policy file (ACL)**    | Fetch as raw HUJSON **or** canonical JSON                                                                   |
 | **Webhooks**             | List, get, delete, **create** (generic / Slack) with subscription & provider validation                     |
 | **Posture integrations** | List, get, create, patch existing integrations                                                              |
+| **Services**             | List, get, create / update, delete VIP services; list & approve associated devices                          |
 | **Invites**              | List / delete device- or user-invites                                                                       |
 | **Contacts**             | Get & update contact emails                                                                                 |
 | **Debug switch**         | `--debug` or `TSCLI_DEBUG=1` prints full HTTP requests / responses to stderr                                |
@@ -150,8 +151,14 @@ make docs-serve      # serve docs locally with docsify
 | ----------------- | --------------------------------------- | ---------------- | ------- |
 | Tailscale API key | `--api-key`, `-k` / `TAILSCALE_API_KEY` | `api-key`        | —       |
 | Tailnet name      | `--tailnet`, `-n` / `TAILSCALE_TAILNET` | `tailnet`        | `-`     |
+| API base URL      | — / `TSCLI_BASE_URL`                    | `base-url`       | `https://api.tailscale.com` |
+| User agent        | — / `TSCLI_USER_AGENT`                  | `user-agent`      | derived from build version / local git |
 | Active profile    | —                                       | `active-tailnet` | —       |
 | Profile list      | —                                       | `tailnets`       | `[]`    |
+
+`base-url` (and the OAuth token endpoint derived from it) must be `https://`, or `http://` restricted to a loopback host (`127.0.0.1`, `::1`, `localhost`) — any other scheme or non-loopback `http://` host is rejected, since your API key or OAuth client secret would otherwise be sent to that URL. There is no `--base-url` flag; set it via `TSCLI_BASE_URL` or a `base-url:` key in `~/.tscli.yaml`.
+
+By default the `User-Agent` sent with every API request is derived from the build version (or, for a locally-built binary, this process's local git repository state). If you are embedding `pkg/tscli` as a library, set `user-agent` (via `TSCLI_USER_AGENT` or your own viper config) to avoid sending your own repository's git metadata to Tailscale's API.
 
 ```yaml
 # ~/.tscli.yaml
@@ -313,6 +320,10 @@ tscli delete key --key key-id
 | Update service                   | :white_check_mark: | `tscli set service --service <name> --body '<json>'` |
 | Set service approval             | :white_check_mark: | `tscli set service approval --service <name> --device <id> --approved=true` |
 | Delete service                   | :white_check_mark: | `tscli delete service --service <name>` |
+| **Tailnet lifecycle**            |        |                 |
+| List tailnets                    | :white_check_mark: | `tscli list tailnets` |
+| Create tailnet                   | :white_check_mark: | `tscli create tailnet --display-name <name>` |
+| Delete tailnet                   | :white_check_mark: | `tscli delete tailnet --id <id>` |
 | **Tailnet Settings**             |        |                 |
 | Get tailnet settings             | :white_check_mark: | `tscli get settings` |
 | Update tailnet settings          | :white_check_mark: | `tscli set settings --devices-approval …` |

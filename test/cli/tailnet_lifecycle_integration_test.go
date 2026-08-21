@@ -19,10 +19,7 @@ func TestTailnetLifecycleCommands(t *testing.T) {
 	mock.AddRaw(http.MethodGet, "/api/v2/organizations/-/tailnets", http.StatusOK, `{"tailnets":[{"id":"T123","displayName":"Sandbox","orgId":"o123","createdAt":"2025-01-01T12:00:00Z"}]}`)
 	mock.AddRaw(http.MethodDelete, "/api/v2/tailnet/T123", http.StatusOK, `{}`)
 
-	env := map[string]string{
-		"TSCLI_BASE_URL":        mock.URL(),
-		"TSCLI_OAUTH_TOKEN_URL": mock.URL() + "/api/v2/oauth/token",
-	}
+	env := map[string]string{"TSCLI_BASE_URL": mock.URL()}
 
 	res := executeCLINoDefaults(t, []string{"create", "tailnet", "--display-name", "Sandbox", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, env)
 	if res.err != nil {
@@ -98,9 +95,8 @@ func TestTailnetLifecycleCommandsUseActiveOAuthProfile(t *testing.T) {
 	mock.AddRaw(http.MethodGet, "/api/v2/organizations/-/tailnets", http.StatusOK, `{"tailnets":[]}`)
 
 	res := executeCLINoDefaults(t, []string{"list", "tailnets"}, map[string]string{
-		"HOME":                  home,
-		"TSCLI_BASE_URL":        mock.URL(),
-		"TSCLI_OAUTH_TOKEN_URL": mock.URL() + "/api/v2/oauth/token",
+		"HOME":           home,
+		"TSCLI_BASE_URL": mock.URL(),
 	})
 	if res.err != nil {
 		t.Fatalf("list tailnets with oauth profile: %v\nstderr:\n%s", res.err, res.stderr)
@@ -135,7 +131,7 @@ func TestTailnetLifecycleCommandErrorsAreActionable(t *testing.T) {
 
 	t.Run("lifecycle commands bypass api-key pre-run", func(t *testing.T) {
 		res := executeCLINoDefaults(t, []string{"list", "tailnets", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, map[string]string{
-			"TSCLI_OAUTH_TOKEN_URL": "http://127.0.0.1:1/api/v2/oauth/token",
+			"TSCLI_BASE_URL": "http://127.0.0.1:1",
 		})
 		if res.err == nil {
 			t.Fatalf("expected oauth exchange to fail")
@@ -151,8 +147,7 @@ func TestTailnetLifecycleCommandErrorsAreActionable(t *testing.T) {
 		mock.AddRaw(http.MethodGet, "/api/v2/organizations/-/tailnets", http.StatusForbidden, `{"message":"forbidden"}`)
 
 		res := executeCLINoDefaults(t, []string{"list", "tailnets", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, map[string]string{
-			"TSCLI_BASE_URL":        mock.URL(),
-			"TSCLI_OAUTH_TOKEN_URL": mock.URL() + "/api/v2/oauth/token",
+			"TSCLI_BASE_URL": mock.URL(),
 		})
 		if res.err == nil {
 			t.Fatalf("expected lifecycle API error")
@@ -163,12 +158,8 @@ func TestTailnetLifecycleCommandErrorsAreActionable(t *testing.T) {
 	})
 
 	t.Run("invalid base-url fails instead of defaulting", func(t *testing.T) {
-		mock := apimock.New(t)
-		mock.AddRaw(http.MethodPost, "/api/v2/oauth/token", http.StatusOK, `{"access_token":"tok-123","token_type":"Bearer","expires_in":3600}`)
-
 		res := executeCLINoDefaults(t, []string{"list", "tailnets", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, map[string]string{
-			"TSCLI_BASE_URL":        "://bad-url",
-			"TSCLI_OAUTH_TOKEN_URL": mock.URL() + "/api/v2/oauth/token",
+			"TSCLI_BASE_URL": "://bad-url",
 		})
 		if res.err == nil {
 			t.Fatalf("expected invalid base-url error")

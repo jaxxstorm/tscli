@@ -9,6 +9,8 @@ commands:
     - post /tailnet/{tailnet}/oauth-apps
   create posture-integration:
     - post /tailnet/{tailnet}/posture/integrations
+  create tailnet:
+    - post /organizations/{organization}/tailnets
   create webhook:
     - post /tailnet/{tailnet}/webhooks
 
@@ -32,6 +34,8 @@ commands:
     - delete /posture/integrations/{id}
   delete service:
     - delete /tailnet/{tailnet}/services/{serviceName}
+  delete tailnet:
+    - delete /tailnet/{tailnet}
   delete user:
     - post /users/{userId}/delete
   delete users:
@@ -116,6 +120,8 @@ commands:
     - get /tailnet/{tailnet}/services
   list services devices:
     - get /tailnet/{tailnet}/services/{serviceName}/devices
+  list tailnets:
+    - get /organizations/{organization}/tailnets
   list users:
     - get /tailnet/{tailnet}/users
   list webhooks:

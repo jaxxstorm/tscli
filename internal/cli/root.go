@@ -73,6 +73,7 @@ func Configure() *cobra.Command {
 	v.BindEnv("tailnet", "TAILSCALE_TAILNET")
 	v.BindEnv("output", "TSCLI_OUTPUT")
 	v.BindEnv("base-url", "TSCLI_BASE_URL")
+	v.BindEnv("user-agent", "TSCLI_USER_AGENT")
 	v.BindPFlag("api-key", root.PersistentFlags().Lookup("api-key"))
 	v.BindPFlag("tailnet", root.PersistentFlags().Lookup("tailnet"))
 	v.BindPFlag("output", root.PersistentFlags().Lookup("output"))
