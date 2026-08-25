@@ -93,6 +93,7 @@ var propertyTypeRegistry = map[string]reflect.Type{
 	"apitype.OAuthApp":                        reflect.TypeOf(apitype.OAuthApp{}),
 	"apitype.OAuthAppRequest":                 reflect.TypeOf(apitype.OAuthAppRequest{}),
 	"apitype.OAuthAppListResponse":            reflect.TypeOf(apitype.OAuthAppListResponse{}),
+	"apitype.OrganizationTailnetListResponse": reflect.TypeOf(apitype.OrganizationTailnetListResponse{}),
 	"tsapi.CreateKeyRequest":                  reflect.TypeOf(tsapi.CreateKeyRequest{}),
 	"tsapi.Device":                            reflect.TypeOf(tsapi.Device{}),
 	"tsapi.Key":                               reflect.TypeOf(tsapi.Key{}),

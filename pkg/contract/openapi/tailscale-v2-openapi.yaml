@@ -3956,6 +3956,22 @@ paths:
       operationId: listOrganizationTailnets
       tags:
         - Organizations
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 100
+          description: Maximum number of tailnets to return per page; defaults to the maximum of 100.
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Opaque pagination cursor from a previous response.
       responses:
         '200':
           description: Successful operation.
@@ -3963,6 +3979,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListOrganizationTailnetsResponse'
+        '400':
+          description: Invalid limit or cursor parameter.
+          $ref: '#/components/responses/400'
         '403':
           description: User does not have sufficient access to list tailnets for this organization.
           $ref: '#/components/responses/403'
@@ -6516,6 +6535,14 @@ components:
           description: Tailnets in the organization.
           items:
             $ref: '#/components/schemas/OrganizationTailnet'
+        cursor:
+          type: string
+          description: Opaque pagination cursor for the next page.
+          example: eyJhZnRlciI6IlQxMjM0NTZDTlRSTCJ9
+        totalCount:
+          type: integer
+          description: Total number of tailnets in the organization.
+          example: 50
     CreateOrganizationTailnetRequest:
       type: object
       required:

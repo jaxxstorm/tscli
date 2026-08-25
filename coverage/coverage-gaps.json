@@ -358,6 +358,14 @@
     "get /device/{deviceId}/routes response advertisedRoutes[]",
     "get /device/{deviceId}/routes response enabledRoutes",
     "get /device/{deviceId}/routes response enabledRoutes[]",
+    "get /organizations/{organization}/tailnets response cursor",
+    "get /organizations/{organization}/tailnets response tailnets",
+    "get /organizations/{organization}/tailnets response tailnets[]",
+    "get /organizations/{organization}/tailnets response tailnets[].createdAt",
+    "get /organizations/{organization}/tailnets response tailnets[].displayName",
+    "get /organizations/{organization}/tailnets response tailnets[].id",
+    "get /organizations/{organization}/tailnets response tailnets[].orgId",
+    "get /organizations/{organization}/tailnets response totalCount",
     "get /tailnet/{tailnet}/devices response devices",
     "get /tailnet/{tailnet}/devices response devices[]",
     "get /tailnet/{tailnet}/devices response devices[].addresses",
@@ -566,12 +574,6 @@
     "get /device/{deviceId}/device-invites response [].multiUse",
     "get /device/{deviceId}/device-invites response [].sharerId",
     "get /device/{deviceId}/device-invites response [].tailnetId",
-    "get /organizations/{organization}/tailnets response tailnets",
-    "get /organizations/{organization}/tailnets response tailnets[]",
-    "get /organizations/{organization}/tailnets response tailnets[].createdAt",
-    "get /organizations/{organization}/tailnets response tailnets[].displayName",
-    "get /organizations/{organization}/tailnets response tailnets[].id",
-    "get /organizations/{organization}/tailnets response tailnets[].orgId",
     "get /posture/integrations/{id} response clientId",
     "get /posture/integrations/{id} response clientSecret",
     "get /posture/integrations/{id} response cloudId",
@@ -1253,6 +1255,16 @@
       "enabledRoutes",
       "enabledRoutes[]"
     ],
+    "get /organizations/{organization}/tailnets response": [
+      "cursor",
+      "tailnets",
+      "tailnets[]",
+      "tailnets[].createdAt",
+      "tailnets[].displayName",
+      "tailnets[].id",
+      "tailnets[].orgId",
+      "totalCount"
+    ],
     "get /tailnet/{tailnet}/devices response": [
       "devices",
       "devices[]",
@@ -1492,14 +1504,6 @@
       "[].multiUse",
       "[].sharerId",
       "[].tailnetId"
-    ],
-    "get /organizations/{organization}/tailnets response": [
-      "tailnets",
-      "tailnets[]",
-      "tailnets[].createdAt",
-      "tailnets[].displayName",
-      "tailnets[].id",
-      "tailnets[].orgId"
     ],
     "get /posture/integrations/{id} response": [
       "clientId",

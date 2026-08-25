@@ -15,7 +15,9 @@ tscli list tailnets [flags]
 ### Options
 
 ```
+      --cursor string                Pagination cursor from a previous response
   -h, --help                         help for tailnets
+      --limit int                    Maximum number of tailnets to return (1-100) (default 100)
       --oauth-client-id string       OAuth client ID for organization tailnet lifecycle access
       --oauth-client-secret string   OAuth client secret for organization tailnet lifecycle access
 ```

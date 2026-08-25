@@ -10,8 +10,8 @@
 - Covered commands: `87`
 - Unmapped commands: `0`
 - Unknown mapped commands: `0`
-- Covered properties: `229`
-- Excluded properties: `657`
+- Covered properties: `237`
+- Excluded properties: `651`
 - Uncovered properties: `0`
 
 ## Uncovered Operations By Domain
@@ -91,6 +91,17 @@
 - `advertisedRoutes[]`
 - `enabledRoutes`
 - `enabledRoutes[]`
+
+### get /organizations/{organization}/tailnets response
+
+- `cursor`
+- `tailnets`
+- `tailnets[]`
+- `tailnets[].createdAt`
+- `tailnets[].displayName`
+- `tailnets[].id`
+- `tailnets[].orgId`
+- `totalCount`
 
 ### get /tailnet/{tailnet}/devices response
 
@@ -348,15 +359,6 @@
 - `[].multiUse`
 - `[].sharerId`
 - `[].tailnetId`
-
-### get /organizations/{organization}/tailnets response
-
-- `tailnets`
-- `tailnets[]`
-- `tailnets[].createdAt`
-- `tailnets[].displayName`
-- `tailnets[].id`
-- `tailnets[].orgId`
 
 ### get /posture/integrations/{id} response
 
