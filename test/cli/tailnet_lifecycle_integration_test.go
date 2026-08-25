@@ -167,6 +167,15 @@ func TestTailnetLifecycleCommandErrorsAreActionable(t *testing.T) {
 		}
 	})
 
+	for _, limit := range []string{"0", "101"} {
+		t.Run("list tailnets rejects limit "+limit, func(t *testing.T) {
+			res := executeCLINoDefaults(t, []string{"list", "tailnets", "--limit", limit, "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, nil)
+			if res.err == nil || !strings.Contains(res.err.Error(), "--limit must be between 1 and 100") {
+				t.Fatalf("expected actionable limit validation error, got %v", res.err)
+			}
+		})
+	}
+
 	t.Run("lifecycle commands bypass api-key pre-run", func(t *testing.T) {
 		res := executeCLINoDefaults(t, []string{"list", "tailnets", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, map[string]string{
 			"TSCLI_BASE_URL": "http://127.0.0.1:1",

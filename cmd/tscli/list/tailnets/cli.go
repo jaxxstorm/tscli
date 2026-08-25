@@ -57,21 +57,36 @@ func Command() *cobra.Command {
 				return fmt.Errorf("list tailnets: %w", err)
 			}
 
-			out := raw
-			if outputType := v.GetString("output"); outputType == "pretty" || outputType == "human" {
+			outputType := v.GetString("output")
+			if outputType == "pretty" || outputType == "human" {
 				var listResp apitype.OrganizationTailnetListResponse
 				if err := json.Unmarshal(raw, &listResp); err != nil {
 					return fmt.Errorf("decode list tailnets response: %w", err)
 				}
-				out, err = json.MarshalIndent(listResp.Tailnets, "", "  ")
-			} else {
-				out, err = json.MarshalIndent(raw, "", "  ")
+				tailnets, err := json.MarshalIndent(listResp.Tailnets, "", "  ")
+				if err != nil {
+					return fmt.Errorf("marshal list tailnets response: %w", err)
+				}
+				if err := output.Print(outputType, tailnets); err != nil {
+					return err
+				}
+
+				pagination, err := json.Marshal(map[string]any{
+					"cursor":     listResp.Cursor,
+					"totalCount": listResp.TotalCount,
+				})
+				if err != nil {
+					return fmt.Errorf("marshal list tailnets pagination: %w", err)
+				}
+				return output.Print(outputType, pagination)
 			}
+
+			out, err := json.MarshalIndent(raw, "", "  ")
 			if err != nil {
 				return fmt.Errorf("marshal list tailnets response: %w", err)
 			}
 
-			return output.Print(v.GetString("output"), out)
+			return output.Print(outputType, out)
 		},
 	}
 
