@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -74,6 +75,43 @@ func TestTailnetLifecycleCommands(t *testing.T) {
 	}
 }
 
+func TestListTailnetsPropertyCoverage(t *testing.T) {
+	mock := apimock.New(t)
+	mock.AddRaw(http.MethodPost, "/api/v2/oauth/token", http.StatusOK, `{"access_token":"tok-123","token_type":"Bearer","expires_in":3600}`)
+	mock.AddRaw(http.MethodGet, "/api/v2/organizations/-/tailnets", http.StatusOK, `{"cursor":"next-page","tailnets":[{"id":"T123","displayName":"Sandbox","orgId":"o123","createdAt":"2025-01-01T12:00:00Z"}],"totalCount":50}`)
+
+	res := executeCLINoDefaults(t, []string{"list", "tailnets", "--limit", "25", "--cursor", "previous-page", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, map[string]string{
+		"TSCLI_BASE_URL": mock.URL(),
+	})
+	if res.err != nil {
+		t.Fatalf("list tailnets: %v\nstderr:\n%s", res.err, res.stderr)
+	}
+
+	var listed map[string]any
+	if err := json.Unmarshal([]byte(res.stdout), &listed); err != nil {
+		t.Fatalf("unmarshal list tailnets output: %v\noutput:\n%s", err, res.stdout)
+	}
+	if listed["cursor"] != "next-page" || listed["totalCount"] != float64(50) {
+		t.Fatalf("expected pagination fields in authoritative response, got %s", res.stdout)
+	}
+	tailnets, _ := listed["tailnets"].([]any)
+	if len(tailnets) != 1 {
+		t.Fatalf("expected tailnets in authoritative response, got %s", res.stdout)
+	}
+
+	reqs := mock.Requests()
+	if len(reqs) != 2 {
+		t.Fatalf("expected OAuth token and list requests, got %+v", reqs)
+	}
+	query, err := url.ParseQuery(reqs[1].Query)
+	if err != nil {
+		t.Fatalf("parse pagination query: %v", err)
+	}
+	if query.Get("limit") != "25" || query.Get("cursor") != "previous-page" {
+		t.Fatalf("expected pagination query parameters, got %q", reqs[1].Query)
+	}
+}
+
 func TestTailnetLifecycleCommandsUseActiveOAuthProfile(t *testing.T) {
 	home := t.TempDir()
 	configFile := filepath.Join(home, ".tscli.yaml")
@@ -128,6 +166,15 @@ func TestTailnetLifecycleCommandErrorsAreActionable(t *testing.T) {
 			t.Fatalf("expected id validation error, got %v", res.err)
 		}
 	})
+
+	for _, limit := range []string{"0", "101"} {
+		t.Run("list tailnets rejects limit "+limit, func(t *testing.T) {
+			res := executeCLINoDefaults(t, []string{"list", "tailnets", "--limit", limit, "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, nil)
+			if res.err == nil || !strings.Contains(res.err.Error(), "--limit must be between 1 and 100") {
+				t.Fatalf("expected actionable limit validation error, got %v", res.err)
+			}
+		})
+	}
 
 	t.Run("lifecycle commands bypass api-key pre-run", func(t *testing.T) {
 		res := executeCLINoDefaults(t, []string{"list", "tailnets", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, map[string]string{

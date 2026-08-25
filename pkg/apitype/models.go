@@ -131,3 +131,16 @@ type OAuthAppRequest struct {
 type OAuthAppListResponse struct {
 	OAuthApps []OAuthApp `json:"oauthApps,omitempty"`
 }
+
+type OrganizationTailnet struct {
+	CreatedAt   string `json:"createdAt,omitempty"`
+	DisplayName string `json:"displayName,omitempty"`
+	ID          string `json:"id,omitempty"`
+	OrgID       string `json:"orgId,omitempty"`
+}
+
+type OrganizationTailnetListResponse struct {
+	Cursor     string                `json:"cursor,omitempty"`
+	Tailnets   []OrganizationTailnet `json:"tailnets,omitempty"`
+	TotalCount int                   `json:"totalCount,omitempty"`
+}

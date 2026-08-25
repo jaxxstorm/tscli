@@ -181,7 +181,7 @@ func TestTailnetListRenderedOutput(t *testing.T) {
 		{
 			name:     "list tailnets pretty",
 			mode:     "pretty",
-			contains: []string{"Sandbox", "createdAt:", "id:", "orgId:"},
+			contains: []string{"Sandbox", "createdAt:", "cursor:", "id:", "orgId:", "totalCount:"},
 			absent:   []string{"tailnets:"},
 			counts: map[string]int{
 				"Sandbox": 1,
@@ -190,7 +190,7 @@ func TestTailnetListRenderedOutput(t *testing.T) {
 		{
 			name:     "list tailnets human",
 			mode:     "human",
-			contains: []string{"Sandbox", "createdAt", "id", "orgId"},
+			contains: []string{"Sandbox", "createdAt", "cursor", "id", "orgId", "totalCount"},
 			absent:   []string{"tailnets:"},
 			counts: map[string]int{
 				"Sandbox": 1,
@@ -209,12 +209,14 @@ func TestTailnetListRenderedOutput(t *testing.T) {
 
 			mock.AddRaw(http.MethodPost, "/api/v2/oauth/token", http.StatusOK, `{"access_token":"tok-123","token_type":"Bearer","expires_in":3600}`)
 			mock.AddJSON(http.MethodGet, "/api/v2/organizations/-/tailnets", http.StatusOK, map[string]any{
+				"cursor": "next-page",
 				"tailnets": []map[string]any{{
 					"id":          "T123",
 					"displayName": "Sandbox",
 					"orgId":       "o123",
 					"createdAt":   "2025-01-01T12:00:00Z",
 				}},
+				"totalCount": 50,
 			})
 
 			res := executeCLI(t, []string{"list", "tailnets", "--oauth-client-id", "cid", "--oauth-client-secret", "secret"}, env)

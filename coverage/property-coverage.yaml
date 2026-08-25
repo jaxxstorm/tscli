@@ -102,3 +102,10 @@ operations:
           command: list oauth-apps
           tests:
             - TestOAuthAppCommands
+  "get /organizations/{organization}/tailnets":
+    response:
+      - type: apitype.OrganizationTailnetListResponse
+        evidence:
+          command: list tailnets
+          tests:
+            - TestListTailnetsPropertyCoverage
