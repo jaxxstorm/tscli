@@ -30,9 +30,9 @@ info:
 
     Access tokens for individual users can be created and managed from the [Keys](https://login.tailscale.com/admin/settings/keys) page of the admin console. These tokens will have the same permissions as the owning user, and can be set to expire in 1 to 90 days. Access tokens are identifiable by the prefix tskey-api-.
 
-    Alternatively, a trust credential (OAuth client or federated identity) can be used to create short-lived access tokens with scoped permission. Trust credentials don't expire, and can therefore be used to provide ongoing access to the API, creating access tokens as needed. Trust credentials and the access tokens they create are not tied to an individual Tailscale user. OAuth client secrets are identifiable by the prefix tskey-client-. Learn more about [trust credentials][kb-trust-credentials].
+    Alternatively, a trust credential (OAuth client or federated identity) can be used to create short-lived access tokens with scoped permission. Trust credentials don't expire, and can therefore be used to provide ongoing access to the API, creating access tokens as needed. Trust credentials and the access tokens they create are not tied to an individual Tailscale user. OAuth client secrets are identifiable by the prefix tskey-client-. Learn more about [trust credentials][docs-trust-credentials].
 
-    [kb-trust-credentials]: https://tailscale.com/kb/1623/
+    [docs-trust-credentials]: https://tailscale.com/docs/reference/trust-credentials
 
     ### Errors
 
@@ -60,51 +60,51 @@ tags:
   - name: Devices
     description: |
       Manage devices.
-      Learn more about [managing devices](/kb/1372/manage-devices).
+      Learn more about [managing devices](/docs/features/access-control/device-management).
   - name: PolicyFile
     x-displayName: Policy file
     description: |
       Manage a tailnet's policy file.
-      Learn more about the [policy file and ACLs](/kb/1018/acls).
+      Learn more about the [policy file and ACLs](/docs/features/access-control/acls).
   - name: Keys
     description: |
       Manage auth keys and API access tokens.
-      Learn more about [auth keys](/kb/1085/auth-keys) and [API access tokens](/kb/1101/api#authentication).
+      Learn more about [auth keys](/docs/features/access-control/auth-keys) and [API access tokens](/docs/reference/tailscale-api#authentication).
   - name: DNS
     description: |
       Manage a tailnet's DNS settings.
-      Learn more about [DNS in Tailscale](/kb/1054/dns).
+      Learn more about [DNS in Tailscale](/docs/reference/dns-in-tailscale).
   - name: Logging
     description: |
       Manage and configure network logging, configuration logging, and log streaming for a tailnet.
-      Learn more about [logging and events](/kb/1349/log-events).
+      Learn more about [logging and events](/docs/reference/logging-streaming-events).
   - name: Users
     description: |
       Manage and query users.
-      Learn more about [managing users](/kb/1373/manage-users).
+      Learn more about [managing users](/docs/manage-users).
   - name: UserInvites
     x-displayName: User invites
     description: |
       Manage user invites.
-      Learn more about [inviting users](/kb/1371/invite-users).
+      Learn more about [inviting users](/docs/features/sharing/how-to/invite-users).
   - name: DeviceInvites
     x-displayName: Device invites
     description: |
       Manage device invites.
-      Learn more about [sharing devices](/kb/1084/sharing).
+      Learn more about [sharing devices](/docs/features/sharing).
   - name: DevicePosture
     x-displayName: Device posture
     description: |
       Manage integrations with device posture data providers.
-      Learn more about how to use [device posture data to secure a tailnet](/kb/1288/device-posture).
+      Learn more about how to use [device posture data to secure a tailnet](/docs/features/device-posture).
   - name: Contacts
     x-displayName: Contact preferences
     description: |
-      Manage [contact preferences](/kb/1224/contact-preferences).
+      Manage [contact preferences](/docs/reference/contact-preferences).
   - name: Webhooks
     description: |
       Manage webhook endpoints for a tailnet.
-      Learn more about [webhooks](/kb/1213/webhooks).
+      Learn more about [webhooks](/docs/features/webhooks).
   - name: TailnetSettings
     x-displayName: Tailnet settings
     description: |
@@ -113,7 +113,7 @@ tags:
     x-displayName: Services
     description: |
       Manage Tailscale Services for a tailnet.
-      Learn more about [Tailscale Services](/kb/1552/tailscale-services).
+      Learn more about [Tailscale Services](/docs/features/tailscale-services).
   - name: OAuthApps
     x-displayName: OAuth apps
     description: |
@@ -384,7 +384,7 @@ paths:
         If a device has advertised routes, they are not exposed to traffic until they are enabled.
         Conversely, if routes are enabled before they are advertised, they are not available for routing until the device in question has advertised them.
 
-        Learn more about [subnet routers](/kb/1019/subnets) and [exit nodes](/kb/1103/exit-nodes).
+        Learn more about [subnet routers](/docs/features/subnet-routers) and [exit nodes](/docs/features/exit-nodes).
 
         OAuth Scope: `devices:routes:read`.
       operationId: listDeviceRoutes
@@ -408,13 +408,13 @@ paths:
       summary: Set device routes
       description: |
         Set a device's enabled subnet routes by replacing the existing list of subnet routes with the supplied parameters.
-        [Advertised routes](/kb/1019/subnets#advertise-subnet-routes) cannot be set through the API, since they must be set directly on the device.
+        [Advertised routes](/docs/features/subnet-routers#advertise-subnet-routes) cannot be set through the API, since they must be set directly on the device.
 
         Routes must be both advertised and enabled for a device to act as a subnet router or exit node.
         If a device has advertised routes, they are not exposed to traffic until they are enabled.
         Conversely, if routes are enabled before they are advertised, they are not available for routing until the device in question has advertised them.
 
-        Learn more about [subnet routers](/kb/1019/subnets) and [exit nodes](/kb/1103/exit-nodes).
+        Learn more about [subnet routers](/docs/features/subnet-routers) and [exit nodes](/docs/features/exit-nodes).
 
         OAuth Scope: `devices:routes`.
       operationId: setDeviceRoutes
@@ -479,6 +479,12 @@ paths:
       responses:
         '200':
           description: Successful operation.
+        '400':
+          description: The `authorized` field is missing from the request body, or is not a boolean.
+          $ref: '#/components/responses/400'
+        '402':
+          description: The tailnet's plan or billing state does not allow authorizing more devices.
+          $ref: '#/components/responses/402'
         '404':
           description: Device not found.
           $ref: '#/components/responses/404'
@@ -492,10 +498,10 @@ paths:
     post:
       summary: Set device name
       description: |
-        When a device is added to a tailnet, its Tailscale [device name](https://tailscale.com/kb/1098/machine-names) (also sometimes referred to as machine name) is generated from its OS hostname.
+        When a device is added to a tailnet, its Tailscale [device name](https://tailscale.com/docs/concepts/machine-names) (also sometimes referred to as machine name) is generated from its OS hostname.
         The device name is the canonical name for the device on your tailnet.
 
-        Device name changes immediately get propogated through your tailnet, so be aware that any existing [Magic DNS](https://tailscale.com/kb/1081/magicdns) URLs using the old name will no longer work.
+        Device name changes immediately get propogated through your tailnet, so be aware that any existing [Magic DNS](https://tailscale.com/docs/features/magicdns) URLs using the old name will no longer work.
 
         OAuth Scope: `devices:core`.
       operationId: setDeviceName
@@ -544,7 +550,7 @@ paths:
         A single node can have multiple tags assigned.
 
         Consult the policy file for your tailnet in the [admin console](https://login.tailscale.com/admin/acls) for the list of tags that have been created for your tailnet.
-        Learn more about [tags](https://tailscale.com/kb/1068/).
+        Learn more about [tags](https://tailscale.com/docs/features/tags).
 
         OAuth Scope: `devices:core`.
       operationId: setDeviceTags
@@ -618,7 +624,7 @@ paths:
       summary: Set device IPv4 address
       description: |
         When a device is added to a tailnet, its Tailscale IPv4 address is set at random either from the CGNAT range,
-        or a subset of the CGNAT range specified by an [ip pool](https://tailscale.com/kb/1304/ip-pool).
+        or a subset of the CGNAT range specified by an [ip pool](https://tailscale.com/docs/reference/ip-pool).
         This endpoint can be used to replace the existing IPv4 address with a specific value.
 
         This action will break any existing connections to this machine.
@@ -1175,7 +1181,7 @@ paths:
                         example: my-phone.something.ts.net
                         description: |
                           The MagicDNS name of the device.
-                          Learn more about MagicDNS at https://tailscale.com/kb/1081/.
+                          Learn more about MagicDNS at https://tailscale.com/docs/features/magicdns.
                       ipv4:
                         type: string
                         example: 100.x.y.z
@@ -1388,7 +1394,7 @@ paths:
       description: |
         Set the log streaming configuration for the provided log type.
 
-        OAuth Scope: `log_streaming`. `device_invites` and `policy_file` are also required if streaming to a [private endpoint](https://tailscale.com/kb/1255/log-streaming#private-endpoints).
+        OAuth Scope: `log_streaming`. `device_invites` and `policy_file` are also required if streaming to a [private endpoint](https://tailscale.com/docs/features/logging/log-streaming#private-endpoints).
       operationId: setLogStreamingConfiguration
       tags:
         - Logging
@@ -1559,7 +1565,7 @@ paths:
       description: |
         Replaces the list of global DNS nameservers for the given tailnet with the list supplied in the request.
 
-        Note that changing the list of DNS nameservers may also affect the status of MagicDNS (if MagicDNS is on; learn about [MagicDNS](https://tailscale.com/kb/1081)).
+        Note that changing the list of DNS nameservers may also affect the status of MagicDNS (if MagicDNS is on; learn about [MagicDNS](https://tailscale.com/docs/features/magicdns)).
         If all nameservers have been removed, MagicDNS will be automatically disabled (until explicitly turned back on by the user).
       operationId: setDnsNameservers
       tags:
@@ -1633,7 +1639,7 @@ paths:
       description: |
         Set the DNS preferences for a tailnet; specifically, the MagicDNS setting.
         Note that MagicDNS is dependent on DNS servers.
-        Learn about [MagicDNS](https://tailscale.com/kb/1081).
+        Learn about [MagicDNS](https://tailscale.com/docs/features/magicdns).
 
         If there is at least one DNS server, then MagicDNS can be enabled.
         Otherwise, it returns an error.
@@ -1910,8 +1916,8 @@ paths:
     post:
       summary: Create an auth key or trust credential
       description: |
-        Creates a new [auth key](https://tailscale.com/kb/1085/), or [trust credential](https://tailscale.com/kb/1623/) in the specified tailnet.
-        Trust credentials include [OAuth clients](https://tailscale.com/kb/1215/) and [federated identities](https://tailscale.com/kb/1581/).
+        Creates a new [auth key](https://tailscale.com/docs/features/access-control/auth-keys), or [trust credential](https://tailscale.com/docs/reference/trust-credentials) in the specified tailnet.
+        Trust credentials include [OAuth clients](https://tailscale.com/docs/features/oauth-clients) and [federated identities](https://tailscale.com/docs/features/workload-identity-federation).
         The key will be associated with the user who owns the API access token used to make this call,
         or, if the call is made with an access token derived from an OAuth client or federated identity, the key will be owned by the tailnet.
 
@@ -1971,7 +1977,7 @@ paths:
                   type: array
                   description: |
                     A list of scopes to grant to the key. At least one scope is required for OAuth clients and federated identities.
-                    See [trust credentials scopes](https://tailscale.com/kb/1623/trust-credentials#scopes) for a list of available scopes.
+                    See [trust credentials scopes](https://tailscale.com/docs/reference/trust-credentials#scopes) for a list of available scopes.
 
                     Only applies to OAuth clients and federated identities.
                   items:
@@ -2136,7 +2142,7 @@ paths:
                   type: array
                   description: |
                     A list of scopes to grant to the key. At least one scope is required.
-                    See [trust credentials scopes](https://tailscale.com/kb/1623/trust-credentials#scopes) for a list of available scopes.
+                    See [trust credentials scopes](https://tailscale.com/docs/reference/trust-credentials#scopes) for a list of available scopes.
                   items:
                     type: string
                   example:
@@ -2211,7 +2217,7 @@ paths:
         This method can return the policy file as JSON or HuJSON, depending on the Accept header.
         The response also includes an `ETag` header, which can be optionally included when [setting the policy file](#tag/policyfile/post/tailnet/{tailnet}/acl) to avoid missed updates.
 
-        Learn more about [policy file ACL syntax](https://tailscale.com/kb/1337/acl-syntax).
+        Learn more about [policy file ACL syntax](https://tailscale.com/docs/reference/syntax/policy-file).
 
         OAuth Scope: `policy_file:read`.
       operationId: getPolicyFile
@@ -2275,7 +2281,7 @@ paths:
         On success, returns the updated ACL in JSON or HuJSON according to the `Accept` header.
         Otherwise, errors are returned for incorrectly defined ACLs, ACLs with failing tests on attempted updates, and mismatched `If-Match` header and `ETag`.
 
-        Learn more about [policy file ACL syntax](https://tailscale.com/kb/1337/acl-syntax).
+        Learn more about [policy file ACL syntax](https://tailscale.com/docs/reference/syntax/policy-file).
 
         OAuth Scope: `policy_file`.
       operationId: setPolicyFile
@@ -2379,7 +2385,7 @@ paths:
         in: query
         description: |
           Specify for which type of resource (user or IP port) matching rules are to be fetched.
-          Read about [previewing changes in the admin console](https://tailscale.com/kb/1018/#previewing-changes).
+          Read about [previewing changes in the admin console](https://tailscale.com/docs/features/tailnet-policy-file/manage-tailnet-policies#preview-changes).
 
           OAuth Scope: `policy_file:read`.
         required: true
@@ -2503,7 +2509,7 @@ paths:
 
         - Run ACL tests: When the request body contains ACL tests as a JSON array,
           Tailscale runs ACL tests against the tailnet's current policy file.
-          Learn more about [ACL tests](https://tailscale.com/kb/1337/acl-syntax#tests).
+          Learn more about [ACL tests](https://tailscale.com/docs/reference/syntax/policy-file#tests).
         - Validate a new policy file: When the request body is a JSON object,
           Tailscale interprets the body as a hypothetical new tailnet policy file with new ACLs,
           including any new rules and tests.
@@ -2529,18 +2535,18 @@ paths:
                         example: dave@example.com
                         description: |
                           Specifies the user identity to test, which can be 
-                          a [user's email address](https://tailscale.com/kb/1337/acl-syntax#reference-users),
-                          a [group](https://tailscale.com/kb/1337/acl-syntax#groups),
-                          a [tag](https://tailscale.com/kb/1068/acl-tags),
-                          or a [host](https://tailscale.com/kb/1337/acl-syntax#hosts) that maps to an IP address.
+                          a [user's email address](https://tailscale.com/docs/reference/syntax/policy-file#reference-users),
+                          a [group](https://tailscale.com/docs/reference/syntax/policy-file#groups),
+                          a [tag](https://tailscale.com/docs/features/tags),
+                          or a [host](https://tailscale.com/docs/reference/syntax/policy-file#hosts) that maps to an IP address.
                           The test case runs from the perspective of a device authenticated with the provided identity.
                       srcPostureAttrs:
                         type: object
                         description: |
-                          Specifies the [device posture attributes](https://tailscale.com/kb/1337/acl-syntax#proto-1)
+                          Specifies the [device posture attributes](https://tailscale.com/docs/reference/syntax/policy-file#proto-1)
                           as key-value pairs to use when evaluating posture conditions in access rules.
                           You only need to use this field if the access rules contain 
-                          [device posture conditions](https://tailscale.com/kb/1288/device-posture#device-posture-conditions).
+                          [device posture conditions](https://tailscale.com/docs/features/device-posture#device-posture-conditions).
                         additionalProperties:
                           x-additionalPropertiesName: Posture attributes
                           anyOf:
@@ -2554,7 +2560,7 @@ paths:
                         example: tcp
                         description: |
                           Specifies the IP protocol for `accept` and `deny` rules,
-                          similar to the `proto` field in [ACL rules](https://tailscale.com/kb/1337/acl-syntax#acls).
+                          similar to the `proto` field in [ACL rules](https://tailscale.com/docs/reference/syntax/policy-file#acls).
                           When omitted, the test checks for either TCP or UDP access.
                       accept:
                         type: array
@@ -2563,7 +2569,7 @@ paths:
                         description: |
                           Specifies destinations to accept. Each destination in the list is of the form `host:port`
                           where `port` is a single numeric port and `host` is in the format described in the
-                          [acl syntax](https://tailscale.com/kb/1337/acl-syntax#accept-and-deny-destinations) documentation.
+                          [acl syntax](https://tailscale.com/docs/reference/syntax/policy-file#accept-and-deny-destinations) documentation.
 
                           Sources in `src` and `destinations` must refer to specific entities and do not support `*` wildcards.
                           For example, an `accept` destination cannot be `tags:*`.
@@ -2574,7 +2580,7 @@ paths:
                         description: |
                           Specifies destinations to deny. Each destination in the list is of the form `host:port`
                           where `port` is a single numeric port and `host` is in the format described in the
-                          [acl syntax](https://tailscale.com/kb/1337/acl-syntax#accept-and-deny-destinations) documentation.
+                          [acl syntax](https://tailscale.com/docs/reference/syntax/policy-file#accept-and-deny-destinations) documentation.
 
                           Sources in `src` and `destinations` must refer to specific entities and do not support `*` wildcards.
                           For example, a `deny` destination cannot be `tags:*`.
@@ -2902,7 +2908,7 @@ paths:
       - name: role
         in: query
         description: |
-          Allows for filtering the output by user role. Learn more about [user roles](kb/1138/user-roles).
+          Allows for filtering the output by user role. Learn more about [user roles](/docs/reference/user-roles).
         required: false
         schema:
           type: string
@@ -2983,7 +2989,7 @@ paths:
       description: |
         Update the role for the specified user.
 
-        Learn more about [user roles](kb/1138/user-roles).
+        Learn more about [user roles](/docs/reference/user-roles).
 
         OAuth Scope: `users`.
 
@@ -3009,7 +3015,7 @@ paths:
                     - auditor
                   example: member
                   description: |
-                    The role of the user. Learn more about [user roles](kb/1138/user-roles).
+                    The role of the user. Learn more about [user roles](/docs/reference/user-roles).
       responses:
         '200':
           description: Successful operation.
@@ -3033,7 +3039,7 @@ paths:
 
         User approval can be managed using the [tailnet settings endpoints](#tag/tailnetsettings).
 
-        Learn more about [user approval](/kb/1239/user-approval) and [enabling user approval for your network](/kb/1239/user-approval#enable-user-approval-for-your-network).
+        Learn more about [user approval](/docs/features/access-control/user-approval) and [enabling user approval for your network](/docs/features/access-control/user-approval#enable-user-approval-for-your-network).
 
         OAuth Scope: `users`.
 
@@ -3046,6 +3052,9 @@ paths:
           description: Successful operation.
         '400':
           $ref: '#/components/responses/400'
+        '402':
+          description: The tailnet's plan or billing state does not allow approving more users.
+          $ref: '#/components/responses/402'
         '403':
           $ref: '#/components/responses/403'
         '404':
@@ -3059,7 +3068,7 @@ paths:
     post:
       summary: Suspend a user
       description: |
-        Suspends a user from their tailnet. Learn more about [suspending users](/kb/1145/remove-team-members#suspending-users).
+        Suspends a user from their tailnet. Learn more about [suspending users](/docs/features/sharing/how-to/remove-team-members#suspending-users).
 
         OAuth Scope: `users`.
 
@@ -3085,7 +3094,7 @@ paths:
     post:
       summary: Restore a user
       description: |
-        Restores a suspended user's access to their tailnet. Learn more about [restoring users](/kb/1145/remove-team-members#restoring-users).
+        Restores a suspended user's access to their tailnet. Learn more about [restoring users](/docs/features/sharing/how-to/remove-team-members#restoring-users).
 
         OAuth Scope: `users`.
 
@@ -3111,7 +3120,7 @@ paths:
     post:
       summary: Delete a user
       description: |
-        Delete a user from their tailnet. Learn more about [deleting users](/kb/1145/remove-team-members#deleting-users).
+        Delete a user from their tailnet. Learn more about [deleting users](/docs/features/sharing/how-to/remove-team-members#deleting-users).
 
         OAuth Scope: `users`.
 
@@ -3431,7 +3440,7 @@ paths:
         Rotate and generate a new secret for a specific webhook.
 
         This secret is used for generating the `Tailscale-Webhook-Signature` header in requests sent to the endpoint URL.
-        Learn more about [verifying webhook event signatures](/kb/1213/webhooks#verifying-an-event-signature).
+        Learn more about [verifying webhook event signatures](/docs/features/webhooks#verifying-an-event-signature).
 
         OAuth Scope: `webhooks`.
       operationId: rotateWebhookSecret
@@ -4067,7 +4076,7 @@ components:
           curl "https://api.tailscale.com/api/v2/tailnet/T1234CNTRL/..."
           ```
 
-          Learn more about [tailnet ID](https://tailscale.com/kb/1217/tailnet-name#tailnet-id).
+          Learn more about [tailnet ID](https://tailscale.com/docs/concepts/tailnet-name#tailnet-id).
       required: true
       schema:
         type: string
@@ -4222,6 +4231,7 @@ components:
             - BILLING.UPDATE.SUBSCRIPTION
             - FAILED_REQUEST.UPDATE
             - GROUP.PUSH_GROUP.ATTRIBUTES
+            - GROUP.UPDATE.USER_ROLE
             - INVITE.ACCEPT.FEATURE
             - INVITE.ACCEPT.NODE_SHARE
             - INVITE.ACCEPT.TAILNET_INVITE
@@ -4493,13 +4503,13 @@ components:
           example: pangolin.tailfe8c.ts.net
           description: |
             The MagicDNS name of the device.
-            Learn more about MagicDNS at https://tailscale.com/kb/1081/.
+            Learn more about MagicDNS at https://tailscale.com/docs/features/magicdns.
         hostname:
           type: string
           example: pangolin
           description: |
             The machine name in the admin console.
-            Learn more about machine names at https://tailscale.com/kb/1098/.
+            Learn more about machine names at https://tailscale.com/docs/concepts/machine-names.
         clientVersion:
           type: string
           example: v1.36.0
@@ -4540,27 +4550,27 @@ components:
           example: false
           description: |
             'true' if the keys for the device will not expire.
-            Learn more at https://tailscale.com/kb/1028/.
+            Learn more at https://tailscale.com/docs/features/access-control/key-expiry.
         expires:
           type: string
           format: date-time
           example: '2023-05-30T04:44:05Z'
           description: |
             The expiration date of the device's auth key.
-            Learn more about key expiry at https://tailscale.com/kb/1028/.
+            Learn more about key expiry at https://tailscale.com/docs/features/access-control/key-expiry.
         authorized:
           type: boolean
           example: false
           description: |
             'true' if the device has been authorized to join the tailnet; otherwise, 'false'.
-            Learn more about device authorization at https://tailscale.com/kb/1099/.
+            Learn more about device authorization at https://tailscale.com/docs/features/access-control/device-management/device-approval.
         isExternal:
           type: boolean
           example: false
           description: |
             'true', indicates that a device is not a member of the tailnet, but is shared in to the tailnet;
             if 'false', the device is a member of the tailnet.
-            Learn more about node sharing at https://tailscale.com/kb/1084/.
+            Learn more about node sharing at https://tailscale.com/docs/features/sharing.
         multipleConnections:
           type: boolean
           example: true
@@ -4579,13 +4589,13 @@ components:
           example: nodekey:01234567890abcdef
           description: |
             Mostly for internal use, required for select operations, such as adding a node to a locked tailnet.
-            Learn about tailnet locks at https://tailscale.com/kb/1226/.
+            Learn about tailnet locks at https://tailscale.com/docs/features/tailnet-lock.
         blocksIncomingConnections:
           type: boolean
           example: false
           description: |
             'true' if the device is not allowed to accept any connections over Tailscale, including pings.
-            Learn more in the "Allow incoming connections" section of https://tailscale.com/kb/1072/.
+            Learn more in the "Allow incoming connections" section of https://tailscale.com/docs/features/client/manage-preferences.
         enabledRoutes:
           type: array
           items:
@@ -4595,7 +4605,7 @@ components:
             - 192.168.1.0/24
           description: |
             The subnet routes for this device that have been approved by a tailnet admin.
-            Learn more about subnet routes at https://tailscale.com/kb/1019/.
+            Learn more about subnet routes at https://tailscale.com/docs/features/subnet-routers.
         advertisedRoutes:
           type: array
           items:
@@ -4605,7 +4615,7 @@ components:
             - 192.168.1.0/24
           description: |
             The subnets this device requests to expose.
-            Learn more about subnet routes at https://tailscale.com/kb/1019/.
+            Learn more about subnet routes at https://tailscale.com/docs/features/subnet-routers.
         clientConnectivity:
           type: object
           description: |
@@ -4725,7 +4735,7 @@ components:
             Once a device is tagged, the tag is the owner of that device.
             A single node can have multiple tags assigned.
             This value is empty for external devices.
-            Learn more about tags at https://tailscale.com/kb/1068/.
+            Learn more about tags at https://tailscale.com/docs/features/tags.
         tailnetLockError:
           type: string
           example: ''
@@ -4738,19 +4748,19 @@ components:
           description: |
             The node's tailnet lock key.
             Every node generates a tailnet lock key (so the value will be present) even if tailnet lock is not enabled.
-            Learn more about tailnet lock at https://tailscale.com/kb/1226/.
+            Learn more about tailnet lock at https://tailscale.com/docs/features/tailnet-lock.
         sshEnabled:
           type: boolean
           example: false
           description: |
             'true' if Tailscale SSH is enabled on this device.
-            Learn more about Tailscale SSH at https://tailscale.com/kb/1193/.
+            Learn more about Tailscale SSH at https://tailscale.com/docs/features/tailscale-ssh.
         postureIdentity:
           type: object
           description: |
             Contains extra identifiers from the device when the tailnet it is connected to has device posture identification collection enabled.
             If the device has not opted-in to posture identification collection, this will contain {"disabled": true}.
-            Learn more about posture identity at https://tailscale.com/kb/1326/device-identity.
+            Learn more about posture identity at https://tailscale.com/docs/features/access-control/device-management/how-to/manage-identity.
           properties:
             serialNumbers:
               type: array
@@ -4768,7 +4778,7 @@ components:
           example: false
           description: |
             'true' if the device is ephemeral.
-            Learn more about ephemeral nodes at https://tailscale.com/kb/1111/ephemeral-nodes.
+            Learn more about ephemeral nodes at https://tailscale.com/docs/features/ephemeral-nodes.
         distro:
           type: object
           description: |
@@ -4962,7 +4972,7 @@ components:
       type: object
       description: |
         A user invite is an active invitation that lets a user join a tailnet
-        with a preassigned [user role](https://tailscale.com/kb/1138/user-roles).
+        with a preassigned [user role](https://tailscale.com/docs/reference/user-roles).
 
         Each user invite has a unique ID that is used to identify the invite
         in API calls. You can find all user invite IDs for a particular tailnet
@@ -5490,6 +5500,7 @@ components:
             - elastic
             - panther
             - cribl
+            - crowdstrike
             - datadog
             - axiom
             - s3
@@ -5712,26 +5723,26 @@ components:
                 reusable:
                   description: |
                     reusable for auth keys only; reusable auth keys can be used multiple times to register different devices.
-                    Learn more about reusable auth keys at https://tailscale.com/kb/1085/#types-of-auth-keys.
+                    Learn more about reusable auth keys at https://tailscale.com/docs/features/access-control/auth-keys#types-of-auth-keys.
                   type: boolean
                   example: true
                 ephemeral:
                   description: |
                     ephemeral for auth keys only; ephemeral keys are used to connect and then clean up short-lived devices.
-                    Learn about ephemeral nodes at https://tailscale.com/kb/1111/.
+                    Learn about ephemeral nodes at https://tailscale.com/docs/features/ephemeral-nodes.
                   type: boolean
                   example: false
                 preauthorized:
                   description: |
                     preauthorized for auth keys only; these are also referred to as "pre-approved" keys. 'true' means that devices
                     registered with this key won't require additional approval from a tailnet admin.
-                    Learn about device approval at https://tailscale.com/kb/1099/.
+                    Learn about device approval at https://tailscale.com/docs/features/access-control/device-management/device-approval.
                   type: boolean
                   example: true
                 tags:
                   description: |
                     tags are the tags that will be set on devices registered with this key.
-                    Learn about tags at https://tailscale.com/kb/1068/.
+                    Learn about tags at https://tailscale.com/docs/features/tags.
 
                     Whether tags are required or optional depends on the owner of the auth key:
                     - When creating an auth key owned by the tailnet (using OAuth), it must have tags. The auth tags specified for that new auth key must exactly match the tags that are on the OAuth client used to create that auth key (or they must be tags that are owned by the tags that are on the OAuth client used to create the auth key).
@@ -6025,7 +6036,7 @@ components:
             - auditor
           example: member
           description: |
-            The role of the user. Learn more about [user roles](kb/1138/user-roles).
+            The role of the user. Learn more about [user roles](/docs/reference/user-roles).
         status:
           type: string
           enum:
@@ -6151,7 +6162,7 @@ components:
             - userDeleted
           description: |
             The list of subscribed events that trigger POST requests to the configured endpoint URL.
-            Learn more about [webhook events](/kb/1213/webhooks#events).
+            Learn more about [webhook events](/docs/features/webhooks#events).
         secret:
           type: string
           format: password
@@ -6161,7 +6172,7 @@ components:
             Only populated on creation or when the secret is rotated.
 
             This secret is used for generating the `Tailscale-Webhook-Signature` header in requests sent to the endpoint URL.
-            Learn more about [verifying webhook event signatures](/kb/1213/webhooks#verifying-an-event-signature).
+            Learn more about [verifying webhook event signatures](/docs/features/webhooks#verifying-an-event-signature).
     providerType:
       type: string
       enum:
@@ -6201,7 +6212,7 @@ components:
         - userDeleted
       description: |
         The list of subscribed events that trigger POST requests to the configured endpoint URL.
-        Learn more about [webhook events](/kb/1213/webhooks#events).
+        Learn more about [webhook events](/docs/features/webhooks#events).
     TailnetSettings:
       type: object
       description: |
@@ -6226,28 +6237,28 @@ components:
             - 'null'
           example: false
           description: |
-            Whether [device approval](/kb/1099/device-approval) is enabled for the tailnet.
+            Whether [device approval](/docs/features/access-control/device-management/device-approval) is enabled for the tailnet.
         devicesAutoUpdatesOn:
           type:
             - boolean
             - 'null'
           example: false
           description: |
-            Whether [auto updates](/kb/1067/update#auto-updates) are enabled for devices that belong to this tailnet.
+            Whether [auto updates](/docs/features/client/update#auto-updates) are enabled for devices that belong to this tailnet.
         devicesKeyDurationDays:
           type: integer
           minimum: 1
           maximum: 180
           example: 180
           description: |
-            The [key expiry](/kb/1028/key-expiry) duration for devices on this tailnet.
+            The [key expiry](/docs/features/access-control/key-expiry) duration for devices on this tailnet.
         usersApprovalOn:
           type:
             - boolean
             - 'null'
           example: true
           description: |
-            Whether [user approval](/kb/1239/user-approval) is enabled for this tailnet.
+            Whether [user approval](/docs/features/access-control/user-approval) is enabled for this tailnet.
         usersRoleAllowedToJoinExternalTailnets:
           type: string
           enum:
@@ -6256,35 +6267,35 @@ components:
             - member
           example: admin
           description: |
-            Which user roles are allowed to [join external tailnets](/kb/1271/invite-any-user).
+            Which user roles are allowed to [join external tailnets](/docs/features/sharing/how-to/invite-any-user).
         networkFlowLoggingOn:
           type:
             - boolean
             - 'null'
           example: false
           description: |
-            Whether [network flog logs](/kb/1219/network-flow-logs) are enabled for the tailnet.
+            Whether [network flog logs](/docs/features/logging/network-flow-logs) are enabled for the tailnet.
         regionalRoutingOn:
           type:
             - boolean
             - 'null'
           example: false
           description: |
-            Whether [regional routing](/kb/1115/high-availability#regional-routing) is enabled for the tailnet.
+            Whether [regional routing](/docs/how-to/set-up-high-availability#regional-routing) is enabled for the tailnet.
         postureIdentityCollectionOn:
           type:
             - boolean
             - 'null'
           example: false
           description: |
-            Whether [identity collection](/kb/1326/device-identity) is enabled for [device posture](/kb/1288/device-posture) integrations for the tailnet.
+            Whether [identity collection](/docs/features/access-control/device-management/how-to/manage-identity) is enabled for [device posture](/docs/features/device-posture) integrations for the tailnet.
         httpsEnabled:
           type:
             - boolean
             - 'null'
           example: false
           description: |
-            Whether provisioning of [HTTPS certificates](/kb/1153/enabling-https) is enabled for this tailnet.
+            Whether provisioning of [HTTPS certificates](/docs/how-to/set-up-https-certificates) is enabled for this tailnet.
     VIPServiceInfo:
       type: object
       description: |
@@ -6433,7 +6444,7 @@ components:
           description: |
             The list of OAuth scopes granted to the app.
             Must be non-empty.
-            Learn more about [OAuth clients and scopes](/kb/1215/oauth-clients).
+            Learn more about [OAuth clients and scopes](/docs/features/oauth-clients).
         allowedNodeAttributes:
           type: array
           items:
@@ -6441,7 +6452,7 @@ components:
           example:
             - custom:myattribute
           description: |
-            The list of custom node attributes that the OAuth app is allowed to set.
+            The list of custom device attributes that the OAuth app is allowed to set.
         clientSecret:
           type: string
           format: password
@@ -6498,7 +6509,7 @@ components:
       description: |
         The list of OAuth scopes granted to the app.
         Must be non-empty.
-        Learn more about [OAuth clients and scopes](/kb/1215/oauth-clients).
+        Learn more about [OAuth clients and scopes](/docs/features/oauth-clients).
     allowedNodeAttributes:
       type: array
       items:
@@ -6506,7 +6517,7 @@ components:
       example:
         - custom:myattribute
       description: |
-        The list of custom node attributes that the OAuth app is allowed to set.
+        The list of custom device attributes that the OAuth app is allowed to set.
     OrganizationTailnet:
       type: object
       properties:
@@ -6606,6 +6617,17 @@ components:
             $ref: '#/components/schemas/Error'
             example:
               message: bad request
+    '402':
+      description: |
+        Payment required. The tailnet's plan or billing state does not allow the
+        operation, and resolving it requires a billing change rather than a
+        different request. The `message` field says which change.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+            example:
+              message: payment required
     '403':
       description: Forbidden.
       content:
