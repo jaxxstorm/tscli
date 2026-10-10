@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/jaxxstorm/tscli v0.9.0
 	gopkg.in/yaml.v3 v3.0.1
-	tailscale.com/client/tailscale/v2 v2.10.1
+	tailscale.com/client/tailscale/v2 v2.12.0
 )
 
 require (
