@@ -8,6 +8,8 @@ Update tailnet settings
 
 Update tailnet settings and print the authoritative settings object returned by the API.
 
+--route-selection sets the tailnet route selection algorithm. It is mutually exclusive with --regional-routing.
+
 ```
 tscli set settings [flags]
 ```
@@ -21,7 +23,8 @@ tscli set settings [flags]
   -h, --help                          help for settings
       --network-flow-logging          Enable/disable network-flow logging
       --posture-identity-collection   Enable/disable posture identity collection
-      --regional-routing              Enable/disable regional routing
+      --regional-routing              Enable/disable regional routing (prefer --route-selection)
+      --route-selection string        Route selection algorithm (active-passive-failover|regional-routing|regional-routing-failover|magicroute)
       --users-approval                Enable/disable user approval
       --users-role-join string        Role allowed to join external tailnets (none|admin|member)
 ```

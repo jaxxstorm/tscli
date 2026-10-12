@@ -80,6 +80,7 @@ type setSettingsOperationRequest struct {
 	UsersRoleAllowedToJoinExternalTailnets *string `json:"usersRoleAllowedToJoinExternalTailnets,omitempty"`
 	NetworkFlowLoggingOn                   *bool   `json:"networkFlowLoggingOn,omitempty"`
 	RegionalRoutingOn                      *bool   `json:"regionalRoutingOn,omitempty"`
+	RouteSelection                         *string `json:"routeSelection,omitempty"`
 	PostureIdentityCollectionOn            *bool   `json:"postureIdentityCollectionOn,omitempty"`
 }
 

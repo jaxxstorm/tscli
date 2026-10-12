@@ -148,6 +148,11 @@ func TestListDevicesPropertyCoverage(t *testing.T) {
 	if !strings.Contains(res.stdout, `"serialNumbers"`) {
 		t.Fatalf("expected postureIdentity.serialNumbers in JSON output, got %s", res.stdout)
 	}
+	for _, want := range []string{`"postureStatus"`, `"passing"`, `"impacting"`, `"failingAssertions"`, `"diskEncryption"`} {
+		if !strings.Contains(res.stdout, want) {
+			t.Fatalf("expected %s in JSON output, got %s", want, res.stdout)
+		}
+	}
 	var payload []map[string]any
 	if err := json.Unmarshal([]byte(res.stdout), &payload); err != nil {
 		t.Fatalf("expected top-level device array output, got %v\n%s", err, res.stdout)
@@ -168,7 +173,7 @@ func TestGetDevicePropertyCoverage(t *testing.T) {
 	if res.err != nil {
 		t.Fatalf("unexpected error: %v", res.err)
 	}
-	for _, want := range []string{`"advertisedRoutes"`, `"multipleConnections"`, `"postureIdentity"`} {
+	for _, want := range []string{`"advertisedRoutes"`, `"multipleConnections"`, `"postureIdentity"`, `"postureStatus"`, `"failingAssertions"`} {
 		if !strings.Contains(res.stdout, want) {
 			t.Fatalf("expected %s in JSON output, got %s", want, res.stdout)
 		}
@@ -204,8 +209,10 @@ func TestGetSettingsPropertyCoverage(t *testing.T) {
 	if res.err != nil {
 		t.Fatalf("unexpected error: %v", res.err)
 	}
-	if !strings.Contains(res.stdout, `"postureIdentityCollectionOn"`) {
-		t.Fatalf("expected postureIdentityCollectionOn in JSON output, got %s", res.stdout)
+	for _, want := range []string{`"postureIdentityCollectionOn"`, `"routeSelection"`, `"active-passive-failover"`} {
+		if !strings.Contains(res.stdout, want) {
+			t.Fatalf("expected %s in JSON output, got %s", want, res.stdout)
+		}
 	}
 }
 
@@ -291,6 +298,48 @@ func TestSetSettingsPropertyCoverage(t *testing.T) {
 	}
 	if !strings.Contains(res.stdout, `"postureIdentityCollectionOn"`) {
 		t.Fatalf("expected authoritative settings response in output, got %s", res.stdout)
+	}
+}
+
+func TestSetSettingsRouteSelection(t *testing.T) {
+	mock := apimock.New(t)
+	mock.AddJSON(http.MethodPatch, "/settings", http.StatusOK, apimock.TailnetSettings())
+
+	res := executeCLI(t, []string{"set", "settings", "--route-selection", "regional-routing"}, map[string]string{
+		"TSCLI_BASE_URL": mock.URL(),
+		"TSCLI_OUTPUT":   "json",
+	})
+	if res.err != nil {
+		t.Fatalf("unexpected error: %v", res.err)
+	}
+	reqs := mock.Requests()
+	if len(reqs) != 1 {
+		t.Fatalf("expected one request to mock API, got %d", len(reqs))
+	}
+	var body map[string]any
+	if err := json.Unmarshal([]byte(reqs[0].Body), &body); err != nil {
+		t.Fatalf("unmarshal request body: %v", err)
+	}
+	if body["routeSelection"] != "regional-routing" {
+		t.Fatalf("expected routeSelection in request body, got %#v", body)
+	}
+	if _, ok := body["regionalRoutingOn"]; ok {
+		t.Fatalf("expected route selection request to omit regionalRoutingOn, got %#v", body)
+	}
+	if !strings.Contains(res.stdout, `"routeSelection"`) {
+		t.Fatalf("expected routeSelection in settings response, got %s", res.stdout)
+	}
+}
+
+func TestSetSettingsRouteSelectionValidation(t *testing.T) {
+	invalid := executeCLI(t, []string{"set", "settings", "--route-selection", "failover"}, nil)
+	if invalid.err == nil || !strings.Contains(invalid.err.Error(), "invalid --route-selection") {
+		t.Fatalf("expected invalid route selection error, got %v", invalid.err)
+	}
+
+	both := executeCLI(t, []string{"set", "settings", "--route-selection", "magicroute", "--regional-routing"}, nil)
+	if both.err == nil || !strings.Contains(both.err.Error(), "must not both be set") {
+		t.Fatalf("expected mutually exclusive settings error, got %v", both.err)
 	}
 }
 

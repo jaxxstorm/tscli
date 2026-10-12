@@ -17,18 +17,28 @@ var validJoin = map[string]struct{}{
 	"none": {}, "admin": {}, "member": {},
 }
 
+var validRouteSelection = map[string]struct{}{
+	"active-passive-failover":   {},
+	"regional-routing":          {},
+	"regional-routing-failover": {},
+	"magicroute":                {},
+}
+
 func Command() *cobra.Command {
 	var (
 		devAppr, devAuto, usrAppr,
 		netLog, regRoute, postureID bool
-		keyDays  int
-		joinRole string
+		keyDays        int
+		joinRole       string
+		routeSelection string
 	)
 
 	cmd := &cobra.Command{
 		Use:   "settings",
 		Short: "Update tailnet settings",
-		Long:  "Update tailnet settings and print the authoritative settings object returned by the API.",
+		Long: `Update tailnet settings and print the authoritative settings object returned by the API.
+
+--route-selection sets the tailnet route selection algorithm. It is mutually exclusive with --regional-routing.`,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			f := cmd.Flags()
 
@@ -48,6 +58,14 @@ func Command() *cobra.Command {
 			if f.Lookup("devices-key-duration").Changed {
 				if keyDays < 1 || keyDays > 180 {
 					return fmt.Errorf("--devices-key-duration must be 1-180")
+				}
+			}
+			if f.Lookup("regional-routing").Changed && f.Lookup("route-selection").Changed {
+				return fmt.Errorf("--route-selection and --regional-routing must not both be set")
+			}
+			if f.Lookup("route-selection").Changed {
+				if _, ok := validRouteSelection[routeSelection]; !ok {
+					return fmt.Errorf("invalid --route-selection: %s (active-passive-failover|regional-routing|regional-routing-failover|magicroute)", routeSelection)
 				}
 			}
 			return nil
@@ -82,6 +100,9 @@ func Command() *cobra.Command {
 			if f.Lookup("regional-routing").Changed {
 				req.RegionalRoutingOn = &regRoute
 			}
+			if f.Lookup("route-selection").Changed {
+				req.RouteSelection = &routeSelection
+			}
 			if f.Lookup("posture-identity-collection").Changed {
 				req.PostureIdentityCollectionOn = &postureID
 			}
@@ -100,7 +121,8 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVar(&devAuto, "devices-auto-updates", false, "Enable/disable device auto-updates")
 	cmd.Flags().BoolVar(&usrAppr, "users-approval", false, "Enable/disable user approval")
 	cmd.Flags().BoolVar(&netLog, "network-flow-logging", false, "Enable/disable network-flow logging")
-	cmd.Flags().BoolVar(&regRoute, "regional-routing", false, "Enable/disable regional routing")
+	cmd.Flags().BoolVar(&regRoute, "regional-routing", false, "Enable/disable regional routing (prefer --route-selection)")
+	cmd.Flags().StringVar(&routeSelection, "route-selection", "", "Route selection algorithm (active-passive-failover|regional-routing|regional-routing-failover|magicroute)")
 	cmd.Flags().BoolVar(&postureID, "posture-identity-collection", false, "Enable/disable posture identity collection")
 
 	cmd.Flags().IntVar(&keyDays, "devices-key-duration", 0, "Device key expiry (1-180 days)")

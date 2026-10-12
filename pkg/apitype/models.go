@@ -34,6 +34,12 @@ type DevicePostureIdentity struct {
 	Disabled      *bool    `json:"disabled,omitempty"`
 }
 
+type DevicePostureStatus struct {
+	Passing           *bool    `json:"passing,omitempty"`
+	Impacting         *bool    `json:"impacting,omitempty"`
+	FailingAssertions []string `json:"failingAssertions,omitempty"`
+}
+
 type Device struct {
 	Addresses                 []string               `json:"addresses,omitempty"`
 	Name                      string                 `json:"name,omitempty"`
@@ -64,6 +70,7 @@ type Device struct {
 	ClientConnectivity        *ClientConnectivity    `json:"clientConnectivity,omitempty"`
 	SSHEnabled                *bool                  `json:"sshEnabled,omitempty"`
 	PostureIdentity           *DevicePostureIdentity `json:"postureIdentity,omitempty"`
+	PostureStatus             *DevicePostureStatus   `json:"postureStatus,omitempty"`
 	Distro                    *Distro                `json:"distro,omitempty"`
 }
 
@@ -90,6 +97,7 @@ type TailnetSettings struct {
 	UsersRoleAllowedToJoinExternalTailnets *string `json:"usersRoleAllowedToJoinExternalTailnets,omitempty"`
 	NetworkFlowLoggingOn                   *bool   `json:"networkFlowLoggingOn,omitempty"`
 	RegionalRoutingOn                      *bool   `json:"regionalRoutingOn,omitempty"`
+	RouteSelection                         *string `json:"routeSelection,omitempty"`
 	PostureIdentityCollectionOn            *bool   `json:"postureIdentityCollectionOn,omitempty"`
 	HTTPSEnabled                           *bool   `json:"httpsEnabled,omitempty"`
 }
@@ -104,6 +112,7 @@ type UpdateTailnetSettingsRequest struct {
 	UsersRoleAllowedToJoinExternalTailnets *string `json:"usersRoleAllowedToJoinExternalTailnets,omitempty"`
 	NetworkFlowLoggingOn                   *bool   `json:"networkFlowLoggingOn,omitempty"`
 	RegionalRoutingOn                      *bool   `json:"regionalRoutingOn,omitempty"`
+	RouteSelection                         *string `json:"routeSelection,omitempty"`
 	PostureIdentityCollectionOn            *bool   `json:"postureIdentityCollectionOn,omitempty"`
 	HTTPSEnabled                           *bool   `json:"httpsEnabled,omitempty"`
 }
