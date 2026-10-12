@@ -139,6 +139,22 @@ func TestPinnedSchemaIncludesDevicePostureIdentityProperty(t *testing.T) {
 	}
 }
 
+func TestPinnedSchemaIncludesDevicePostureStatusProperty(t *testing.T) {
+	doc := loadSnapshotDoc(t)
+	deviceProps := loadDeviceSchemaProperties(t, doc)
+
+	postureStatus, ok := deviceProps["postureStatus"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected Device.postureStatus in pinned schema")
+	}
+	postureProps := requireMap(t, postureStatus, "Device.postureStatus.properties", "properties")
+	for _, key := range []string{"passing", "impacting", "failingAssertions"} {
+		if _, ok := postureProps[key]; !ok {
+			t.Fatalf("expected postureStatus.%s in pinned schema", key)
+		}
+	}
+}
+
 func TestPinnedSchemaIncludesDeviceAdvancedRouteProperties(t *testing.T) {
 	doc := loadSnapshotDoc(t)
 	deviceProps := loadDeviceSchemaProperties(t, doc)
@@ -168,6 +184,48 @@ func TestPinnedSchemaIncludesTailnetSettingsPostureIdentityCollectionProperty(t 
 	props := requireMap(t, settingsSchema, "TailnetSettings", "properties")
 	if _, ok := props["postureIdentityCollectionOn"]; !ok {
 		t.Fatalf("expected TailnetSettings.postureIdentityCollectionOn in pinned schema")
+	}
+}
+
+func TestPinnedSchemaIncludesTailnetSettingsRouteSelectionProperty(t *testing.T) {
+	doc := loadSnapshotDoc(t)
+	settingsSchema := resolveSchemaRef(t, doc, "#/components/schemas/TailnetSettings")
+	props := requireMap(t, settingsSchema, "TailnetSettings", "properties")
+
+	regional, ok := props["regionalRoutingOn"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected TailnetSettings.regionalRoutingOn in pinned schema")
+	}
+	readOnly, ok := regional["readOnly"].(bool)
+	if !ok || !readOnly {
+		t.Fatalf("expected TailnetSettings.regionalRoutingOn to be readOnly, got %#v", regional["readOnly"])
+	}
+
+	routeSelection, ok := props["routeSelection"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected TailnetSettings.routeSelection in pinned schema")
+	}
+	enum, ok := routeSelection["enum"].([]any)
+	if !ok {
+		t.Fatalf("expected TailnetSettings.routeSelection.enum, got %#v", routeSelection["enum"])
+	}
+	got := map[string]struct{}{}
+	for _, item := range enum {
+		value, ok := item.(string)
+		if !ok {
+			t.Fatalf("expected string enum value, got %#v", item)
+		}
+		got[value] = struct{}{}
+	}
+	for _, want := range []string{
+		"active-passive-failover",
+		"regional-routing",
+		"regional-routing-failover",
+		"magicroute",
+	} {
+		if _, ok := got[want]; !ok {
+			t.Fatalf("expected routeSelection enum %q, got %#v", want, enum)
+		}
 	}
 }
 

@@ -23,6 +23,11 @@ func Device() map[string]any {
 			"serialNumbers": []string{"CP74LFQJXM"},
 			"disabled":      false,
 		},
+		"postureStatus": map[string]any{
+			"passing":           false,
+			"impacting":         true,
+			"failingAssertions": []string{"diskEncryption"},
+		},
 	}
 }
 
@@ -47,6 +52,7 @@ func TailnetSettings() map[string]any {
 		"usersApprovalOn":             false,
 		"networkFlowLoggingOn":        true,
 		"regionalRoutingOn":           false,
+		"routeSelection":              "active-passive-failover",
 		"postureIdentityCollectionOn": true,
 		"httpsEnabled":                true,
 	}

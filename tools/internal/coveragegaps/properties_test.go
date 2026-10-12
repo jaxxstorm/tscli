@@ -17,6 +17,11 @@ func TestExpandTypePropertyPaths(t *testing.T) {
 		"devices[].postureIdentity",
 		"devices[].postureIdentity.serialNumbers",
 		"devices[].postureIdentity.serialNumbers[]",
+		"devices[].postureStatus",
+		"devices[].postureStatus.passing",
+		"devices[].postureStatus.impacting",
+		"devices[].postureStatus.failingAssertions",
+		"devices[].postureStatus.failingAssertions[]",
 	}
 	for _, item := range mustContain {
 		if !contains(paths, item) {
