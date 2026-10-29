@@ -10,7 +10,7 @@ require (
 
 require (
 	github.com/tailscale/hujson v0.0.0-20260727124030-b80ff77dac4f // indirect
-	golang.org/x/oauth2 v0.36.0 // indirect
+	golang.org/x/oauth2 v0.37.0 // indirect
 )
 
 replace github.com/jaxxstorm/tscli => ..

@@ -1,12 +1,15 @@
 package config
 
 import (
+	"bytes"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"filippo.io/age"
+	"filippo.io/age/armor"
 	"github.com/spf13/viper"
 )
 
@@ -64,6 +67,9 @@ func TestEncryptAndDecryptSecret(t *testing.T) {
 	if strings.Contains(ciphertext, "super-secret") {
 		t.Fatalf("expected ciphertext to omit plaintext, got %q", ciphertext)
 	}
+	if !strings.HasPrefix(ciphertext, armor.Header) {
+		t.Fatal("encrypted secrets must use text-safe age armor")
+	}
 
 	plaintext, err := decryptSecret(v, ciphertext)
 	if err != nil {
@@ -72,6 +78,46 @@ func TestEncryptAndDecryptSecret(t *testing.T) {
 	if plaintext != "super-secret" {
 		t.Fatalf("expected decrypted plaintext, got %q", plaintext)
 	}
+}
+
+func TestLegacyBinaryCiphertextPreservesTrailingWhitespace(t *testing.T) {
+	identity, err := age.GenerateX25519Identity()
+	if err != nil {
+		t.Fatal(err)
+	}
+	v := viper.New()
+	v.Set("encryption.age.public-key", identity.Recipient().String())
+	v.Set("encryption.age.private-key", identity.String())
+	// Find a valid legacy ciphertext whose final byte would be stripped by
+	// TrimSpace, then exercise profile normalization and runtime decryption.
+	for attempt := 0; attempt < 4096; attempt++ {
+		var buf bytes.Buffer
+		w, err := age.Encrypt(&buf, identity.Recipient())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := io.WriteString(w, "legacy-secret"); err != nil {
+			t.Fatal(err)
+		}
+		if err := w.Close(); err != nil {
+			t.Fatal(err)
+		}
+		ciphertext := buf.String()
+		if ciphertext == strings.TrimSpace(ciphertext) {
+			continue
+		}
+		v.Set("active-tailnet", "sandbox")
+		v.Set("tailnets", []map[string]any{{"name": "sandbox", "api-key-encrypted": ciphertext}})
+		resolved, err := resolveRuntimeConfig(v, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resolved.APIKey != "legacy-secret" {
+			t.Fatal("legacy secret did not survive profile normalization")
+		}
+		return
+	}
+	t.Fatal("could not generate a legacy ciphertext with trailing whitespace")
 }
 
 func TestResolveRuntimeConfigDecryptsEncryptedProfileSecrets(t *testing.T) {
