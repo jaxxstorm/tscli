@@ -22,6 +22,7 @@ tscli set settings [flags]
       --network-flow-logging          Enable/disable network-flow logging
       --posture-identity-collection   Enable/disable posture identity collection
       --regional-routing              Enable/disable regional routing
+      --route-selection string        Route selection algorithm (active-passive-failover|regional-routing|regional-routing-failover|magicroute)
       --users-approval                Enable/disable user approval
       --users-role-join string        Role allowed to join external tailnets (none|admin|member)
 ```
