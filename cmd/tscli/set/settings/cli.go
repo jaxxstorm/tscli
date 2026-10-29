@@ -24,6 +24,7 @@ func Command() *cobra.Command {
 		keyDays                    int
 		adminSessionTimeoutMinutes int
 		joinRole                   string
+		routeSelection             string
 	)
 
 	cmd := &cobra.Command{
@@ -54,6 +55,13 @@ func Command() *cobra.Command {
 			if f.Lookup("admin-console-session-timeout-minutes").Changed {
 				if adminSessionTimeoutMinutes < 0 || adminSessionTimeoutMinutes > 43200 {
 					return fmt.Errorf("--admin-console-session-timeout-minutes must be 0-43200")
+				}
+			}
+			if f.Lookup("route-selection").Changed {
+				switch routeSelection {
+				case "active-passive-failover", "regional-routing", "regional-routing-failover", "magicroute":
+				default:
+					return fmt.Errorf("invalid --route-selection: %s (active-passive-failover|regional-routing|regional-routing-failover|magicroute)", routeSelection)
 				}
 			}
 			return nil
@@ -91,6 +99,9 @@ func Command() *cobra.Command {
 			if f.Lookup("regional-routing").Changed {
 				req.RegionalRoutingOn = &regRoute
 			}
+			if f.Lookup("route-selection").Changed {
+				req.RouteSelection = &routeSelection
+			}
 			if f.Lookup("posture-identity-collection").Changed {
 				req.PostureIdentityCollectionOn = &postureID
 			}
@@ -115,6 +126,8 @@ func Command() *cobra.Command {
 	cmd.Flags().IntVar(&keyDays, "devices-key-duration", 0, "Device key expiry (1-180 days)")
 	cmd.Flags().IntVar(&adminSessionTimeoutMinutes, "admin-console-session-timeout-minutes", 0, "Admin console session timeout (0-43200 minutes; 0 disables)")
 	cmd.Flags().StringVar(&joinRole, "users-role-join", "", "Role allowed to join external tailnets (none|admin|member)")
+	cmd.Flags().StringVar(&routeSelection, "route-selection", "", "Route selection algorithm (active-passive-failover|regional-routing|regional-routing-failover|magicroute)")
+	cmd.MarkFlagsMutuallyExclusive("regional-routing", "route-selection")
 
 	return cmd
 }

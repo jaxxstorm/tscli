@@ -73,6 +73,7 @@ type createKeyOperationRequest struct {
 }
 
 type setSettingsOperationRequest struct {
+	RouteSelection                         *string `json:"routeSelection,omitempty"`
 	DevicesApprovalOn                      *bool   `json:"devicesApprovalOn,omitempty"`
 	DevicesAutoUpdatesOn                   *bool   `json:"devicesAutoUpdatesOn,omitempty"`
 	DevicesKeyDurationDays                 *int    `json:"devicesKeyDurationDays,omitempty"`

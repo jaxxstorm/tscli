@@ -34,6 +34,12 @@ type DevicePostureIdentity struct {
 	Disabled      *bool    `json:"disabled,omitempty"`
 }
 
+type DevicePostureStatus struct {
+	Passing           *bool    `json:"passing,omitempty"`
+	Impacting         *bool    `json:"impacting,omitempty"`
+	FailingAssertions []string `json:"failingAssertions,omitempty"`
+}
+
 type Device struct {
 	Addresses                 []string               `json:"addresses,omitempty"`
 	Name                      string                 `json:"name,omitempty"`
@@ -64,6 +70,7 @@ type Device struct {
 	ClientConnectivity        *ClientConnectivity    `json:"clientConnectivity,omitempty"`
 	SSHEnabled                *bool                  `json:"sshEnabled,omitempty"`
 	PostureIdentity           *DevicePostureIdentity `json:"postureIdentity,omitempty"`
+	PostureStatus             *DevicePostureStatus   `json:"postureStatus,omitempty"`
 	Distro                    *Distro                `json:"distro,omitempty"`
 }
 
@@ -82,6 +89,7 @@ type DeviceRoutesUpdateRequest struct {
 
 type TailnetSettings struct {
 	AdminConsoleSessionTimeoutMinutes      *int    `json:"adminConsoleSessionTimeoutMinutes,omitempty"`
+	RouteSelection                         *string `json:"routeSelection,omitempty"`
 	ACLsExternallyManagedOn                *bool   `json:"aclsExternallyManagedOn,omitempty"`
 	ACLsExternalLink                       *string `json:"aclsExternalLink,omitempty"`
 	DevicesApprovalOn                      *bool   `json:"devicesApprovalOn,omitempty"`
@@ -97,6 +105,7 @@ type TailnetSettings struct {
 
 type UpdateTailnetSettingsRequest struct {
 	AdminConsoleSessionTimeoutMinutes      *int    `json:"adminConsoleSessionTimeoutMinutes,omitempty"`
+	RouteSelection                         *string `json:"routeSelection,omitempty"`
 	ACLsExternallyManagedOn                *bool   `json:"aclsExternallyManagedOn,omitempty"`
 	ACLsExternalLink                       *string `json:"aclsExternalLink,omitempty"`
 	DevicesApprovalOn                      *bool   `json:"devicesApprovalOn,omitempty"`

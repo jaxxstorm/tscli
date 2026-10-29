@@ -155,6 +155,7 @@ func TestListDevicesPropertyCoverage(t *testing.T) {
 	if len(payload) == 0 {
 		t.Fatalf("expected non-empty device array output")
 	}
+	assertDevicePostureStatus(t, payload[0])
 }
 
 func TestGetDevicePropertyCoverage(t *testing.T) {
@@ -172,6 +173,23 @@ func TestGetDevicePropertyCoverage(t *testing.T) {
 		if !strings.Contains(res.stdout, want) {
 			t.Fatalf("expected %s in JSON output, got %s", want, res.stdout)
 		}
+	}
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(res.stdout), &payload); err != nil {
+		t.Fatal(err)
+	}
+	assertDevicePostureStatus(t, payload)
+}
+
+func assertDevicePostureStatus(t *testing.T, device map[string]any) {
+	t.Helper()
+	status, ok := device["postureStatus"].(map[string]any)
+	if !ok || status["passing"] != false || status["impacting"] != true {
+		t.Fatalf("expected posture status including false passing value, got %#v", device["postureStatus"])
+	}
+	assertions, ok := status["failingAssertions"].([]any)
+	if !ok || len(assertions) != 1 || assertions[0] != "node:os == 'macos'" {
+		t.Fatalf("unexpected failing assertions: %#v", status["failingAssertions"])
 	}
 }
 
@@ -206,6 +224,9 @@ func TestGetSettingsPropertyCoverage(t *testing.T) {
 	}
 	if !strings.Contains(res.stdout, `"postureIdentityCollectionOn"`) {
 		t.Fatalf("expected postureIdentityCollectionOn in JSON output, got %s", res.stdout)
+	}
+	if !strings.Contains(res.stdout, `"routeSelection": "magicroute"`) {
+		t.Fatalf("expected routeSelection in JSON output, got %s", res.stdout)
 	}
 }
 
@@ -269,7 +290,7 @@ func TestSetSettingsPropertyCoverage(t *testing.T) {
 	mock := apimock.New(t)
 	mock.AddJSON(http.MethodPatch, "/settings", http.StatusOK, apimock.TailnetSettings())
 
-	res := executeCLI(t, []string{"set", "settings", "--devices-approval", "--posture-identity-collection"}, map[string]string{
+	res := executeCLI(t, []string{"set", "settings", "--devices-approval", "--posture-identity-collection", "--route-selection", "magicroute"}, map[string]string{
 		"TSCLI_BASE_URL": mock.URL(),
 		"TSCLI_OUTPUT":   "json",
 	})
@@ -289,8 +310,30 @@ func TestSetSettingsPropertyCoverage(t *testing.T) {
 			t.Fatalf("expected %s in request body, got %#v", want, body)
 		}
 	}
+	if body["routeSelection"] != "magicroute" {
+		t.Fatalf("expected routeSelection in request body, got %#v", body)
+	}
+	if _, ok := body["regionalRoutingOn"]; ok {
+		t.Fatalf("unexpected regionalRoutingOn in request body: %#v", body)
+	}
+	if !strings.Contains(res.stdout, `"routeSelection": "magicroute"`) {
+		t.Fatalf("expected routeSelection in response, got %s", res.stdout)
+	}
 	if !strings.Contains(res.stdout, `"postureIdentityCollectionOn"`) {
 		t.Fatalf("expected authoritative settings response in output, got %s", res.stdout)
+	}
+}
+
+func TestSetSettingsRouteSelectionValidation(t *testing.T) {
+	for _, args := range [][]string{
+		{"--route-selection", "invalid"},
+		{"--route-selection", ""},
+		{"--route-selection", "magicroute", "--regional-routing=false"},
+	} {
+		res := executeCLI(t, append([]string{"set", "settings"}, args...), nil)
+		if res.err == nil || !strings.Contains(res.err.Error(), "route-selection") {
+			t.Fatalf("expected route-selection validation error for %v, got %v", args, res.err)
+		}
 	}
 }
 

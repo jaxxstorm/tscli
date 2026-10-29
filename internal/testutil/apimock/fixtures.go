@@ -19,6 +19,11 @@ func Device() map[string]any {
 			"10.0.0.0/24",
 		},
 		"multipleConnections": true,
+		"postureStatus": map[string]any{
+			"passing":           false,
+			"impacting":         true,
+			"failingAssertions": []string{"node:os == 'macos'"},
+		},
 		"postureIdentity": map[string]any{
 			"serialNumbers": []string{"CP74LFQJXM"},
 			"disabled":      false,
@@ -47,6 +52,7 @@ func TailnetSettings() map[string]any {
 		"usersApprovalOn":             false,
 		"networkFlowLoggingOn":        true,
 		"regionalRoutingOn":           false,
+		"routeSelection":              "magicroute",
 		"postureIdentityCollectionOn": true,
 		"httpsEnabled":                true,
 	}

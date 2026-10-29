@@ -1,6 +1,6 @@
 module github.com/jaxxstorm/tscli
 
-go 1.26.0
+go 1.27.3
 
 require (
 	filippo.io/age v1.3.2
