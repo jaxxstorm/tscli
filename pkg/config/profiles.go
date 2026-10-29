@@ -505,10 +505,10 @@ func normalizeProfile(profile TailnetProfile) TailnetProfile {
 		Name:                       strings.TrimSpace(profile.Name),
 		Tailnet:                    strings.TrimSpace(profile.Tailnet),
 		APIKey:                     strings.TrimSpace(profile.APIKey),
-		APIKeyEncrypted:            strings.TrimSpace(profile.APIKeyEncrypted),
+		APIKeyEncrypted:            profile.APIKeyEncrypted,
 		OAuthClientID:              strings.TrimSpace(profile.OAuthClientID),
 		OAuthClientSecret:          strings.TrimSpace(profile.OAuthClientSecret),
-		OAuthClientSecretEncrypted: strings.TrimSpace(profile.OAuthClientSecretEncrypted),
+		OAuthClientSecretEncrypted: profile.OAuthClientSecretEncrypted,
 	}
 }
 
