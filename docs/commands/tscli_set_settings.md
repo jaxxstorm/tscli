@@ -15,15 +15,17 @@ tscli set settings [flags]
 ### Options
 
 ```
-      --devices-approval              Enable/disable device approval
-      --devices-auto-updates          Enable/disable device auto-updates
-      --devices-key-duration int      Device key expiry (1-180 days)
-  -h, --help                          help for settings
-      --network-flow-logging          Enable/disable network-flow logging
-      --posture-identity-collection   Enable/disable posture identity collection
-      --regional-routing              Enable/disable regional routing
-      --users-approval                Enable/disable user approval
-      --users-role-join string        Role allowed to join external tailnets (none|admin|member)
+      --admin-console-session-timeout-minutes int   Admin console session timeout (0-43200 minutes; 0 disables)
+      --devices-approval                            Enable/disable device approval
+      --devices-auto-updates                        Enable/disable device auto-updates
+      --devices-key-duration int                    Device key expiry (1-180 days)
+  -h, --help                                        help for settings
+      --network-flow-logging                        Enable/disable network-flow logging
+      --posture-identity-collection                 Enable/disable posture identity collection
+      --regional-routing                            Enable/disable regional routing
+      --route-selection string                      Route selection algorithm (active-passive-failover|regional-routing|regional-routing-failover|magicroute)
+      --users-approval                              Enable/disable user approval
+      --users-role-join string                      Role allowed to join external tailnets (none|admin|member)
 ```
 
 ### Options inherited from parent commands

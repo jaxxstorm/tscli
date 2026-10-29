@@ -651,6 +651,11 @@ paths:
       responses:
         '200':
           description: Successful operation.
+        '400':
+          description: |
+            The address is malformed, is outside the Tailscale IPv4 range, is reserved,
+            or is already assigned to another device in the tailnet.
+          $ref: '#/components/responses/400'
         '404':
           description: Device not found.
           $ref: '#/components/responses/404'
@@ -4309,6 +4314,7 @@ components:
             - TAILNET.UPDATE.LOGSTREAM_ENDPOINT
             - TAILNET.UPDATE.MAX_KEY_DURATION
             - TAILNET.UPDATE.POSTURE_INTEGRATION
+            - TAILNET.UPDATE.ROUTE_SELECTION
             - TAILNET.UPDATE.SECURITY_EMAIL
             - TAILNET.UPDATE.SUPPORT_EMAIL
             - TAILNET.UPDATE.TCD
@@ -4773,6 +4779,22 @@ components:
           example:
             serialNumbers:
               - CP74LFQJXM
+        postureStatus:
+          type: object
+          description: |
+            Reports the status of a single posture for a device.
+          properties:
+            passing:
+              type: boolean
+              description: Reports whether the device is passing this posture.
+            impacting:
+              type: boolean
+              description: Whether the status of this posture affects the connectivity of the device.
+            failingAssertions:
+              type: array
+              description: List of posture assertions the device is failing. Empty if the device is passing.
+              items:
+                type: string
         isEphemeral:
           type: boolean
           example: false
@@ -5196,6 +5218,7 @@ components:
                 - TCD
                 - TKA
                 - AUTH_PROVIDER
+                - ROUTE_SELECTION
               description: The property name on this target which was updated by the event. When empty, the event didn't update any fields on this target.
               example: ALLOWED_IPS
         action:
@@ -6231,6 +6254,14 @@ components:
           example: https://github.com/example/tailnet-policy
           description: |
             Link to the external tailnet policy definition or management solution for this tailnet.
+        adminConsoleSessionTimeoutMinutes:
+          type: integer
+          minimum: 0
+          maximum: 43200
+          example: 180
+          description: |
+            The [admin console session timeout](/docs/account/admin-console-session-timeout) for members of this tailnet.
+            Setting it to 0 disables the timeout.
         devicesApprovalOn:
           type:
             - boolean
@@ -6280,8 +6311,28 @@ components:
             - boolean
             - 'null'
           example: false
+          readOnly: true
           description: |
-            Whether [regional routing](/docs/how-to/set-up-high-availability#regional-routing) is enabled for the tailnet.
+            Whether [regional routing](/docs/features/route-selection#regional-routing) is enabled for the tailnet.
+            A PATCH request should prefer setting `routeSelection`.
+            A PATCH request must not specify both the `regionalRoutingOn` and `routeSelection` fields.
+        routeSelection:
+          type:
+            - string
+          enum:
+            - active-passive-failover
+            - regional-routing
+            - regional-routing-failover
+            - magicroute
+          example: active-passive-failover
+          description: |
+            The [route selection](/docs/features/route-selection) algorithm used by the tailnet:
+            * `active-passive-failover` - Active-passive failover (formerly known as "Failover")
+            * `regional-routing` - Regional routing
+            * `regional-routing-failover` - Regional routing with in-region failover
+            * `magicroute` - MagicRoute
+
+            A PATCH request must not specify both the `regionalRoutingOn` and `routeSelection` fields.
         postureIdentityCollectionOn:
           type:
             - boolean

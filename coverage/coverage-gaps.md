@@ -10,7 +10,7 @@
 - Covered commands: `87`
 - Unmapped commands: `0`
 - Unknown mapped commands: `0`
-- Covered properties: `237`
+- Covered properties: `253`
 - Excluded properties: `651`
 - Uncovered properties: `0`
 
@@ -77,6 +77,11 @@
 - `postureIdentity.disabled`
 - `postureIdentity.serialNumbers`
 - `postureIdentity.serialNumbers[]`
+- `postureStatus`
+- `postureStatus.failingAssertions`
+- `postureStatus.failingAssertions[]`
+- `postureStatus.impacting`
+- `postureStatus.passing`
 - `sshEnabled`
 - `tags`
 - `tags[]`
@@ -151,6 +156,11 @@
 - `devices[].postureIdentity.disabled`
 - `devices[].postureIdentity.serialNumbers`
 - `devices[].postureIdentity.serialNumbers[]`
+- `devices[].postureStatus`
+- `devices[].postureStatus.failingAssertions`
+- `devices[].postureStatus.failingAssertions[]`
+- `devices[].postureStatus.impacting`
+- `devices[].postureStatus.passing`
 - `devices[].sshEnabled`
 - `devices[].tags`
 - `devices[].tags[]`
@@ -195,6 +205,7 @@
 
 - `aclsExternalLink`
 - `aclsExternallyManagedOn`
+- `adminConsoleSessionTimeoutMinutes`
 - `devicesApprovalOn`
 - `devicesAutoUpdatesOn`
 - `devicesKeyDurationDays`
@@ -202,17 +213,20 @@
 - `networkFlowLoggingOn`
 - `postureIdentityCollectionOn`
 - `regionalRoutingOn`
+- `routeSelection`
 - `usersApprovalOn`
 - `usersRoleAllowedToJoinExternalTailnets`
 
 ### patch /tailnet/{tailnet}/settings request
 
+- `adminConsoleSessionTimeoutMinutes`
 - `devicesApprovalOn`
 - `devicesAutoUpdatesOn`
 - `devicesKeyDurationDays`
 - `networkFlowLoggingOn`
 - `postureIdentityCollectionOn`
 - `regionalRoutingOn`
+- `routeSelection`
 - `usersApprovalOn`
 - `usersRoleAllowedToJoinExternalTailnets`
 
@@ -220,6 +234,7 @@
 
 - `aclsExternalLink`
 - `aclsExternallyManagedOn`
+- `adminConsoleSessionTimeoutMinutes`
 - `devicesApprovalOn`
 - `devicesAutoUpdatesOn`
 - `devicesKeyDurationDays`
@@ -227,6 +242,7 @@
 - `networkFlowLoggingOn`
 - `postureIdentityCollectionOn`
 - `regionalRoutingOn`
+- `routeSelection`
 - `usersApprovalOn`
 - `usersRoleAllowedToJoinExternalTailnets`
 

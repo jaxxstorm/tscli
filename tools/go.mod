@@ -1,6 +1,6 @@
 module github.com/jaxxstorm/tscli/tools
 
-go 1.26.0
+go 1.27.3
 
 require (
 	github.com/jaxxstorm/tscli v0.9.0
