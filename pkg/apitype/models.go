@@ -81,6 +81,7 @@ type DeviceRoutesUpdateRequest struct {
 }
 
 type TailnetSettings struct {
+	AdminConsoleSessionTimeoutMinutes      *int    `json:"adminConsoleSessionTimeoutMinutes,omitempty"`
 	ACLsExternallyManagedOn                *bool   `json:"aclsExternallyManagedOn,omitempty"`
 	ACLsExternalLink                       *string `json:"aclsExternalLink,omitempty"`
 	DevicesApprovalOn                      *bool   `json:"devicesApprovalOn,omitempty"`
@@ -95,6 +96,7 @@ type TailnetSettings struct {
 }
 
 type UpdateTailnetSettingsRequest struct {
+	AdminConsoleSessionTimeoutMinutes      *int    `json:"adminConsoleSessionTimeoutMinutes,omitempty"`
 	ACLsExternallyManagedOn                *bool   `json:"aclsExternallyManagedOn,omitempty"`
 	ACLsExternalLink                       *string `json:"aclsExternalLink,omitempty"`
 	DevicesApprovalOn                      *bool   `json:"devicesApprovalOn,omitempty"`

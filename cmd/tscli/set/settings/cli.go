@@ -21,8 +21,9 @@ func Command() *cobra.Command {
 	var (
 		devAppr, devAuto, usrAppr,
 		netLog, regRoute, postureID bool
-		keyDays  int
-		joinRole string
+		keyDays                    int
+		adminSessionTimeoutMinutes int
+		joinRole                   string
 	)
 
 	cmd := &cobra.Command{
@@ -50,6 +51,11 @@ func Command() *cobra.Command {
 					return fmt.Errorf("--devices-key-duration must be 1-180")
 				}
 			}
+			if f.Lookup("admin-console-session-timeout-minutes").Changed {
+				if adminSessionTimeoutMinutes < 0 || adminSessionTimeoutMinutes > 43200 {
+					return fmt.Errorf("--admin-console-session-timeout-minutes must be 0-43200")
+				}
+			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -63,6 +69,9 @@ func Command() *cobra.Command {
 
 			if f.Lookup("devices-approval").Changed {
 				req.DevicesApprovalOn = &devAppr
+			}
+			if f.Lookup("admin-console-session-timeout-minutes").Changed {
+				req.AdminConsoleSessionTimeoutMinutes = &adminSessionTimeoutMinutes
 			}
 			if f.Lookup("devices-auto-updates").Changed {
 				req.DevicesAutoUpdatesOn = &devAuto
@@ -104,6 +113,7 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVar(&postureID, "posture-identity-collection", false, "Enable/disable posture identity collection")
 
 	cmd.Flags().IntVar(&keyDays, "devices-key-duration", 0, "Device key expiry (1-180 days)")
+	cmd.Flags().IntVar(&adminSessionTimeoutMinutes, "admin-console-session-timeout-minutes", 0, "Admin console session timeout (0-43200 minutes; 0 disables)")
 	cmd.Flags().StringVar(&joinRole, "users-role-join", "", "Role allowed to join external tailnets (none|admin|member)")
 
 	return cmd
