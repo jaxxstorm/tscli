@@ -6,6 +6,13 @@ import (
 	"testing"
 )
 
+func TestSettingsTimeoutPropertyCoverage(t *testing.T) {
+	paths := expandTypePropertyPaths("", propertyTypeRegistry["coverage.set_settings_operation_request"])
+	if !contains(paths, "adminConsoleSessionTimeoutMinutes") {
+		t.Fatalf("timeout request property missing: %v", paths)
+	}
+}
+
 func TestExpandTypePropertyPaths(t *testing.T) {
 	paths := expandTypePropertyPaths("", propertyTypeRegistry["apitype.DeviceListResponse"])
 

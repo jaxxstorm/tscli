@@ -457,6 +457,7 @@
     "get /tailnet/{tailnet}/oauth-apps/{appId} response updated",
     "get /tailnet/{tailnet}/settings response aclsExternalLink",
     "get /tailnet/{tailnet}/settings response aclsExternallyManagedOn",
+    "get /tailnet/{tailnet}/settings response adminConsoleSessionTimeoutMinutes",
     "get /tailnet/{tailnet}/settings response devicesApprovalOn",
     "get /tailnet/{tailnet}/settings response devicesAutoUpdatesOn",
     "get /tailnet/{tailnet}/settings response devicesKeyDurationDays",
@@ -467,6 +468,7 @@
     "get /tailnet/{tailnet}/settings response routeSelection",
     "get /tailnet/{tailnet}/settings response usersApprovalOn",
     "get /tailnet/{tailnet}/settings response usersRoleAllowedToJoinExternalTailnets",
+    "patch /tailnet/{tailnet}/settings request adminConsoleSessionTimeoutMinutes",
     "patch /tailnet/{tailnet}/settings request devicesApprovalOn",
     "patch /tailnet/{tailnet}/settings request devicesAutoUpdatesOn",
     "patch /tailnet/{tailnet}/settings request devicesKeyDurationDays",
@@ -478,6 +480,7 @@
     "patch /tailnet/{tailnet}/settings request usersRoleAllowedToJoinExternalTailnets",
     "patch /tailnet/{tailnet}/settings response aclsExternalLink",
     "patch /tailnet/{tailnet}/settings response aclsExternallyManagedOn",
+    "patch /tailnet/{tailnet}/settings response adminConsoleSessionTimeoutMinutes",
     "patch /tailnet/{tailnet}/settings response devicesApprovalOn",
     "patch /tailnet/{tailnet}/settings response devicesAutoUpdatesOn",
     "patch /tailnet/{tailnet}/settings response devicesKeyDurationDays",
@@ -1376,6 +1379,7 @@
     "get /tailnet/{tailnet}/settings response": [
       "aclsExternalLink",
       "aclsExternallyManagedOn",
+      "adminConsoleSessionTimeoutMinutes",
       "devicesApprovalOn",
       "devicesAutoUpdatesOn",
       "devicesKeyDurationDays",
@@ -1388,6 +1392,7 @@
       "usersRoleAllowedToJoinExternalTailnets"
     ],
     "patch /tailnet/{tailnet}/settings request": [
+      "adminConsoleSessionTimeoutMinutes",
       "devicesApprovalOn",
       "devicesAutoUpdatesOn",
       "devicesKeyDurationDays",
@@ -1401,6 +1406,7 @@
     "patch /tailnet/{tailnet}/settings response": [
       "aclsExternalLink",
       "aclsExternallyManagedOn",
+      "adminConsoleSessionTimeoutMinutes",
       "devicesApprovalOn",
       "devicesAutoUpdatesOn",
       "devicesKeyDurationDays",
