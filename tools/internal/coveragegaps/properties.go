@@ -73,6 +73,7 @@ type createKeyOperationRequest struct {
 }
 
 type setSettingsOperationRequest struct {
+	AdminConsoleSessionTimeoutMinutes      *int    `json:"adminConsoleSessionTimeoutMinutes,omitempty"`
 	RouteSelection                         *string `json:"routeSelection,omitempty"`
 	DevicesApprovalOn                      *bool   `json:"devicesApprovalOn,omitempty"`
 	DevicesAutoUpdatesOn                   *bool   `json:"devicesAutoUpdatesOn,omitempty"`

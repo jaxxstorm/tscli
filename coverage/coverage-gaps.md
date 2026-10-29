@@ -10,7 +10,7 @@
 - Covered commands: `87`
 - Unmapped commands: `0`
 - Unknown mapped commands: `0`
-- Covered properties: `250`
+- Covered properties: `253`
 - Excluded properties: `651`
 - Uncovered properties: `0`
 
@@ -205,6 +205,7 @@
 
 - `aclsExternalLink`
 - `aclsExternallyManagedOn`
+- `adminConsoleSessionTimeoutMinutes`
 - `devicesApprovalOn`
 - `devicesAutoUpdatesOn`
 - `devicesKeyDurationDays`
@@ -218,6 +219,7 @@
 
 ### patch /tailnet/{tailnet}/settings request
 
+- `adminConsoleSessionTimeoutMinutes`
 - `devicesApprovalOn`
 - `devicesAutoUpdatesOn`
 - `devicesKeyDurationDays`
@@ -232,6 +234,7 @@
 
 - `aclsExternalLink`
 - `aclsExternallyManagedOn`
+- `adminConsoleSessionTimeoutMinutes`
 - `devicesApprovalOn`
 - `devicesAutoUpdatesOn`
 - `devicesKeyDurationDays`

@@ -651,6 +651,11 @@ paths:
       responses:
         '200':
           description: Successful operation.
+        '400':
+          description: |
+            The address is malformed, is outside the Tailscale IPv4 range, is reserved,
+            or is already assigned to another device in the tailnet.
+          $ref: '#/components/responses/400'
         '404':
           description: Device not found.
           $ref: '#/components/responses/404'
@@ -6249,6 +6254,14 @@ components:
           example: https://github.com/example/tailnet-policy
           description: |
             Link to the external tailnet policy definition or management solution for this tailnet.
+        adminConsoleSessionTimeoutMinutes:
+          type: integer
+          minimum: 0
+          maximum: 43200
+          example: 180
+          description: |
+            The [admin console session timeout](/docs/account/admin-console-session-timeout) for members of this tailnet.
+            Setting it to 0 disables the timeout.
         devicesApprovalOn:
           type:
             - boolean
