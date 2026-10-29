@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"filippo.io/age"
+	"filippo.io/age/armor"
 	"github.com/spf13/viper"
 )
 
@@ -125,7 +126,8 @@ func encryptSecret(v *viper.Viper, plaintext string) (string, error) {
 	}
 
 	var buf bytes.Buffer
-	w, err := age.Encrypt(&buf, recipient)
+	armored := armor.NewWriter(&buf)
+	w, err := age.Encrypt(armored, recipient)
 	if err != nil {
 		return "", fmt.Errorf("create age writer: %w", err)
 	}
@@ -135,6 +137,9 @@ func encryptSecret(v *viper.Viper, plaintext string) (string, error) {
 	if err := w.Close(); err != nil {
 		return "", fmt.Errorf("close age writer: %w", err)
 	}
+	if err := armored.Close(); err != nil {
+		return "", fmt.Errorf("close age armor writer: %w", err)
+	}
 	return strings.TrimSpace(buf.String()), nil
 }
 
@@ -143,7 +148,11 @@ func decryptSecret(v *viper.Viper, ciphertext string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	r, err := age.Decrypt(strings.NewReader(ciphertext), identity)
+	var encrypted io.Reader = strings.NewReader(ciphertext)
+	if strings.HasPrefix(strings.TrimSpace(ciphertext), armor.Header) {
+		encrypted = armor.NewReader(strings.NewReader(strings.TrimSpace(ciphertext)))
+	}
+	r, err := age.Decrypt(encrypted, identity)
 	if err != nil {
 		return "", fmt.Errorf("decrypt secret: %w", err)
 	}
