@@ -3,7 +3,7 @@ module github.com/jaxxstorm/tscli/tools
 go 1.27.3
 
 require (
-	github.com/jaxxstorm/tscli v0.11.0
+	github.com/jaxxstorm/tscli v0.12.0
 	gopkg.in/yaml.v3 v3.0.1
 	tailscale.com/client/tailscale/v2 v2.12.0
 )
