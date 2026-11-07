@@ -2,6 +2,7 @@
 package output
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -11,7 +12,9 @@ type JSONPrinter struct{}
 
 func (JSONPrinter) Print(b []byte) error {
 	var obj any
-	if err := json.Unmarshal(b, &obj); err != nil {
+	dec := json.NewDecoder(bytes.NewReader(b))
+	dec.UseNumber()
+	if err := dec.Decode(&obj); err != nil || !json.Valid(b) {
 		_, err = os.Stdout.Write(b)
 		return err
 	}
