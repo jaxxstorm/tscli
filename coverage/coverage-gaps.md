@@ -10,8 +10,8 @@
 - Covered commands: `87`
 - Unmapped commands: `0`
 - Unknown mapped commands: `0`
-- Covered properties: `253`
-- Excluded properties: `651`
+- Covered properties: `340`
+- Excluded properties: `569`
 - Uncovered properties: `0`
 
 ## Uncovered Operations By Domain
@@ -169,6 +169,70 @@
 - `devices[].updateAvailable`
 - `devices[].user`
 
+### get /tailnet/{tailnet}/keys response
+
+- `keys`
+- `keys[]`
+- `keys[].audience`
+- `keys[].capabilities`
+- `keys[].capabilities.devices`
+- `keys[].capabilities.devices.create`
+- `keys[].capabilities.devices.create.ephemeral`
+- `keys[].capabilities.devices.create.nodeAttributes`
+- `keys[].capabilities.devices.create.preauthorized`
+- `keys[].capabilities.devices.create.reusable`
+- `keys[].capabilities.devices.create.tags`
+- `keys[].capabilities.devices.create.tags[]`
+- `keys[].created`
+- `keys[].customClaimRules`
+- `keys[].description`
+- `keys[].expires`
+- `keys[].expirySeconds`
+- `keys[].id`
+- `keys[].invalid`
+- `keys[].issuer`
+- `keys[].key`
+- `keys[].keyType`
+- `keys[].revoked`
+- `keys[].scopes`
+- `keys[].scopes[]`
+- `keys[].subject`
+- `keys[].tags`
+- `keys[].tags[]`
+- `keys[].updated`
+- `keys[].userId`
+
+### get /tailnet/{tailnet}/keys/{keyId} response
+
+- `audience`
+- `capabilities`
+- `capabilities.devices`
+- `capabilities.devices.create`
+- `capabilities.devices.create.ephemeral`
+- `capabilities.devices.create.nodeAttributes`
+- `capabilities.devices.create.preauthorized`
+- `capabilities.devices.create.reusable`
+- `capabilities.devices.create.tags`
+- `capabilities.devices.create.tags[]`
+- `created`
+- `customClaimRules`
+- `description`
+- `expires`
+- `expirySeconds`
+- `id`
+- `invalid`
+- `issuer`
+- `key`
+- `keyType`
+- `revoked`
+- `scopes`
+- `scopes[]`
+- `subject`
+- `tags`
+- `tags[]`
+- `updated`
+- `userId`
+
 ### get /tailnet/{tailnet}/oauth-apps response
 
 - `oauthApps`
@@ -265,6 +329,7 @@
 - `capabilities.devices`
 - `capabilities.devices.create`
 - `capabilities.devices.create.ephemeral`
+- `capabilities.devices.create.nodeAttributes`
 - `capabilities.devices.create.preauthorized`
 - `capabilities.devices.create.reusable`
 - `capabilities.devices.create.tags`
@@ -279,6 +344,37 @@
 - `subject`
 - `tags`
 - `tags[]`
+
+### post /tailnet/{tailnet}/keys response
+
+- `audience`
+- `capabilities`
+- `capabilities.devices`
+- `capabilities.devices.create`
+- `capabilities.devices.create.ephemeral`
+- `capabilities.devices.create.nodeAttributes`
+- `capabilities.devices.create.preauthorized`
+- `capabilities.devices.create.reusable`
+- `capabilities.devices.create.tags`
+- `capabilities.devices.create.tags[]`
+- `created`
+- `customClaimRules`
+- `description`
+- `expires`
+- `expirySeconds`
+- `id`
+- `invalid`
+- `issuer`
+- `key`
+- `keyType`
+- `revoked`
+- `scopes`
+- `scopes[]`
+- `subject`
+- `tags`
+- `tags[]`
+- `updated`
+- `userId`
 
 ### post /tailnet/{tailnet}/oauth-apps request
 
@@ -433,68 +529,6 @@
 
 - `searchPaths`
 - `searchPaths[]`
-
-### get /tailnet/{tailnet}/keys response
-
-- `keys`
-- `keys[]`
-- `keys[].audience`
-- `keys[].capabilities`
-- `keys[].capabilities.devices`
-- `keys[].capabilities.devices.create`
-- `keys[].capabilities.devices.create.ephemeral`
-- `keys[].capabilities.devices.create.preauthorized`
-- `keys[].capabilities.devices.create.reusable`
-- `keys[].capabilities.devices.create.tags`
-- `keys[].capabilities.devices.create.tags[]`
-- `keys[].created`
-- `keys[].customClaimRules`
-- `keys[].description`
-- `keys[].expires`
-- `keys[].expirySeconds`
-- `keys[].id`
-- `keys[].invalid`
-- `keys[].issuer`
-- `keys[].key`
-- `keys[].keyType`
-- `keys[].revoked`
-- `keys[].scopes`
-- `keys[].scopes[]`
-- `keys[].subject`
-- `keys[].tags`
-- `keys[].tags[]`
-- `keys[].updated`
-- `keys[].userId`
-
-### get /tailnet/{tailnet}/keys/{keyId} response
-
-- `audience`
-- `capabilities`
-- `capabilities.devices`
-- `capabilities.devices.create`
-- `capabilities.devices.create.ephemeral`
-- `capabilities.devices.create.preauthorized`
-- `capabilities.devices.create.reusable`
-- `capabilities.devices.create.tags`
-- `capabilities.devices.create.tags[]`
-- `created`
-- `customClaimRules`
-- `description`
-- `expires`
-- `expirySeconds`
-- `id`
-- `invalid`
-- `issuer`
-- `key`
-- `keyType`
-- `revoked`
-- `scopes`
-- `scopes[]`
-- `subject`
-- `tags`
-- `tags[]`
-- `updated`
-- `userId`
 
 ### get /tailnet/{tailnet}/logging/configuration response
 
@@ -1003,36 +1037,6 @@
 - `searchPaths`
 - `searchPaths[]`
 
-### post /tailnet/{tailnet}/keys response
-
-- `audience`
-- `capabilities`
-- `capabilities.devices`
-- `capabilities.devices.create`
-- `capabilities.devices.create.ephemeral`
-- `capabilities.devices.create.preauthorized`
-- `capabilities.devices.create.reusable`
-- `capabilities.devices.create.tags`
-- `capabilities.devices.create.tags[]`
-- `created`
-- `customClaimRules`
-- `description`
-- `expires`
-- `expirySeconds`
-- `id`
-- `invalid`
-- `issuer`
-- `key`
-- `keyType`
-- `revoked`
-- `scopes`
-- `scopes[]`
-- `subject`
-- `tags`
-- `tags[]`
-- `updated`
-- `userId`
-
 ### post /tailnet/{tailnet}/posture/integrations request
 
 - `clientId`
@@ -1144,6 +1148,7 @@
 - `capabilities.devices`
 - `capabilities.devices.create`
 - `capabilities.devices.create.ephemeral`
+- `capabilities.devices.create.nodeAttributes`
 - `capabilities.devices.create.preauthorized`
 - `capabilities.devices.create.reusable`
 - `capabilities.devices.create.tags`

@@ -132,6 +132,9 @@ func TestCreateKeyAuthkeyCompatibilityWithoutFlags(t *testing.T) {
 	devices := caps["devices"].(map[string]any)
 	create := devices["create"].(map[string]any)
 
+	if _, exists := create["nodeAttributes"]; exists {
+		t.Fatalf("nodeAttributes must be omitted by default: %s", reqs[0].Body)
+	}
 	if got := create["reusable"]; got != false {
 		t.Fatalf("expected reusable=false default, got %#v", got)
 	}

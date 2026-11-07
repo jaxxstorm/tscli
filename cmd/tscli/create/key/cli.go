@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jaxxstorm/tscli/pkg/apitype"
 	"github.com/jaxxstorm/tscli/pkg/output"
 
 	"github.com/jaxxstorm/tscli/pkg/tscli"
@@ -90,26 +91,32 @@ func printKey(format string, key *tsapi.Key) error {
 
 func Command() *cobra.Command {
 	var (
-		kind          string
-		desc          string
-		expiry        time.Duration
-		scopes        []string
-		tags          []string
-		reusable      bool
-		ephemeral     bool
-		preauthorized bool
-		issuer        string
-		subject       string
-		audience      string
-		claims        []string
+		kind               string
+		desc               string
+		expiry             time.Duration
+		scopes             []string
+		tags               []string
+		reusable           bool
+		ephemeral          bool
+		preauthorized      bool
+		issuer             string
+		subject            string
+		audience           string
+		claims             []string
+		nodeAttributesJSON string
+		nodeAttributes     map[string]json.RawMessage
 	)
 
 	cmd := &cobra.Command{
 		Use:   "key",
 		Short: "Create an auth-key, OAuth client, or federated credential",
 		Long: "Create Tailscale auth-keys, OAuth clients, or federated identities.\n" +
-			"Auth-key capability flags (--reusable, --ephemeral, --preauthorized, --tags) apply only to --type authkey.",
+			"Auth-key capability flags (--reusable, --ephemeral, --preauthorized, --tags, --node-attributes) apply only to --type authkey.\n" +
+			"--node-attributes accepts a JSON object with up to 100 custom: keys and string, integer literal, or boolean values.\n" +
+			"Auth-key creation, get key, and list keys preserve returned node attributes, including exact integers in JSON and YAML output.\n" +
+			"Creating an auth-key with node attributes requires devices:posture_attributes in addition to auth_keys on the calling OAuth credential; --scope does not grant permissions to the caller.",
 		Example: "  tscli create key --type authkey --description \"CI runner\" --expiry 720h --reusable --preauthorized --tags tag:ci\n" +
+			"  tscli create key --node-attributes '{\"custom:environment\":\"production\",\"custom:rack\":12,\"custom:managed\":true}'\n" +
 			"  tscli create key --type oauthclient --scope users:read --scope devices:read\n" +
 			"  tscli create key --type federated --scope users:read --issuer https://example.com --subject example-*",
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
@@ -149,6 +156,16 @@ func Command() *cobra.Command {
 					return fmt.Errorf("--subject is required for federated credentials")
 				}
 			}
+			if cmd.Flags().Changed("node-attributes") {
+				if kind != "authkey" {
+					return fmt.Errorf("--node-attributes is supported only with --type authkey")
+				}
+				var err error
+				nodeAttributes, err = parseNodeAttributes(nodeAttributesJSON)
+				if err != nil {
+					return err
+				}
+			}
 			return nil
 		},
 
@@ -163,10 +180,11 @@ func Command() *cobra.Command {
 			var key *tsapi.Key
 			switch kind {
 			case "authkey":
-				req := tsapi.CreateKeyRequest{
+				req := apitype.CreateKeyRequest{
 					Description:  desc,
-					Capabilities: tsapi.KeyCapabilities{},
+					Capabilities: apitype.KeyCapabilities{},
 				}
+				req.Capabilities.Devices.Create.NodeAttributes = nodeAttributes
 				req.Capabilities.Devices.Create.Reusable = reusable
 				req.Capabilities.Devices.Create.Ephemeral = ephemeral
 				if len(tags) > 0 {
@@ -176,10 +194,15 @@ func Command() *cobra.Command {
 				if cmd.Flags().Lookup("expiry").Changed {
 					req.ExpirySeconds = int64(expiry.Seconds())
 				}
-				key, err = client.Keys().CreateAuthKey(ctx, req)
-				if err != nil {
+				var result apitype.Key
+				if _, err := doRequest(ctx, client, http.MethodPost, "/tailnet/{tailnet}/keys", req, &result); err != nil {
 					return fmt.Errorf("create auth-key: %w", err)
 				}
+				b, err := json.MarshalIndent(result, "", "  ")
+				if err != nil {
+					return fmt.Errorf("marshal key: %w", err)
+				}
+				return output.Print(outputType, b)
 			case "oauthclient":
 				req := tsapi.CreateOAuthClientRequest{
 					Description: desc,
@@ -227,6 +250,7 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVar(&preauthorized, "preauthorized", false, "Auth-key only: create key in preauthorized state")
 	cmd.Flags().StringSliceVar(&scopes, "scope", nil, "OAuth/federated scopes (repeatable)")
 	cmd.Flags().StringSliceVar(&tags, "tags", nil, "Allowed tags (repeatable) for auth-key device creation, OAuth clients, and federated credentials")
+	cmd.Flags().StringVar(&nodeAttributesJSON, "node-attributes", "", "Auth-key only: custom device posture attributes as a JSON object (max 100; string, integer, or boolean values)")
 	cmd.Flags().StringVar(&issuer, "issuer", "", "Federated only: issuer HTTPS URL")
 	cmd.Flags().StringVar(&subject, "subject", "", "Federated only: subject pattern")
 	cmd.Flags().StringVar(&audience, "audience", "", "Federated only: audience hint")
