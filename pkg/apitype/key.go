@@ -28,6 +28,6 @@ type KeyCapabilities struct {
 // CreateKeyRequest is the auth-key request with optional custom posture attributes.
 type CreateKeyRequest struct {
 	Capabilities  KeyCapabilities `json:"capabilities"`
-	ExpirySeconds int64           `json:"expirySeconds"`
+	ExpirySeconds int64           `json:"expirySeconds,omitempty"`
 	Description   string          `json:"description"`
 }
