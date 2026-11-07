@@ -1931,7 +1931,7 @@ paths:
         The identity of the key is embedded in the key itself and can be used to perform operations on the key (e.g., revoking it or retrieving information about it).
         The full key can no longer be retrieved after the initial response.
 
-        OAuth Scope: `auth_keys` grants access to create machine auth keys.
+        OAuth Scope: `auth_keys` grants access to create machine auth keys. If you include `nodeAttributes` in the request body, you must also have `devices:posture_attributes`.
 
         OAuth Scope: `oauth_keys` grants access to create OAuth clients.
 
@@ -5775,6 +5775,23 @@ components:
                     type: string
                   example:
                     - tag:example
+                nodeAttributes:
+                  description: |
+                    nodeAttributes are custom device posture attributes that will be set on devices registered with this key.
+                    Attribute keys must be in the `custom:` namespace, and values must be strings, integers, or booleans.
+                    At most 100 attributes may be set.
+                    Learn about device posture attributes at https://tailscale.com/docs/features/device-posture.
+
+                    Creating an auth key with node attributes requires permission to write device posture attributes.
+                  type: object
+                  additionalProperties:
+                    oneOf:
+                      - type: string
+                      - type: integer
+                      - type: boolean
+                  example:
+                    custom:environment: production
+                    custom:rack: 12
     Key:
       type: object
       description: |

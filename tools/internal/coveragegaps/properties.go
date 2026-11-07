@@ -60,16 +60,16 @@ type openapiComponents struct {
 }
 
 type createKeyOperationRequest struct {
-	KeyType          string                `json:"keyType"`
-	Capabilities     tsapi.KeyCapabilities `json:"capabilities"`
-	ExpirySeconds    int64                 `json:"expirySeconds"`
-	Description      string                `json:"description"`
-	Scopes           []string              `json:"scopes"`
-	Tags             []string              `json:"tags"`
-	Issuer           string                `json:"issuer"`
-	Subject          string                `json:"subject"`
-	Audience         string                `json:"audience"`
-	CustomClaimRules map[string]string     `json:"customClaimRules"`
+	KeyType          string                  `json:"keyType"`
+	Capabilities     apitype.KeyCapabilities `json:"capabilities"`
+	ExpirySeconds    int64                   `json:"expirySeconds"`
+	Description      string                  `json:"description"`
+	Scopes           []string                `json:"scopes"`
+	Tags             []string                `json:"tags"`
+	Issuer           string                  `json:"issuer"`
+	Subject          string                  `json:"subject"`
+	Audience         string                  `json:"audience"`
+	CustomClaimRules map[string]string       `json:"customClaimRules"`
 }
 
 type setSettingsOperationRequest struct {

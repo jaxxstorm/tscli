@@ -10,8 +10,8 @@
 - Covered commands: `87`
 - Unmapped commands: `0`
 - Unknown mapped commands: `0`
-- Covered properties: `253`
-- Excluded properties: `651`
+- Covered properties: `254`
+- Excluded properties: `655`
 - Uncovered properties: `0`
 
 ## Uncovered Operations By Domain
@@ -265,6 +265,7 @@
 - `capabilities.devices`
 - `capabilities.devices.create`
 - `capabilities.devices.create.ephemeral`
+- `capabilities.devices.create.nodeAttributes`
 - `capabilities.devices.create.preauthorized`
 - `capabilities.devices.create.reusable`
 - `capabilities.devices.create.tags`
@@ -443,6 +444,7 @@
 - `keys[].capabilities.devices`
 - `keys[].capabilities.devices.create`
 - `keys[].capabilities.devices.create.ephemeral`
+- `keys[].capabilities.devices.create.nodeAttributes`
 - `keys[].capabilities.devices.create.preauthorized`
 - `keys[].capabilities.devices.create.reusable`
 - `keys[].capabilities.devices.create.tags`
@@ -473,6 +475,7 @@
 - `capabilities.devices`
 - `capabilities.devices.create`
 - `capabilities.devices.create.ephemeral`
+- `capabilities.devices.create.nodeAttributes`
 - `capabilities.devices.create.preauthorized`
 - `capabilities.devices.create.reusable`
 - `capabilities.devices.create.tags`
@@ -1010,6 +1013,7 @@
 - `capabilities.devices`
 - `capabilities.devices.create`
 - `capabilities.devices.create.ephemeral`
+- `capabilities.devices.create.nodeAttributes`
 - `capabilities.devices.create.preauthorized`
 - `capabilities.devices.create.reusable`
 - `capabilities.devices.create.tags`
@@ -1144,6 +1148,7 @@
 - `capabilities.devices`
 - `capabilities.devices.create`
 - `capabilities.devices.create.ephemeral`
+- `capabilities.devices.create.nodeAttributes`
 - `capabilities.devices.create.preauthorized`
 - `capabilities.devices.create.reusable`
 - `capabilities.devices.create.tags`

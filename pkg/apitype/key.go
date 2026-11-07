@@ -1,0 +1,23 @@
+package apitype
+
+import "encoding/json"
+
+// KeyCapabilities includes device posture attributes not yet modeled by the SDK.
+type KeyCapabilities struct {
+	Devices struct {
+		Create struct {
+			Reusable       bool                       `json:"reusable"`
+			Ephemeral      bool                       `json:"ephemeral"`
+			Tags           []string                   `json:"tags"`
+			Preauthorized  bool                       `json:"preauthorized"`
+			NodeAttributes map[string]json.RawMessage `json:"nodeAttributes,omitempty"`
+		} `json:"create"`
+	} `json:"devices"`
+}
+
+// CreateKeyRequest is the auth-key request with optional custom posture attributes.
+type CreateKeyRequest struct {
+	Capabilities  KeyCapabilities `json:"capabilities"`
+	ExpirySeconds int64           `json:"expirySeconds"`
+	Description   string          `json:"description"`
+}
