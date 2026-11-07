@@ -63,6 +63,34 @@ operations:
           tests:
            - TestCreateKeyAuthkeyTagsPayload
            - TestCreateKeyNodeAttributesPayload
+    response:
+      # apitype.Key embeds SDK metadata and overrides capabilities.
+      - type: tsapi.Key
+        evidence:
+          tests: [TestCreateKeyNodeAttributesResponse]
+      - type: apitype.KeyCapabilities
+        root: capabilities
+        evidence:
+          tests: [TestCreateKeyNodeAttributesResponse]
+  "get /tailnet/{tailnet}/keys/{keyId}":
+    response:
+      - type: tsapi.Key
+        evidence:
+          tests: [TestGetKeyNodeAttributesResponse]
+      - type: apitype.KeyCapabilities
+        root: capabilities
+        evidence:
+          tests: [TestGetKeyNodeAttributesResponse]
+  "get /tailnet/{tailnet}/keys":
+    response:
+      - type: "[]tsapi.Key"
+        root: keys
+        evidence:
+          tests: [TestListKeysNodeAttributesResponse]
+      - type: apitype.KeyCapabilities
+        root: keys[].capabilities
+        evidence:
+          tests: [TestListKeysNodeAttributesResponse]
   "post /tailnet/{tailnet}/oauth-apps":
     request:
       - type: apitype.OAuthAppRequest

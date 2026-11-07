@@ -1,6 +1,16 @@
 package apitype
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	tsapi "tailscale.com/client/tailscale/v2"
+)
+
+// Key retains SDK metadata while extending capabilities with posture attributes.
+type Key struct {
+	tsapi.Key
+	Capabilities KeyCapabilities `json:"capabilities"`
+}
 
 // KeyCapabilities includes device posture attributes not yet modeled by the SDK.
 type KeyCapabilities struct {

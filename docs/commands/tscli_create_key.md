@@ -9,6 +9,7 @@ Create an auth-key, OAuth client, or federated credential
 Create Tailscale auth-keys, OAuth clients, or federated identities.
 Auth-key capability flags (--reusable, --ephemeral, --preauthorized, --tags, --node-attributes) apply only to --type authkey.
 --node-attributes accepts a JSON object with up to 100 custom: keys and string, integer literal, or boolean values.
+Auth-key creation, get key, and list keys preserve returned node attributes, including exact integers in JSON and YAML output.
 Creating an auth-key with node attributes requires devices:posture_attributes in addition to auth_keys on the calling OAuth credential; --scope does not grant permissions to the caller.
 
 ```

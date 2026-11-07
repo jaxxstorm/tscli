@@ -86,6 +86,8 @@ type setSettingsOperationRequest struct {
 }
 
 var propertyTypeRegistry = map[string]reflect.Type{
+	"[]tsapi.Key":                             reflect.TypeOf([]tsapi.Key{}),
+	"apitype.KeyCapabilities":                 reflect.TypeOf(apitype.KeyCapabilities{}),
 	"apitype.Device":                          reflect.TypeOf(apitype.Device{}),
 	"apitype.DeviceListResponse":              reflect.TypeOf(apitype.DeviceListResponse{}),
 	"apitype.DeviceRoutes":                    reflect.TypeOf(apitype.DeviceRoutes{}),

@@ -9,13 +9,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/jaxxstorm/tscli/pkg/output"
 
+	"github.com/jaxxstorm/tscli/pkg/apitype"
 	"github.com/jaxxstorm/tscli/pkg/tscli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	tsapi "tailscale.com/client/tailscale/v2"
 )
 
 func Command() *cobra.Command {
@@ -32,19 +33,24 @@ func Command() *cobra.Command {
 				return fmt.Errorf("failed to create client: %w", err)
 			}
 
-			var keys []tsapi.Key
-			keys, err = client.Keys().List(context.Background(), showAll)
+			var response struct {
+				Keys []apitype.Key `json:"keys"`
+			}
+			path := "/tailnet/{tailnet}/keys"
+			if showAll {
+				path += "?all=true"
+			}
+			_, err = tscli.Do(context.Background(), client, http.MethodGet, path, nil, &response)
 			if err != nil {
 				return fmt.Errorf("failed to list keys: %w", err)
 			}
 
-			out, err := json.MarshalIndent(keys, "", "  ")
+			out, err := json.MarshalIndent(response.Keys, "", "  ")
 			if err != nil {
 				return fmt.Errorf("failed to marshal keys into JSON: %w", err)
 			}
 			outputType := viper.GetString("output")
-			output.Print(outputType, out)
-			return nil
+			return output.Print(outputType, out)
 		},
 	}
 

@@ -113,6 +113,7 @@ func Command() *cobra.Command {
 		Long: "Create Tailscale auth-keys, OAuth clients, or federated identities.\n" +
 			"Auth-key capability flags (--reusable, --ephemeral, --preauthorized, --tags, --node-attributes) apply only to --type authkey.\n" +
 			"--node-attributes accepts a JSON object with up to 100 custom: keys and string, integer literal, or boolean values.\n" +
+			"Auth-key creation, get key, and list keys preserve returned node attributes, including exact integers in JSON and YAML output.\n" +
 			"Creating an auth-key with node attributes requires devices:posture_attributes in addition to auth_keys on the calling OAuth credential; --scope does not grant permissions to the caller.",
 		Example: "  tscli create key --type authkey --description \"CI runner\" --expiry 720h --reusable --preauthorized --tags tag:ci\n" +
 			"  tscli create key --node-attributes '{\"custom:environment\":\"production\",\"custom:rack\":12,\"custom:managed\":true}'\n" +
@@ -193,10 +194,15 @@ func Command() *cobra.Command {
 				if cmd.Flags().Lookup("expiry").Changed {
 					req.ExpirySeconds = int64(expiry.Seconds())
 				}
-				key = &tsapi.Key{}
-				if _, err := doRequest(ctx, client, http.MethodPost, "/tailnet/{tailnet}/keys", req, key); err != nil {
+				var result apitype.Key
+				if _, err := doRequest(ctx, client, http.MethodPost, "/tailnet/{tailnet}/keys", req, &result); err != nil {
 					return fmt.Errorf("create auth-key: %w", err)
 				}
+				b, err := json.MarshalIndent(result, "", "  ")
+				if err != nil {
+					return fmt.Errorf("marshal key: %w", err)
+				}
+				return output.Print(outputType, b)
 			case "oauthclient":
 				req := tsapi.CreateOAuthClientRequest{
 					Description: desc,
