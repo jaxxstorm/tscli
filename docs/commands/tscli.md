@@ -11,11 +11,11 @@ A CLI tool for interacting with the Tailscale API.
 ### Options
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -h, --help             help for tscli
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -h, --help[=true|false]    help for tscli
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

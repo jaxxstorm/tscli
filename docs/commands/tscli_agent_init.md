@@ -15,19 +15,19 @@ tscli agent init [flags]
 ### Options
 
 ```
-      --dir string     Optional repository root for a repo-local install; omit to install global user-level integrations
-      --force          Overwrite unmanaged files at generated target paths
-  -h, --help           help for init
-      --tool strings   Tool integrations to install (supported: generic, codex, claude, opencode, copilot; availability depends on global vs local install target)
+      --dir string           Optional repository root for a repo-local install; omit to install global user-level integrations
+      --force[=true|false]   Overwrite unmanaged files at generated target paths
+  -h, --help[=true|false]    help for init
+      --tool strings         Tool integrations to install (supported: generic, codex, claude, opencode, copilot; availability depends on global vs local install target)
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

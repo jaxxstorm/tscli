@@ -39,21 +39,21 @@ tscli delete devices [flags]
 ### Options
 
 ```
-      --confirm              Actually delete devices (default is a dry run)
-      --ephemeral            Only delete ephemeral devices
-      --exclude strings      Device names to exclude by partial match (can be specified multiple times)
-  -h, --help                 help for devices
-      --include strings      Device names to include by partial match (can be specified multiple times)
-      --last-seen duration   Duration to consider a device disconnected (e.g., 15m, 1h, 24h) (default 15m0s)
+      --confirm[=true|false]     Actually delete devices (default is a dry run)
+      --ephemeral[=true|false]   Only delete ephemeral devices
+      --exclude strings          Device names to exclude by partial match (can be specified multiple times)
+  -h, --help[=true|false]        help for devices
+      --include strings          Device names to include by partial match (can be specified multiple times)
+      --last-seen duration       Duration to consider a device disconnected (e.g., 15m, 1h, 24h) (default 15m0s)
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

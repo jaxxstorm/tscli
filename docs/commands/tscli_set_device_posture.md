@@ -30,21 +30,21 @@ tscli set device posture [flags]
 ### Options
 
 ```
-      --comment string   Optional audit-log comment
-      --device string    Device ID
-      --expiry string    Expiry time in RFC3339 format (optional)
-  -h, --help             help for posture
-      --key string       Posture attribute key (must start with 'custom:')
-      --value string     Posture attribute value
+      --comment string      Optional audit-log comment
+      --device string       Device ID
+      --expiry string       Expiry time in RFC3339 format (optional)
+  -h, --help[=true|false]   help for posture
+      --key string          Posture attribute key (must start with 'custom:')
+      --value string        Posture attribute value
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

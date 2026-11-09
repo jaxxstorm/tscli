@@ -11,18 +11,18 @@ tscli set device name [flags]
 ### Options
 
 ```
-      --device string   Device ID to rename
-  -h, --help            help for name
-      --name string     New device hostname
+      --device string       Device ID to rename
+  -h, --help[=true|false]   help for name
+      --name string         New device hostname
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

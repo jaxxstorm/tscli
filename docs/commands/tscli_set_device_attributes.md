@@ -11,18 +11,18 @@ tscli set device attributes [flags]
 ### Options
 
 ```
-      --body string   Inline JSON payload
-      --file string   Path to a JSON payload file, file://path, or '-' for stdin
-  -h, --help          help for attributes
+      --body string         Inline JSON payload
+      --file string         Path to a JSON payload file, file://path, or '-' for stdin
+  -h, --help[=true|false]   help for attributes
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

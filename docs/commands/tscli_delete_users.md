@@ -37,21 +37,21 @@ tscli delete users [flags]
 ### Options
 
 ```
-      --admins             Include privileged users in deletion candidates
-      --confirm            Actually delete users (default is a dry run)
-      --devices int        Only delete users with this device count
-  -h, --help               help for users
-      --last-seen string   Delete users last seen longer than this duration (e.g. 24h, 30m)
-      --status string      Delete users by status: inactive|suspended
+      --admins[=true|false]    Include privileged users in deletion candidates
+      --confirm[=true|false]   Actually delete users (default is a dry run)
+      --devices int            Only delete users with this device count
+  -h, --help[=true|false]      help for users
+      --last-seen string       Delete users last seen longer than this duration (e.g. 24h, 30m)
+      --status string          Delete users by status: inactive|suspended
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

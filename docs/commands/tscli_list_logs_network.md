@@ -15,18 +15,18 @@ tscli list logs network [flags]
 ### Options
 
 ```
-  -e, --end string     RFC3339 timestamp. Defaults to the current time.
-  -h, --help           help for network
-  -s, --start string   RFC3339 timestamp *or* relative offset (e.g. "30d", "90m"). Required. (default "90m")
+  -e, --end string          RFC3339 timestamp. Defaults to the current time.
+  -h, --help[=true|false]   help for network
+  -s, --start string        RFC3339 timestamp *or* relative offset (e.g. "30d", "90m"). Required. (default "90m")
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

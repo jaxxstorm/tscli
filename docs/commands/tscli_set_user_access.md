@@ -11,20 +11,20 @@ tscli set user access [flags]
 ### Options
 
 ```
-      --approve       Approve the user
-  -h, --help          help for access
-      --restore       Restore the user
-      --suspend       Suspend the user
-      --user string   User ID or email address
+      --approve[=true|false]   Approve the user
+  -h, --help[=true|false]      help for access
+      --restore[=true|false]   Restore the user
+      --suspend[=true|false]   Suspend the user
+      --user string            User ID or email address
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

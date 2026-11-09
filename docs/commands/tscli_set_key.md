@@ -11,19 +11,19 @@ tscli set key [flags]
 ### Options
 
 ```
-      --body string   Inline JSON payload
-      --file string   Path to a JSON payload file, file://path, or '-' for stdin
-  -h, --help          help for key
-      --key string    Key ID to update
+      --body string         Inline JSON payload
+      --file string         Path to a JSON payload file, file://path, or '-' for stdin
+  -h, --help[=true|false]   help for key
+      --key string          Key ID to update
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

@@ -15,18 +15,18 @@ tscli create invite user [flags]
 ### Options
 
 ```
-      --email string   E-mail address to invite (required)
-  -h, --help           help for user
-      --role string    User role: owner|member|admin|it-admin|network-admin|billing-admin|auditor (default "member")
+      --email string        E-mail address to invite (required)
+  -h, --help[=true|false]   help for user
+      --role string         User role: owner|member|admin|it-admin|network-admin|billing-admin|auditor (default "member")
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

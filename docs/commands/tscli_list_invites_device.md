@@ -11,18 +11,18 @@ tscli list invites device [flags]
 ### Options
 
 ```
-      --device string   Device ID (nodeId or numeric id)
-  -h, --help            help for device
-      --state string    Filter by state: pending|accepted|all
+      --device string       Device ID (nodeId or numeric id)
+  -h, --help[=true|false]   help for device
+      --state string        Filter by state: pending|accepted|all
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

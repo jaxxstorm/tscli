@@ -11,18 +11,18 @@ tscli set dns split-dns [flags]
 ### Options
 
 ```
-  -e, --entry stringArray   Mapping "domain=nameserver". Repeat --entry for multiple IP or DoH endpoint values. Set an empty value to clear.
-  -h, --help                help for split-dns
-      --replace             Replace the entire mapping (PUT) instead of patching (PATCH).
+  -e, --entry stringArray      Mapping "domain=nameserver". Repeat --entry for multiple IP or DoH endpoint values. Set an empty value to clear.
+  -h, --help[=true|false]      help for split-dns
+      --replace[=true|false]   Replace the entire mapping (PUT) instead of patching (PATCH).
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

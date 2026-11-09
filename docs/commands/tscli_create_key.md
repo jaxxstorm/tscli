@@ -28,29 +28,29 @@ tscli create key [flags]
 ### Options
 
 ```
-      --audience string          Federated only: audience hint
-      --claim strings            Federated only: custom claim rule key=value (repeatable)
-      --description string       Short description (≤50 chars)
-      --ephemeral                Auth-key only: mark devices authenticated with this key as ephemeral
-      --expiry duration          Expiry duration (e.g. 720h) for auth-keys
-  -h, --help                     help for key
-      --issuer string            Federated only: issuer HTTPS URL
-      --node-attributes string   Auth-key only: custom device posture attributes as a JSON object (max 100; string, integer, or boolean values)
-      --preauthorized            Auth-key only: create key in preauthorized state
-      --reusable                 Auth-key only: allow the key to be used multiple times
-      --scope strings            OAuth/federated scopes (repeatable)
-      --subject string           Federated only: subject pattern
-      --tags strings             Allowed tags (repeatable) for auth-key device creation, OAuth clients, and federated credentials
-      --type string              Key type: authkey|oauthclient|federated (default "authkey")
+      --audience string              Federated only: audience hint
+      --claim strings                Federated only: custom claim rule key=value (repeatable)
+      --description string           Short description (≤50 chars)
+      --ephemeral[=true|false]       Auth-key only: mark devices authenticated with this key as ephemeral
+      --expiry duration              Expiry duration (e.g. 720h) for auth-keys
+  -h, --help[=true|false]            help for key
+      --issuer string                Federated only: issuer HTTPS URL
+      --node-attributes string       Auth-key only: custom device posture attributes as a JSON object (max 100; string, integer, or boolean values)
+      --preauthorized[=true|false]   Auth-key only: create key in preauthorized state
+      --reusable[=true|false]        Auth-key only: allow the key to be used multiple times
+      --scope strings                OAuth/federated scopes (repeatable)
+      --subject string               Federated only: subject pattern
+      --tags strings                 Allowed tags (repeatable) for auth-key device creation, OAuth clients, and federated credentials
+      --type string                  Key type: authkey|oauthclient|federated (default "authkey")
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

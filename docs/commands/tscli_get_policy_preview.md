@@ -11,21 +11,21 @@ tscli get policy preview [flags]
 ### Options
 
 ```
-      --body string    inline ACL JSON/HuJSON
-      --current        use current tailnet ACL
-      --file string    path, file://path or '-' for stdin
-  -h, --help           help for preview
-      --type string    user | ipport (required)
-      --value string   email or "ip:port" (required)
+      --body string            inline ACL JSON/HuJSON
+      --current[=true|false]   use current tailnet ACL
+      --file string            path, file://path or '-' for stdin
+  -h, --help[=true|false]      help for preview
+      --type string            user | ipport (required)
+      --value string           email or "ip:port" (required)
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

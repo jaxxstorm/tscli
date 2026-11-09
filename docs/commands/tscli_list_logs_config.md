@@ -15,18 +15,18 @@ tscli list logs config [flags]
 ### Options
 
 ```
-  -e, --end string     End time in RFC3339. Defaults to “now”.
-  -h, --help           help for config
-  -s, --start string   Start time (RFC3339 or relative like "24h", "30d12h"). Required. (default "24h")
+  -e, --end string          End time in RFC3339. Defaults to “now”.
+  -h, --help[=true|false]   help for config
+  -s, --start string        Start time (RFC3339 or relative like "24h", "30d12h"). Required. (default "24h")
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

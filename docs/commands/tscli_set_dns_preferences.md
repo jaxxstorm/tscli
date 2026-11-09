@@ -11,17 +11,17 @@ tscli set dns preferences [flags]
 ### Options
 
 ```
-  -h, --help       help for preferences
-      --magicdns   Set to true to enable MagicDNS, false to disable (default true)
+  -h, --help[=true|false]       help for preferences
+      --magicdns[=true|false]   Set to true to enable MagicDNS, false to disable (default true)
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO
