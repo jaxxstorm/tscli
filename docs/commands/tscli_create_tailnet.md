@@ -16,7 +16,7 @@ tscli create tailnet [flags]
 
 ```
       --display-name string          Unique display name for the API-driven tailnet
-  -h, --help                         help for tailnet
+  -h, --help[=true|false]            help for tailnet
       --oauth-client-id string       OAuth client ID for organization tailnet lifecycle access
       --oauth-client-secret string   OAuth client secret for organization tailnet lifecycle access
 ```
@@ -24,10 +24,10 @@ tscli create tailnet [flags]
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

@@ -25,7 +25,7 @@ tscli config profiles set sandbox --api-key tskey-xxx --profile-tailnet example.
 
 ```
       --api-key string               API key for the tailnet profile
-  -h, --help                         help for set
+  -h, --help[=true|false]            help for set
       --oauth-client-id string       OAuth client ID for the tailnet profile
       --oauth-client-secret string   OAuth client secret for the tailnet profile
       --profile-tailnet string       Explicit effective tailnet value for this profile (defaults to the profile name)
@@ -34,8 +34,8 @@ tscli config profiles set sandbox --api-key tskey-xxx --profile-tailnet example.
 ### Options inherited from parent commands
 
 ```
-  -d, --debug           Dump HTTP requests/responses
-  -o, --output string   Output: [human json pretty yaml]
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
 ```
 
 ### SEE ALSO

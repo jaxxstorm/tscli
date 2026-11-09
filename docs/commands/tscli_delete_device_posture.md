@@ -15,18 +15,18 @@ tscli delete device posture [flags]
 ### Options
 
 ```
-      --device string   Device ID whose attribute will be removed (nodeId "node-abc123" or numeric id). Example: --device=node-abcdef123456
-  -h, --help            help for posture
-      --key string      Posture attribute key to remove (must start with "custom:"). Example: --key=custom:buildNumber
+      --device string       Device ID whose attribute will be removed (nodeId "node-abc123" or numeric id). Example: --device=node-abcdef123456
+  -h, --help[=true|false]   help for posture
+      --key string          Posture attribute key to remove (must start with "custom:"). Example: --key=custom:buildNumber
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

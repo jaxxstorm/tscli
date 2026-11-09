@@ -13,7 +13,7 @@ tscli create oauth-app [flags]
 ```
       --allowed-node-attribute strings   Custom node attribute the app may set (repeatable)
       --description string               OAuth app description
-  -h, --help                             help for oauth-app
+  -h, --help[=true|false]                help for oauth-app
       --name string                      OAuth app name
       --redirect-uri strings             Permitted redirect URI (repeatable)
       --scope strings                    OAuth scope (repeatable)
@@ -22,10 +22,10 @@ tscli create oauth-app [flags]
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

@@ -11,19 +11,19 @@ tscli set webhook [flags]
 ### Options
 
 ```
-  -h, --help                   help for webhook
+  -h, --help[=true|false]      help for webhook
       --id string              Webhook ID to update
-      --rotate                 Rotate the webhook secret
+      --rotate[=true|false]    Rotate the webhook secret
       --subscription strings   Webhook subscriptions to set (repeatable)
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

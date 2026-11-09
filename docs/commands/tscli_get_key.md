@@ -11,17 +11,17 @@ tscli get key [flags]
 ### Options
 
 ```
-  -h, --help         help for key
-      --key string   Key ID to retrieve
+  -h, --help[=true|false]   help for key
+      --key string          Key ID to retrieve
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

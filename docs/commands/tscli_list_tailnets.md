@@ -16,7 +16,7 @@ tscli list tailnets [flags]
 
 ```
       --cursor string                Pagination cursor from a previous response
-  -h, --help                         help for tailnets
+  -h, --help[=true|false]            help for tailnets
       --limit int                    Maximum number of tailnets to return (1-100) (default 100)
       --oauth-client-id string       OAuth client ID for organization tailnet lifecycle access
       --oauth-client-secret string   OAuth client secret for organization tailnet lifecycle access
@@ -25,10 +25,10 @@ tscli list tailnets [flags]
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

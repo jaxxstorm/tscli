@@ -15,19 +15,19 @@ tscli set device key [flags]
 ### Options
 
 ```
-      --device string    Device ID to update key settings for
-      --disable-expiry   Disable key expiry for this device
-      --enable-expiry    Enable key expiry for this device
-  -h, --help             help for key
+      --device string                 Device ID to update key settings for
+      --disable-expiry[=true|false]   Disable key expiry for this device
+      --enable-expiry[=true|false]    Enable key expiry for this device
+  -h, --help[=true|false]             help for key
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

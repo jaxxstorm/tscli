@@ -11,7 +11,7 @@ tscli create webhook [flags]
 ### Options
 
 ```
-  -h, --help                   help for webhook
+  -h, --help[=true|false]      help for webhook
       --provider string        Provider type: generic|slack|mattermost|googlechat|discord (default "generic")
       --subscription strings   Event subscription (repeatable)
       --url string             Destination endpoint URL (required)
@@ -20,10 +20,10 @@ tscli create webhook [flags]
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

@@ -14,7 +14,7 @@ tscli create posture-integration [flags]
       --client-id string       Client/application ID
       --client-secret string   Client secret / API token (required)
       --cloud-id string        Provider cloud/region ID
-  -h, --help                   help for posture-integration
+  -h, --help[=true|false]      help for posture-integration
       --provider string        Provider (falcon|intune|jamfpro|kandji|kolide|sentinelone)
       --tenant-id string       Microsoft Intune tenant ID
 ```
@@ -22,10 +22,10 @@ tscli create posture-integration [flags]
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

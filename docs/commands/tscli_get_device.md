@@ -15,20 +15,20 @@ tscli get device [flags]
 ### Options
 
 ```
-      --all             Include advanced fields such as ClientConnectivity, AdvertisedRoutes, and EnabledRoutes.
-      --device string   Device identifier (preferred nodeId "node-abc123" or legacy numeric id).
-  -h, --help            help for device
-      --ip string       Match by the device’s Tailscale IPv4 (or IPv6) address.
-      --name string     Match by device hostname (case-insensitive).
+      --all[=true|false]    Include advanced fields such as ClientConnectivity, AdvertisedRoutes, and EnabledRoutes.
+      --device string       Device identifier (preferred nodeId "node-abc123" or legacy numeric id).
+  -h, --help[=true|false]   help for device
+      --ip string           Match by the device’s Tailscale IPv4 (or IPv6) address.
+      --name string         Match by device hostname (case-insensitive).
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

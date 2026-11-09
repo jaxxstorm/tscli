@@ -15,19 +15,19 @@ tscli set contact [flags]
 ### Options
 
 ```
-      --email string   New email address
-  -h, --help           help for contact
-      --resend         Resend verification email for the contact type
-      --type string    Contact type to update (primary|billing|security) (default "primary")
+      --email string          New email address
+  -h, --help[=true|false]     help for contact
+      --resend[=true|false]   Resend verification email for the contact type
+      --type string           Contact type to update (primary|billing|security) (default "primary")
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

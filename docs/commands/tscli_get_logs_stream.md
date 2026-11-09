@@ -16,18 +16,18 @@ tscli get logs stream --type {configuration|network} [--status] [flags]
 ### Options
 
 ```
-  -h, --help          help for stream
-      --status        Fetch /status instead of /stream (shows runtime status)
-      --type string   Log type: "configuration" or "network" (required)
+  -h, --help[=true|false]     help for stream
+      --status[=true|false]   Fetch /status instead of /stream (shows runtime status)
+      --type string           Log type: "configuration" or "network" (required)
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

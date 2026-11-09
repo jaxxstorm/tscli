@@ -11,20 +11,20 @@ tscli create invite device [flags]
 ### Options
 
 ```
-      --allow-exit-node   Let the shared device act as an exit-node
-      --device string     Device ID or nodeId to share (required)
-  -e, --email strings     Recipient e-mail. Omit for a multi-use invite.
-  -h, --help              help for device
-      --multi-use         Generate a multi-use share link
+      --allow-exit-node[=true|false]   Let the shared device act as an exit-node
+      --device string                  Device ID or nodeId to share (required)
+  -e, --email strings                  Recipient e-mail. Omit for a multi-use invite.
+  -h, --help[=true|false]              help for device
+      --multi-use[=true|false]         Generate a multi-use share link
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO

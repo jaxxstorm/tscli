@@ -24,18 +24,18 @@ tscli set device routes [flags]
 ### Options
 
 ```
-      --device string   Device ID to modify (nodeId or numeric id)
-  -h, --help            help for routes
-      --route strings   CIDR block to enable (repeatable). Example: --route 10.0.0.0/24 --route 192.168.1.0/24
+      --device string       Device ID to modify (nodeId or numeric id)
+  -h, --help[=true|false]   help for routes
+      --route strings       CIDR block to enable (repeatable). Example: --route 10.0.0.0/24 --route 192.168.1.0/24
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -k, --api-key string   Tailscale API key
-  -d, --debug            Dump HTTP requests/responses
-  -o, --output string    Output: [human json pretty yaml]
-  -n, --tailnet string   Tailscale tailnet (default "-")
+  -k, --api-key string       Tailscale API key
+  -d, --debug[=true|false]   Dump HTTP requests/responses
+  -o, --output string        Output: [human json pretty yaml]
+  -n, --tailnet string       Tailscale tailnet (default "-")
 ```
 
 ### SEE ALSO
